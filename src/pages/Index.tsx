@@ -12,7 +12,7 @@ import { ItemEncyclopedia } from '@/components/ItemEncyclopedia';
 import { FruitCalculator } from '@/components/FruitCalculator';
 import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
-import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell } from 'lucide-react';
+import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna } from 'lucide-react';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('market');
@@ -59,7 +59,7 @@ const Index = () => {
               Market Board
             </TabsTrigger>
             <TabsTrigger value="mutations" className="flex items-center gap-2">
-              <dna className="h-4 w-4" />
+              <Dna className="h-4 w-4" />
               Mutationpedia
             </TabsTrigger>
             <TabsTrigger value="encyclopedia" className="flex items-center gap-2">

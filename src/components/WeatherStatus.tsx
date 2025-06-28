@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cloud_drizzle, cloud_rain, cloud_sun, cloudy, sun } from 'lucide-react';
+import { CloudDrizzle, CloudRain, CloudSun, Cloudy, Sun } from 'lucide-react';
 
 interface Weather {
   weather_name: string;
@@ -59,12 +58,12 @@ export const WeatherStatus = () => {
 
   const getWeatherIcon = (iconName: string) => {
     switch (iconName) {
-      case 'sun': return sun;
-      case 'cloud-drizzle': return cloud_drizzle;
-      case 'cloud-rain': return cloud_rain;
-      case 'cloud-sun': return cloud_sun;
-      case 'cloudy': return cloudy;
-      default: return sun;
+      case 'sun': return Sun;
+      case 'cloud-drizzle': return CloudDrizzle;
+      case 'cloud-rain': return CloudRain;
+      case 'cloud-sun': return CloudSun;
+      case 'cloudy': return Cloudy;
+      default: return Sun;
     }
   };
 

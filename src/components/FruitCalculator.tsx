@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,11 +8,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
-import { trending_up } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 interface FruitData {
   name: string;
   fruit_constant: number;
+}
+
+interface EnvironmentalMutationData {
+  label: string;
+  multiplier: number;
+  cropSpecific?: string;
 }
 
 export const FruitCalculator = () => {
@@ -57,7 +62,7 @@ export const FruitCalculator = () => {
     { value: 'rainbow', label: 'Rainbow (x100)', multiplier: 100 }
   ];
 
-  const environmentalMutationData = {
+  const environmentalMutationData: {[key: string]: EnvironmentalMutationData} = {
     windstruck: { label: 'Windstruck', multiplier: 0.15 },
     wet: { label: 'Wet', multiplier: 0.25 },
     chilled: { label: 'Chilled', multiplier: 0.10 },
@@ -178,7 +183,7 @@ export const FruitCalculator = () => {
       .map(([mutation, _]) => mutation);
     
     const environmentalSum = activeEnvironmentalMutations.reduce((sum, mutation) => {
-      return sum + environmentalMutationData[mutation as keyof typeof environmentalMutationData].multiplier;
+      return sum + environmentalMutationData[mutation].multiplier;
     }, 0);
     
     const environmentalMultiplier = 1 + environmentalSum - activeEnvironmentalMutations.length;
@@ -373,7 +378,7 @@ export const FruitCalculator = () => {
             </div>
           ) : (
             <div className="text-center text-muted-foreground py-8">
-              <trending_up className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Select a crop and enter mass to calculate price</p>
             </div>
           )}
