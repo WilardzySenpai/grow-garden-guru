@@ -22,44 +22,60 @@ interface NotificationFeedProps {
 export const NotificationFeed = ({ notifications: wsNotifications }: NotificationFeedProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  // Process WebSocket notifications when they come in
   useEffect(() => {
-    // Add some mock notifications for demonstration
-    const mockNotifications: Notification[] = [
+    if (wsNotifications && wsNotifications.length > 0) {
+      const newNotifications = wsNotifications.map((wsNotif, index) => ({
+        id: `ws-${Date.now()}-${index}`,
+        type: 'info' as const,
+        title: wsNotif.title || 'Game Update',
+        message: wsNotif.message || JSON.stringify(wsNotif),
+        timestamp: new Date(),
+        read: false
+      }));
+      
+      setNotifications(prev => [...newNotifications, ...prev]);
+      
+      // Show toast for the first new notification
+      if (newNotifications.length > 0) {
+        toast({
+          title: newNotifications[0].title,
+          description: newNotifications[0].message,
+        });
+      }
+    }
+  }, [wsNotifications]);
+
+  // Add some initial notifications for demonstration
+  useEffect(() => {
+    const initialNotifications: Notification[] = [
       {
         id: '1',
         type: 'success',
-        title: 'New Mutation Event!',
-        message: 'Rainbow mutations are now 50% more likely to appear during the next 2 hours!',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
+        title: 'System Connected',
+        message: 'Successfully connected to Grow A Garden analytics system.',
+        timestamp: new Date(Date.now() - 1 * 60 * 1000),
         read: false
       },
       {
         id: '2',
         type: 'info',
-        title: 'Weather Update',
-        message: 'Heavy rain is forecasted to begin in 30 minutes. Perfect for Wet mutations!',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
+        title: 'Market Data Loaded',
+        message: 'Market board has been populated with current stock information.',
+        timestamp: new Date(Date.now() - 2 * 60 * 1000),
         read: false
       },
       {
         id: '3',
-        type: 'warning',
-        title: 'Market Alert',
-        message: 'Golden Watering Can prices have increased by 25% due to high demand.',
-        timestamp: new Date(Date.now() - 45 * 60 * 1000),
-        read: true
-      },
-      {
-        id: '4',
-        type: 'success',
-        title: 'New Pet Available',
-        message: 'The legendary Disco Bee is now available in the Event Shop for a limited time!',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        type: 'info',
+        title: 'Weather Data Synchronized',
+        message: 'Weather information has been updated from the API.',
+        timestamp: new Date(Date.now() - 5 * 60 * 1000),
         read: true
       }
     ];
 
-    setNotifications(mockNotifications);
+    setNotifications(prev => prev.length === 0 ? initialNotifications : prev);
   }, []);
 
   const markAsRead = (id: string) => {
@@ -78,10 +94,13 @@ export const NotificationFeed = ({ notifications: wsNotifications }: Notificatio
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
-    toast({
-      title: "All notifications marked as read",
-      description: `${notifications.filter(n => !n.read).length} notifications marked as read.`,
-    });
+    const unreadCount = notifications.filter(n => !n.read).length;
+    if (unreadCount > 0) {
+      toast({
+        title: "All notifications marked as read",
+        description: `${unreadCount} notifications marked as read.`,
+      });
+    }
   };
 
   const getNotificationBadgeVariant = (type: string) => {

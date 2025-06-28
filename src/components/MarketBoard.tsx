@@ -8,12 +8,21 @@ import { toast } from '@/hooks/use-toast';
 interface MarketItem {
   item_id: string;
   display_name: string;
-  icon?: string;
+  icon: string;
   quantity: number;
-  Date_Start?: string;
-  Date_End?: string;
-  start_date_unix?: number;
-  end_date_unix?: number;
+  Date_Start: string;
+  Date_End: string;
+  start_date_unix: number;
+  end_date_unix: number;
+}
+
+interface MarketData {
+  seed_stock: MarketItem[];
+  gear_stock: MarketItem[];
+  egg_stock: MarketItem[];
+  cosmetic_stock: MarketItem[];
+  eventshop_stock: MarketItem[];
+  notification: any[];
 }
 
 interface MarketBoardProps {
@@ -22,25 +31,25 @@ interface MarketBoardProps {
 }
 
 export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProps) => {
-  const [marketData, setMarketData] = useState<{
-    seeds: MarketItem[];
-    gear: MarketItem[];
-    eggs: MarketItem[];
-    cosmetics: MarketItem[];
-    event_shop: MarketItem[];
-  }>({
-    seeds: [],
-    gear: [],
-    eggs: [],
-    cosmetics: [],
-    event_shop: []
+  const [marketData, setMarketData] = useState<MarketData>({
+    seed_stock: [],
+    gear_stock: [],
+    egg_stock: [],
+    cosmetic_stock: [],
+    eventshop_stock: [],
+    notification: []
   });
   
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
+    // Load initial data from API
+    loadInitialData();
+    
+    // Connect to WebSocket for real-time updates
     connectWebSocket();
+    
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
@@ -48,80 +57,87 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
     };
   }, []);
 
+  const loadInitialData = async () => {
+    try {
+      const response = await fetch('https://api.joshlei.com/v2/growagarden/stock');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setMarketData(data);
+      onNotifications(data.notification || []);
+    } catch (error) {
+      console.error('Failed to load initial market data:', error);
+      toast({
+        title: "Error Loading Market Data",
+        description: "Failed to fetch initial market data. Trying WebSocket connection...",
+        variant: "destructive"
+      });
+    }
+  };
+
   const connectWebSocket = () => {
     onStatusChange('connecting');
     
-    // For demo purposes, simulate WebSocket connection
-    // In production, you would connect to: wss://websocket.joshlei.com/growagarden?user_id=YOUR_DISCORD_ID
-    setTimeout(() => {
+    // Note: You'll need to replace 'YOUR_DISCORD_ID' with actual Discord user ID
+    const userId = 'YOUR_DISCORD_ID'; // This should be configurable
+    const wsUrl = `wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`;
+    
+    wsRef.current = new WebSocket(wsUrl);
+    
+    wsRef.current.onopen = () => {
+      console.log('WebSocket connection established.');
       setIsConnected(true);
       onStatusChange('connected');
-      
-      // Simulate market data
-      const mockData = {
-        seeds: [
-          {
-            item_id: 'seed_001',
-            display_name: 'Premium Sunflower Seeds',
-            icon: '🌻',
-            quantity: 50,
-            Date_Start: new Date().toISOString(),
-            Date_End: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            end_date_unix: Math.floor((Date.now() + 24 * 60 * 60 * 1000) / 1000)
-          },
-          {
-            item_id: 'seed_002',
-            display_name: 'Sugar Apple Seeds',
-            icon: '🍎',
-            quantity: 25,
-            Date_Start: new Date().toISOString(),
-            Date_End: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-            end_date_unix: Math.floor((Date.now() + 12 * 60 * 60 * 1000) / 1000)
-          }
-        ],
-        gear: [
-          {
-            item_id: 'gear_001',
-            display_name: 'Golden Watering Can',
-            icon: '🥤',
-            quantity: 1,
-            Date_Start: new Date().toISOString(),
-            Date_End: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-            end_date_unix: Math.floor((Date.now() + 48 * 60 * 60 * 1000) / 1000)
-          }
-        ],
-        eggs: [
-          {
-            item_id: 'egg_001',
-            display_name: 'Dragonfly Egg',
-            icon: '🥚',
-            quantity: 3,
-            Date_Start: new Date().toISOString(),
-            Date_End: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-            end_date_unix: Math.floor((Date.now() + 6 * 60 * 60 * 1000) / 1000)
-          }
-        ],
-        cosmetics: [],
-        event_shop: [
-          {
-            item_id: 'event_001',
-            display_name: 'Winter Festival Badge',
-            icon: '❄️',
-            quantity: 1,
-            Date_Start: new Date().toISOString(),
-            Date_End: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            end_date_unix: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
-          }
-        ]
-      };
-      
-      setMarketData(mockData);
       
       toast({
         title: "Market Board Connected",
         description: "Live market data is now streaming.",
       });
-    }, 2000);
+    };
+
+    wsRef.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
+        
+        setMarketData(data);
+        onNotifications(data.notification || []);
+        
+        // Show toast for significant market changes
+        if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
+          toast({
+            title: "Market Updated",
+            description: "New items available in the market!",
+          });
+        }
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error);
+      }
+    };
+
+    wsRef.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      onStatusChange('disconnected');
+      toast({
+        title: "Connection Error",
+        description: "WebSocket connection failed. Retrying...",
+        variant: "destructive"
+      });
+    };
+
+    wsRef.current.onclose = () => {
+      console.log('WebSocket connection closed.');
+      setIsConnected(false);
+      onStatusChange('disconnected');
+      
+      // Attempt to reconnect after 5 seconds
+      setTimeout(() => {
+        if (!isConnected) {
+          connectWebSocket();
+        }
+      }, 5000);
+    };
   };
 
   const formatTimeRemaining = (endUnix: number) => {
@@ -152,21 +168,26 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
           <p className="text-muted-foreground text-center py-8">No items available</p>
         ) : (
           <div className="grid gap-3">
-            {items.map((item) => (
-              <div key={item.item_id} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
+            {items.map((item, index) => (
+              <div key={`${item.item_id}-${index}`} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{item.icon}</span>
+                  <img 
+                    src={item.icon} 
+                    alt={item.display_name}
+                    className="w-8 h-8 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                   <div>
                     <h4 className="font-medium">{item.display_name}</h4>
                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  {item.end_date_unix && (
-                    <Badge variant="outline" className="mb-1">
-                      {formatTimeRemaining(item.end_date_unix)}
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="mb-1">
+                    {formatTimeRemaining(item.end_date_unix)}
+                  </Badge>
                   <p className="text-xs text-muted-foreground">ID: {item.item_id}</p>
                 </div>
               </div>
@@ -198,19 +219,19 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
             
             <div className="mt-6">
               <TabsContent value="seeds">
-                {renderMarketSection(marketData.seeds, 'Seeds')}
+                {renderMarketSection(marketData.seed_stock, 'Seeds')}
               </TabsContent>
               <TabsContent value="gear">
-                {renderMarketSection(marketData.gear, 'Gear')}
+                {renderMarketSection(marketData.gear_stock, 'Gear')}
               </TabsContent>
               <TabsContent value="eggs">
-                {renderMarketSection(marketData.eggs, 'Eggs')}
+                {renderMarketSection(marketData.egg_stock, 'Eggs')}
               </TabsContent>
               <TabsContent value="cosmetics">
-                {renderMarketSection(marketData.cosmetics, 'Cosmetics')}
+                {renderMarketSection(marketData.cosmetic_stock, 'Cosmetics')}
               </TabsContent>
               <TabsContent value="event">
-                {renderMarketSection(marketData.event_shop, 'Event Shop')}
+                {renderMarketSection(marketData.eventshop_stock, 'Event Shop')}
               </TabsContent>
             </div>
           </Tabs>

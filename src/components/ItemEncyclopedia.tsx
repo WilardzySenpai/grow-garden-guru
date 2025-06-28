@@ -9,13 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface Item {
   item_id: string;
   display_name: string;
-  icon?: string;
+  icon: string;
   rarity: string;
-  price: number;
+  price: string;
   currency: string;
   description: string;
-  last_seen?: string;
-  duration?: number;
+  last_seen: string;
+  duration: string;
 }
 
 interface Pet {
@@ -28,6 +28,9 @@ interface Pet {
 export const ItemEncyclopedia = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Pet data - this could be moved to API later
   const [pets] = useState<Pet[]>([
     {
       name: 'Dragonfly',
@@ -68,56 +71,24 @@ export const ItemEncyclopedia = () => {
   ]);
 
   useEffect(() => {
-    // Simulate API call to /info/ endpoint
-    const mockItems: Item[] = [
-      {
-        item_id: 'item_001',
-        display_name: 'Golden Watering Can',
-        icon: '🥤',
-        rarity: 'Epic',
-        price: 1500,
-        currency: 'Sheckles',
-        description: 'A magnificent watering can that enhances plant growth rate by 25%.',
-        last_seen: '2024-12-28',
-        duration: 7200
-      },
-      {
-        item_id: 'item_002',
-        display_name: 'Premium Fertilizer',
-        icon: '💊',
-        rarity: 'Rare',
-        price: 750,
-        currency: 'Sheckles',
-        description: 'High-quality fertilizer that increases mutation chance.',
-        last_seen: '2024-12-27',
-        duration: 3600
-      },
-      {
-        item_id: 'item_003',
-        display_name: 'Weather Predictor',
-        icon: '🌡️',
-        rarity: 'Legendary',
-        price: 3000,
-        currency: 'Gems',
-        description: 'A mystical device that can predict weather patterns 24 hours in advance.',
-        last_seen: '2024-12-25',
-        duration: 86400
-      },
-      {
-        item_id: 'pet_001',
-        display_name: 'Dragonfly Egg',
-        icon: '🥚',
-        rarity: 'Rare',
-        price: 2000,
-        currency: 'Sheckles',
-        description: 'An egg that will hatch into a Dragonfly pet. Can apply Gold mutation to crops.',
-        last_seen: '2024-12-28',
-        duration: 14400
-      }
-    ];
-
-    setItems(mockItems);
+    fetchItems();
   }, []);
+
+  const fetchItems = async () => {
+    try {
+      const response = await fetch('https://api.joshlei.com/v2/growagarden/info/');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setItems(data);
+    } catch (error) {
+      console.error('Failed to fetch items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredItems = items.filter(item =>
     item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -138,15 +109,35 @@ export const ItemEncyclopedia = () => {
       case 'rare': return 'default';
       case 'epic': return 'destructive';
       case 'legendary': return 'default';
+      case 'mythical': return 'default';
       default: return 'secondary';
     }
   };
 
-  const formatDuration = (seconds: number) => {
+  const formatDuration = (durationStr: string) => {
+    const seconds = parseInt(durationStr);
+    if (seconds === 0 || isNaN(seconds)) return 'N/A';
+    
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
+
+  const formatPrice = (price: string) => {
+    const priceNum = parseInt(price);
+    if (priceNum === 0 || isNaN(priceNum)) return 'Free';
+    return priceNum.toLocaleString();
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <p className="text-center text-muted-foreground">Loading encyclopedia data...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -190,7 +181,14 @@ export const ItemEncyclopedia = () => {
                     <TableRow key={item.item_id} className="hover:bg-accent/50">
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{item.icon}</span>
+                          <img 
+                            src={item.icon}
+                            alt={item.display_name}
+                            className="w-8 h-8 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
                           <div>
                             <div className="font-medium">{item.display_name}</div>
                             <div className="text-xs text-muted-foreground">ID: {item.item_id}</div>
@@ -204,18 +202,18 @@ export const ItemEncyclopedia = () => {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {item.price.toLocaleString()} {item.currency}
+                          {formatPrice(item.price)} {item.currency}
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        <p className="text-sm">{item.description}</p>
+                        <p className="text-sm">{item.description || 'No description available'}</p>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1 text-xs">
-                          {item.last_seen && (
-                            <div>Last seen: {item.last_seen}</div>
+                          {item.last_seen !== '0' && (
+                            <div>Last seen: {new Date(parseInt(item.last_seen) * 1000).toLocaleDateString()}</div>
                           )}
-                          {item.duration && (
+                          {item.duration !== '0' && (
                             <div>Duration: {formatDuration(item.duration)}</div>
                           )}
                         </div>

@@ -10,23 +10,56 @@ interface SystemMonitorProps {
 
 export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
   const [rateLimits, setRateLimits] = useState({
-    remainingIp: 95,
-    remainingGlobal: 180,
-    limitIp: 100,
-    limitGlobal: 200
+    remainingIp: 10000,
+    remainingGlobal: 100000,
+    limitIp: 10000,
+    limitGlobal: 100000
   });
 
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
+  const [lastApiCall, setLastApiCall] = useState<Date | null>(null);
 
+  // Monitor API calls and update rate limits
   useEffect(() => {
-    // Simulate rate limit updates
-    const interval = setInterval(() => {
-      setRateLimits(prev => ({
-        ...prev,
-        remainingIp: Math.max(0, prev.remainingIp - Math.random() * 2),
-        remainingGlobal: Math.max(0, prev.remainingGlobal - Math.random() * 3)
-      }));
-    }, 5000);
+    const checkRateLimits = async () => {
+      try {
+        const response = await fetch('https://api.joshlei.com/v2/growagarden/stock', {
+          method: 'HEAD' // Use HEAD to check headers without downloading content
+        });
+        
+        // Update rate limits from headers
+        const remainingGlobal = response.headers.get('Ratelimit-Remaining-Global');
+        const remainingIp = response.headers.get('Ratelimit-Remaining-Ip');
+        const limitGlobal = response.headers.get('Request-Limit-Global');
+        const limitIp = response.headers.get('Request-Limit-Ip');
+        const retryAfterHeader = response.headers.get('Retry-After');
+        
+        if (remainingGlobal || remainingIp) {
+          setRateLimits({
+            remainingIp: remainingIp ? parseInt(remainingIp) : rateLimits.remainingIp,
+            remainingGlobal: remainingGlobal ? parseInt(remainingGlobal) : rateLimits.remainingGlobal,
+            limitIp: limitIp ? parseInt(limitIp) : 10000,
+            limitGlobal: limitGlobal ? parseInt(limitGlobal) : 100000
+          });
+        }
+        
+        if (retryAfterHeader) {
+          setRetryAfter(parseInt(retryAfterHeader));
+        }
+        
+        setLastApiCall(new Date());
+        
+        if (response.status === 429) {
+          console.warn('Rate limit exceeded');
+        }
+      } catch (error) {
+        console.error('Failed to check rate limits:', error);
+      }
+    };
+
+    // Check rate limits every 30 seconds
+    const interval = setInterval(checkRateLimits, 30000);
+    checkRateLimits(); // Initial check
 
     return () => clearInterval(interval);
   }, []);
@@ -75,9 +108,9 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
           </div>
           
           <div className="flex items-center justify-between">
-            <span>Last Update</span>
+            <span>Last API Check</span>
             <span className="text-sm text-muted-foreground">
-              {new Date().toLocaleTimeString()}
+              {lastApiCall ? lastApiCall.toLocaleTimeString() : 'Never'}
             </span>
           </div>
 
@@ -103,21 +136,23 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span>IP Rate Limit</span>
-              <span>{Math.round(rateLimits.remainingIp)}/{rateLimits.limitIp}</span>
+              <span>{rateLimits.remainingIp.toLocaleString()}/{rateLimits.limitIp.toLocaleString()}</span>
             </div>
             <Progress value={(rateLimits.remainingIp / rateLimits.limitIp) * 100} />
+            <div className="text-xs text-muted-foreground mt-1">
+              Resets every 10 minutes
+            </div>
           </div>
 
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span>Global Rate Limit</span>
-              <span>{Math.round(rateLimits.remainingGlobal)}/{rateLimits.limitGlobal}</span>
+              <span>{rateLimits.remainingGlobal.toLocaleString()}/{rateLimits.limitGlobal.toLocaleString()}</span>
             </div>
             <Progress value={(rateLimits.remainingGlobal / rateLimits.limitGlobal) * 100} />
-          </div>
-
-          <div className="text-xs text-muted-foreground">
-            Limits reset every hour
+            <div className="text-xs text-muted-foreground mt-1">
+              Resets every hour
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -130,20 +165,28 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">99.9%</div>
-              <div className="text-sm text-muted-foreground">Uptime</div>
+              <div className="text-2xl font-bold text-green-600">
+                {wsStatus === 'connected' ? '100%' : '0%'}
+              </div>
+              <div className="text-sm text-muted-foreground">WebSocket Uptime</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">45ms</div>
-              <div className="text-sm text-muted-foreground">Avg Response</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {lastApiCall ? '✓' : '✗'}
+              </div>
+              <div className="text-sm text-muted-foreground">API Reachable</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">1.2K</div>
-              <div className="text-sm text-muted-foreground">Requests/min</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {Math.round((rateLimits.remainingIp / rateLimits.limitIp) * 100)}%
+              </div>
+              <div className="text-sm text-muted-foreground">IP Quota Left</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">3</div>
-              <div className="text-sm text-muted-foreground">Active Users</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {Math.round((rateLimits.remainingGlobal / rateLimits.limitGlobal) * 100)}%
+              </div>
+              <div className="text-sm text-muted-foreground">Global Quota Left</div>
             </div>
           </div>
         </CardContent>

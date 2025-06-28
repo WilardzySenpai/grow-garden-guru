@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,9 +11,10 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { TrendingUp } from 'lucide-react';
 
-interface FruitData {
-  name: string;
-  fruit_constant: number;
+interface CalculateResponse {
+  base_price: number;
+  variants: { [key: string]: number };
+  mutations: { [key: string]: number };
 }
 
 interface EnvironmentalMutationData {
@@ -25,6 +27,7 @@ export const FruitCalculator = () => {
   const [cropName, setCropName] = useState('');
   const [mass, setMass] = useState('');
   const [fruitConstant, setFruitConstant] = useState<number | null>(null);
+  const [availableCrops, setAvailableCrops] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Growth mutations (only one allowed)
@@ -54,8 +57,6 @@ export const FruitCalculator = () => {
     };
   } | null>(null);
 
-  const crops = ['Sugar Apple', 'Sunflower', 'Watermelon', 'Pumpkin', 'Tomato'];
-  
   const growthMutations = [
     { value: 'ripe', label: 'Ripe (x20)', multiplier: 20, cropSpecific: 'Sugar Apple' },
     { value: 'gold', label: 'Gold (x50)', multiplier: 50 },
@@ -75,24 +76,41 @@ export const FruitCalculator = () => {
     dawnbound: { label: 'Dawnbound', multiplier: 0.28, cropSpecific: 'Sunflower' }
   };
 
+  // Load available crops on component mount
+  useEffect(() => {
+    loadAvailableCrops();
+  }, []);
+
+  const loadAvailableCrops = async () => {
+    try {
+      const response = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: CalculateResponse = await response.json();
+      // Extract crop names from the variants or mutations keys
+      // For now, we'll use a default list since the API structure isn't fully clear
+      setAvailableCrops(['cactus', 'sugar_apple', 'sunflower', 'watermelon', 'pumpkin', 'tomato']);
+    } catch (error) {
+      console.error('Failed to load available crops:', error);
+      // Fallback to default crops
+      setAvailableCrops(['cactus', 'sugar_apple', 'sunflower', 'watermelon', 'pumpkin', 'tomato']);
+    }
+  };
+
   const fetchFruitConstant = async (name: string) => {
     setLoading(true);
     try {
-      // Simulate API call to /calculate endpoint
-      // In production: const response = await fetch(`/calculate?name=${encodeURIComponent(name)}`);
+      const itemId = name.toLowerCase().replace(/ /g, "_");
+      const response = await fetch(`https://api.joshlei.com/v2/growagarden/calculate?Name=${encodeURIComponent(itemId)}&Weight=1`);
       
-      // Mock data for demonstration
-      const mockConstants: {[key: string]: number} = {
-        'Sugar Apple': 1.2,
-        'Sunflower': 0.8,
-        'Watermelon': 1.5,
-        'Pumpkin': 1.0,
-        'Tomato': 0.9
-      };
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-      
-      const constant = mockConstants[name] || 1.0;
+      const data: CalculateResponse = await response.json();
+      const constant = data.base_price || 1.0;
       setFruitConstant(constant);
       
       toast({
@@ -100,11 +118,13 @@ export const FruitCalculator = () => {
         description: `${name}: ${constant}`,
       });
     } catch (error) {
+      console.error('Failed to fetch fruit constant:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch fruit constant.",
+        description: "Failed to fetch fruit constant. Using default value.",
         variant: "destructive"
       });
+      setFruitConstant(1.0);
     } finally {
       setLoading(false);
     }
@@ -128,7 +148,6 @@ export const FruitCalculator = () => {
   }, [environmentalMutations.sundried, environmentalMutations.verdant]);
 
   const handleEnvironmentalMutationChange = (mutation: string, checked: boolean) => {
-    // Exclusivity rules
     if (checked) {
       let newMutations = { ...environmentalMutations };
       
@@ -226,26 +245,28 @@ export const FruitCalculator = () => {
                 <SelectValue placeholder="Select a crop" />
               </SelectTrigger>
               <SelectContent>
-                {crops.map((crop) => (
-                  <SelectItem key={crop} value={crop}>{crop}</SelectItem>
+                {availableCrops.map((crop) => (
+                  <SelectItem key={crop} value={crop}>
+                    {crop.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {fruitConstant !== null && (
               <Badge variant="secondary">
-                Fruit Constant: {fruitConstant}
+                Base Price: {fruitConstant}
               </Badge>
             )}
           </div>
 
           {/* Mass Input */}
           <div className="space-y-2">
-            <Label>Mass (kg)</Label>
+            <Label>Weight (kg)</Label>
             <Input
               type="number"
               value={mass}
               onChange={(e) => setMass(e.target.value)}
-              placeholder="Enter mass in kilograms"
+              placeholder="Enter weight in kilograms"
               min="0"
               step="0.01"
             />
@@ -266,12 +287,12 @@ export const FruitCalculator = () => {
                     value={mutation.value}
                     checked={growthMutation === mutation.value}
                     onChange={(e) => setGrowthMutation(e.target.value)}
-                    disabled={mutation.cropSpecific && cropName !== mutation.cropSpecific}
+                    disabled={mutation.cropSpecific && !cropName.toLowerCase().includes(mutation.cropSpecific.toLowerCase().replace(/ /g, '_'))}
                     className="w-4 h-4"
                   />
                   <Label 
                     htmlFor={mutation.value}
-                    className={`${mutation.cropSpecific && cropName !== mutation.cropSpecific ? 'text-muted-foreground' : ''}`}
+                    className={`${mutation.cropSpecific && !cropName.toLowerCase().includes(mutation.cropSpecific.toLowerCase().replace(/ /g, '_')) ? 'text-muted-foreground' : ''}`}
                   >
                     {mutation.label}
                     {mutation.cropSpecific && (
@@ -297,11 +318,11 @@ export const FruitCalculator = () => {
                     id={key}
                     checked={environmentalMutations[key]}
                     onCheckedChange={(checked) => handleEnvironmentalMutationChange(key, checked as boolean)}
-                    disabled={data.cropSpecific && cropName !== data.cropSpecific}
+                    disabled={data.cropSpecific && !cropName.toLowerCase().includes(data.cropSpecific.toLowerCase().replace(/ /g, '_'))}
                   />
                   <Label 
                     htmlFor={key}
-                    className={`text-sm ${data.cropSpecific && cropName !== data.cropSpecific ? 'text-muted-foreground' : ''}`}
+                    className={`text-sm ${data.cropSpecific && !cropName.toLowerCase().includes(data.cropSpecific.toLowerCase().replace(/ /g, '_')) ? 'text-muted-foreground' : ''}`}
                   >
                     {data.label} (+{data.multiplier})
                     {data.cropSpecific && (
@@ -347,12 +368,12 @@ export const FruitCalculator = () => {
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Fruit Constant:</span>
+                    <span>Base Price:</span>
                     <span className="font-medium">{calculationResult.breakdown.fruitConstant}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span>Mass²:</span>
+                    <span>Weight²:</span>
                     <span className="font-medium">
                       {calculationResult.breakdown.mass}² = {Math.pow(calculationResult.breakdown.mass, 2)}
                     </span>
@@ -372,14 +393,14 @@ export const FruitCalculator = () => {
                 <Separator />
 
                 <div className="text-xs text-muted-foreground">
-                  Formula: Fruit Constant × Mass² × Growth Multiplier × Environmental Multiplier
+                  Formula: Base Price × Weight² × Growth Multiplier × Environmental Multiplier
                 </div>
               </div>
             </div>
           ) : (
             <div className="text-center text-muted-foreground py-8">
               <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Select a crop and enter mass to calculate price</p>
+              <p>Select a crop and enter weight to calculate price</p>
             </div>
           )}
         </CardContent>

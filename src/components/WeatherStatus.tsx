@@ -1,69 +1,51 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CloudDrizzle, CloudRain, CloudSun, Cloudy, Sun } from 'lucide-react';
 
 interface Weather {
+  weather_id: string;
   weather_name: string;
   icon: string;
   active: boolean;
-  end_duration_unix?: number;
+  end_duration_unix: number;
   duration: number;
+  start_duration_unix: number;
 }
 
 export const WeatherStatus = () => {
+  const [weatherData, setWeatherData] = useState<Weather[]>([]);
   const [currentWeather, setCurrentWeather] = useState<Weather | null>(null);
-  const [weatherForecast, setWeatherForecast] = useState<Weather[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate weather data - in production, fetch from /weather endpoint
-    const mockCurrentWeather: Weather = {
-      weather_name: 'Sunny',
-      icon: 'sun',
-      active: true,
-      end_duration_unix: Math.floor((Date.now() + 2 * 60 * 60 * 1000) / 1000),
-      duration: 4 * 60 * 60 // 4 hours in seconds
-    };
-
-    const mockForecast: Weather[] = [
-      {
-        weather_name: 'Light Rain',
-        icon: 'cloud-drizzle',
-        active: false,
-        duration: 2 * 60 * 60
-      },
-      {
-        weather_name: 'Heavy Rain',
-        icon: 'cloud-rain',
-        active: false,
-        duration: 1 * 60 * 60
-      },
-      {
-        weather_name: 'Partly Cloudy',
-        icon: 'cloud-sun',
-        active: false,
-        duration: 3 * 60 * 60
-      },
-      {
-        weather_name: 'Overcast',
-        icon: 'cloudy',
-        active: false,
-        duration: 6 * 60 * 60
-      }
-    ];
-
-    setCurrentWeather(mockCurrentWeather);
-    setWeatherForecast(mockForecast);
+    fetchWeatherData();
+    
+    // Refresh weather data every 30 seconds
+    const interval = setInterval(fetchWeatherData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const getWeatherIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'sun': return Sun;
-      case 'cloud-drizzle': return CloudDrizzle;
-      case 'cloud-rain': return CloudRain;
-      case 'cloud-sun': return CloudSun;
-      case 'cloudy': return Cloudy;
-      default: return Sun;
+  const fetchWeatherData = async () => {
+    try {
+      const response = await fetch('https://api.joshlei.com/v2/growagarden/weather');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const weather = data.weather || [];
+      
+      setWeatherData(weather);
+      
+      // Find the currently active weather
+      const active = weather.find((w: Weather) => w.active);
+      setCurrentWeather(active || null);
+      
+    } catch (error) {
+      console.error('Failed to fetch weather data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,6 +67,18 @@ export const WeatherStatus = () => {
     return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`;
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Card className="market-card">
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">Loading weather data...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Current Weather */}
@@ -98,18 +92,22 @@ export const WeatherStatus = () => {
           {currentWeather ? (
             <div className="text-center space-y-4">
               <div className="flex justify-center">
-                {(() => {
-                  const IconComponent = getWeatherIcon(currentWeather.icon);
-                  return <IconComponent className="h-16 w-16 text-primary" />;
-                })()}
+                <img 
+                  src={currentWeather.icon}
+                  alt={currentWeather.weather_name}
+                  className="w-16 h-16 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
               </div>
               <div>
                 <h3 className="text-xl font-semibold">{currentWeather.weather_name}</h3>
-                <Badge variant={currentWeather.active ? 'default' : 'secondary'} className="mt-2">
-                  {currentWeather.active ? 'Active' : 'Inactive'}
+                <Badge variant="default" className="mt-2">
+                  Active
                 </Badge>
               </div>
-              {currentWeather.active && currentWeather.end_duration_unix && (
+              {currentWeather.end_duration_unix > 0 && (
                 <div className="text-sm text-muted-foreground">
                   {formatTimeRemaining(currentWeather.end_duration_unix)}
                 </div>
@@ -119,7 +117,15 @@ export const WeatherStatus = () => {
               </div>
             </div>
           ) : (
-            <p className="text-center text-muted-foreground">Loading weather data...</p>
+            <div className="text-center space-y-4">
+              <div className="text-6xl">☀️</div>
+              <div>
+                <h3 className="text-xl font-semibold">Clear Skies</h3>
+                <Badge variant="secondary" className="mt-2">
+                  No Active Weather
+                </Badge>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -131,13 +137,17 @@ export const WeatherStatus = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {weatherForecast.map((weather, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
+            {weatherData.filter(w => !w.active).slice(0, 6).map((weather) => (
+              <div key={weather.weather_id} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
                 <div className="flex items-center gap-3">
-                  {(() => {
-                    const IconComponent = getWeatherIcon(weather.icon);
-                    return <IconComponent className="h-6 w-6 text-primary" />;
-                  })()}
+                  <img 
+                    src={weather.icon}
+                    alt={weather.weather_name}
+                    className="w-6 h-6 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                   <span className="font-medium">{weather.weather_name}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -145,6 +155,11 @@ export const WeatherStatus = () => {
                 </div>
               </div>
             ))}
+            {weatherData.filter(w => !w.active).length === 0 && (
+              <p className="text-center text-muted-foreground py-4">
+                No forecast data available
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
