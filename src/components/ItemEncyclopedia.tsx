@@ -10,7 +10,7 @@ interface Item {
   item_id: string;
   display_name: string;
   icon: string;
-  rarity: string;
+  rarity: string | null;
   price: string;
   currency: string;
   description: string;
@@ -92,8 +92,8 @@ export const ItemEncyclopedia = () => {
 
   const filteredItems = items.filter(item =>
     item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.rarity.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (item.rarity && item.rarity.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const filteredPets = pets.filter(pet =>
@@ -102,7 +102,9 @@ export const ItemEncyclopedia = () => {
     pet.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getRarityColor = (rarity: string) => {
+  const getRarityColor = (rarity: string | null) => {
+    if (!rarity) return 'secondary';
+    
     switch (rarity.toLowerCase()) {
       case 'common': return 'secondary';
       case 'uncommon': return 'outline';  
@@ -197,7 +199,7 @@ export const ItemEncyclopedia = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant={getRarityColor(item.rarity)}>
-                          {item.rarity}
+                          {item.rarity || 'Unknown'}
                         </Badge>
                       </TableCell>
                       <TableCell>
