@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,6 +12,7 @@ import { FruitCalculator } from '@/components/FruitCalculator';
 import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
 import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('market');
@@ -41,6 +41,7 @@ const Index = () => {
             </div>
             
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <div className={`status-indicator ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
                 <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
                 {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
