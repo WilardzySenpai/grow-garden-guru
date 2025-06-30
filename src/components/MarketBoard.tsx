@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,22 +46,26 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
 
+  // Generate a unique session ID for this browser session
+  const sessionIdRef = useRef<string>(() => {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  });
+
   useEffect(() => {
-    // Skip initial API load due to CORS issues
-    console.log('Initial API load disabled due to CORS policy');
-    
-    // Connect to WebSocket for real-time updates
+    console.log('MarketBoard: Component mounted, connecting WebSocket');
     connectWebSocket();
     
+    // Cleanup function to close WebSocket when component unmounts
     return () => {
+      console.log('MarketBoard: Component unmounting, closing WebSocket');
       if (wsRef.current) {
-        wsRef.current.close();
+        wsRef.current.close(1000, 'Component unmounting'); // Normal closure
       }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   const connectWebSocket = () => {
     // Clear any existing reconnection timeout
@@ -70,21 +73,29 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
       clearTimeout(reconnectTimeoutRef.current);
     }
 
+    // Close existing connection if it exists
+    if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
+      console.log('MarketBoard: Closing existing WebSocket connection');
+      wsRef.current.close(1000, 'Creating new connection');
+    }
+
     onStatusChange('connecting');
     setError(null);
     
-    // Note: Replace 'YOUR_DISCORD_ID' with actual Discord user ID
-    const userId = 'demo_user'; // Using demo user for now
+    // Use unique session ID instead of demo_user
+    const userId = sessionIdRef.current;
     const wsUrl = `wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`;
+    
+    console.log('MarketBoard: Connecting to WebSocket with user ID:', userId);
     
     try {
       wsRef.current = new WebSocket(wsUrl);
       
       wsRef.current.onopen = () => {
-        console.log('WebSocket connection established.');
+        console.log('MarketBoard: WebSocket connection established');
         setIsConnected(true);
         onStatusChange('connected');
-        reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
+        reconnectAttemptsRef.current = 0;
         
         toast({
           title: "Market Board Connected",
@@ -95,12 +106,11 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
       wsRef.current.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('WebSocket message received:', data);
+          console.log('MarketBoard: WebSocket message received');
           
           setMarketData(data);
           onNotifications(data.notification || []);
           
-          // Show toast for significant market changes
           if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
             toast({
               title: "Market Updated",
@@ -108,24 +118,31 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
             });
           }
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          console.error('MarketBoard: Failed to parse WebSocket message:', error);
         }
       };
 
       wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('MarketBoard: WebSocket error:', error);
         setError('WebSocket connection failed');
         onStatusChange('disconnected');
       };
 
       wsRef.current.onclose = (event) => {
-        console.log('WebSocket connection closed.', event.code, event.reason);
+        console.log('MarketBoard: WebSocket connection closed', event.code, event.reason);
         setIsConnected(false);
         onStatusChange('disconnected');
         
-        // Only attempt to reconnect if it wasn't a manual close and we haven't exceeded max attempts
+        // Handle different close codes
+        if (event.code === 4001) {
+          setError('Another connection was established. Using single connection mode.');
+          // Don't reconnect automatically for 4001 - this is expected behavior
+          return;
+        }
+        
+        // Only attempt to reconnect for unexpected closures
         if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000); // Exponential backoff, max 30s
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
           reconnectAttemptsRef.current++;
           
           setError(`Connection lost. Reconnecting in ${delay/1000}s... (Attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
@@ -145,7 +162,7 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
         }
       };
     } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
+      console.error('MarketBoard: Failed to create WebSocket connection:', error);
       setError('Failed to create WebSocket connection');
       onStatusChange('disconnected');
     }
