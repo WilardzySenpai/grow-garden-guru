@@ -47,9 +47,7 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
   const maxReconnectAttempts = 5;
 
   // Generate a unique session ID for this browser session
-  const sessionIdRef = useRef<string>(() => {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  });
+  const sessionIdRef = useRef<string>(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   useEffect(() => {
     console.log('MarketBoard: Component mounted, connecting WebSocket');
