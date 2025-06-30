@@ -54,14 +54,10 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto p-4 space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="market" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Market Board
-            </TabsTrigger>
-            <TabsTrigger value="mutations" className="flex items-center gap-2">
-              <Dna className="h-4 w-4" />
-              Mutationpedia
             </TabsTrigger>
             <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
@@ -90,10 +86,6 @@ const Index = () => {
                 <WeatherStatus />
               </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="mutations">
-            <Mutationpedia />
           </TabsContent>
 
           <TabsContent value="encyclopedia">
