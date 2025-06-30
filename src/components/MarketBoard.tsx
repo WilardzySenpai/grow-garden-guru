@@ -42,10 +42,14 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
   
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 5;
 
   useEffect(() => {
-    // Load initial data from API
-    loadInitialData();
+    // Skip initial API load due to CORS issues
+    console.log('Initial API load disabled due to CORS policy');
     
     // Connect to WebSocket for real-time updates
     connectWebSocket();
@@ -54,90 +58,97 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
       if (wsRef.current) {
         wsRef.current.close();
       }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
     };
   }, []);
 
-  const loadInitialData = async () => {
-    try {
-      const response = await fetch('https://api.joshlei.com/v2/growagarden/stock');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setMarketData(data);
-      onNotifications(data.notification || []);
-    } catch (error) {
-      console.error('Failed to load initial market data:', error);
-      toast({
-        title: "Error Loading Market Data",
-        description: "Failed to fetch initial market data. Trying WebSocket connection...",
-        variant: "destructive"
-      });
-    }
-  };
-
   const connectWebSocket = () => {
+    // Clear any existing reconnection timeout
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+
     onStatusChange('connecting');
+    setError(null);
     
-    // Note: You'll need to replace 'YOUR_DISCORD_ID' with actual Discord user ID
-    const userId = 'YOUR_DISCORD_ID'; // This should be configurable
+    // Note: Replace 'YOUR_DISCORD_ID' with actual Discord user ID
+    const userId = 'demo_user'; // Using demo user for now
     const wsUrl = `wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`;
     
-    wsRef.current = new WebSocket(wsUrl);
-    
-    wsRef.current.onopen = () => {
-      console.log('WebSocket connection established.');
-      setIsConnected(true);
-      onStatusChange('connected');
+    try {
+      wsRef.current = new WebSocket(wsUrl);
       
-      toast({
-        title: "Market Board Connected",
-        description: "Live market data is now streaming.",
-      });
-    };
+      wsRef.current.onopen = () => {
+        console.log('WebSocket connection established.');
+        setIsConnected(true);
+        onStatusChange('connected');
+        reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
+        
+        toast({
+          title: "Market Board Connected",
+          description: "Live market data is now streaming.",
+        });
+      };
 
-    wsRef.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
+      wsRef.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('WebSocket message received:', data);
+          
+          setMarketData(data);
+          onNotifications(data.notification || []);
+          
+          // Show toast for significant market changes
+          if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
+            toast({
+              title: "Market Updated",
+              description: "New items available in the market!",
+            });
+          }
+        } catch (error) {
+          console.error('Failed to parse WebSocket message:', error);
+        }
+      };
+
+      wsRef.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setError('WebSocket connection failed');
+        onStatusChange('disconnected');
+      };
+
+      wsRef.current.onclose = (event) => {
+        console.log('WebSocket connection closed.', event.code, event.reason);
+        setIsConnected(false);
+        onStatusChange('disconnected');
         
-        setMarketData(data);
-        onNotifications(data.notification || []);
-        
-        // Show toast for significant market changes
-        if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
+        // Only attempt to reconnect if it wasn't a manual close and we haven't exceeded max attempts
+        if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000); // Exponential backoff, max 30s
+          reconnectAttemptsRef.current++;
+          
+          setError(`Connection lost. Reconnecting in ${delay/1000}s... (Attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            if (!isConnected) {
+              connectWebSocket();
+            }
+          }, delay);
+        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+          setError('Maximum reconnection attempts reached. Please refresh the page.');
           toast({
-            title: "Market Updated",
-            description: "New items available in the market!",
+            title: "Connection Failed",
+            description: "Unable to maintain WebSocket connection. Please refresh the page.",
+            variant: "destructive"
           });
         }
-      } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
-      }
-    };
-
-    wsRef.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      };
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error);
+      setError('Failed to create WebSocket connection');
       onStatusChange('disconnected');
-      toast({
-        title: "Connection Error",
-        description: "WebSocket connection failed. Retrying...",
-        variant: "destructive"
-      });
-    };
-
-    wsRef.current.onclose = () => {
-      console.log('WebSocket connection closed.');
-      setIsConnected(false);
-      onStatusChange('disconnected');
-      
-      // Attempt to reconnect after 5 seconds
-      setTimeout(() => {
-        if (!isConnected) {
-          connectWebSocket();
-        }
-      }, 5000);
-    };
+    }
   };
 
   const formatTimeRemaining = (endUnix: number) => {
@@ -165,7 +176,9 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No items available</p>
+          <p className="text-muted-foreground text-center py-8">
+            {error ? 'Waiting for connection...' : 'No items available'}
+          </p>
         ) : (
           <div className="grid gap-3">
             {items.map((item, index) => (
@@ -200,6 +213,16 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
 
   return (
     <div className="space-y-6">
+      {error && (
+        <Card className="border-yellow-500/50 bg-yellow-500/10">
+          <CardContent className="py-4">
+            <p className="text-center text-yellow-600 text-sm">
+              ⚠️ {error}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

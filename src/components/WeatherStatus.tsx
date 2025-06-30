@@ -17,33 +17,42 @@ export const WeatherStatus = () => {
   const [weatherData, setWeatherData] = useState<Weather[]>([]);
   const [currentWeather, setCurrentWeather] = useState<Weather | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchWeatherData();
     
-    // Refresh weather data every 30 seconds
-    const interval = setInterval(fetchWeatherData, 30000);
+    // Refresh weather data every 60 seconds (increased from 30 to reduce API calls)
+    const interval = setInterval(fetchWeatherData, 60000);
     return () => clearInterval(interval);
   }, []);
 
   const fetchWeatherData = async () => {
     try {
-      const response = await fetch('https://api.joshlei.com/v2/growagarden/weather');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      setError(null);
+      // Temporarily disable API calls due to CORS issues
+      console.log('Weather API temporarily disabled due to CORS policy');
       
-      const data = await response.json();
-      const weather = data.weather || [];
+      // Mock data for demonstration
+      const mockWeather: Weather[] = [
+        {
+          weather_id: '1',
+          weather_name: 'Clear Skies',
+          icon: '☀️',
+          active: true,
+          end_duration_unix: 0,
+          duration: 0,
+          start_duration_unix: Math.floor(Date.now() / 1000)
+        }
+      ];
       
-      setWeatherData(weather);
-      
-      // Find the currently active weather
-      const active = weather.find((w: Weather) => w.active);
-      setCurrentWeather(active || null);
+      setWeatherData(mockWeather);
+      setCurrentWeather(mockWeather[0]);
+      setError('API temporarily unavailable due to CORS policy');
       
     } catch (error) {
       console.error('Failed to fetch weather data:', error);
+      setError('Failed to fetch weather data');
     } finally {
       setLoading(false);
     }
@@ -81,6 +90,16 @@ export const WeatherStatus = () => {
 
   return (
     <div className="space-y-4">
+      {error && (
+        <Card className="border-yellow-500/50 bg-yellow-500/10">
+          <CardContent className="py-4">
+            <p className="text-center text-yellow-600 text-sm">
+              ⚠️ {error}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Current Weather */}
       <Card className="market-card">
         <CardHeader>
@@ -92,14 +111,20 @@ export const WeatherStatus = () => {
           {currentWeather ? (
             <div className="text-center space-y-4">
               <div className="flex justify-center">
-                <img 
-                  src={currentWeather.icon}
-                  alt={currentWeather.weather_name}
-                  className="w-16 h-16 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                <div className="text-6xl">
+                  {typeof currentWeather.icon === 'string' && currentWeather.icon.startsWith('http') ? (
+                    <img 
+                      src={currentWeather.icon}
+                      alt={currentWeather.weather_name}
+                      className="w-16 h-16 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    currentWeather.icon
+                  )}
+                </div>
               </div>
               <div>
                 <h3 className="text-xl font-semibold">{currentWeather.weather_name}</h3>
@@ -140,14 +165,18 @@ export const WeatherStatus = () => {
             {weatherData.filter(w => !w.active).slice(0, 6).map((weather) => (
               <div key={weather.weather_id} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
                 <div className="flex items-center gap-3">
-                  <img 
-                    src={weather.icon}
-                    alt={weather.weather_name}
-                    className="w-6 h-6 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                  {typeof weather.icon === 'string' && weather.icon.startsWith('http') ? (
+                    <img 
+                      src={weather.icon}
+                      alt={weather.weather_name}
+                      className="w-6 h-6 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <span className="text-xl">{weather.icon}</span>
+                  )}
                   <span className="font-medium">{weather.weather_name}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">

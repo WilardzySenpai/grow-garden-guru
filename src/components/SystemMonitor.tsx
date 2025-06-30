@@ -18,47 +18,25 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
 
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [lastApiCall, setLastApiCall] = useState<Date | null>(null);
+  const [corsError, setCorsError] = useState<boolean>(false);
 
   // Monitor API calls and update rate limits
   useEffect(() => {
     const checkRateLimits = async () => {
       try {
-        const response = await fetch('https://api.joshlei.com/v2/growagarden/stock', {
-          method: 'HEAD' // Use HEAD to check headers without downloading content
-        });
+        // Temporarily disable API calls due to CORS issues
+        console.log('Rate limit check disabled due to CORS policy');
+        setCorsError(true);
+        return;
         
-        // Update rate limits from headers
-        const remainingGlobal = response.headers.get('Ratelimit-Remaining-Global');
-        const remainingIp = response.headers.get('Ratelimit-Remaining-Ip');
-        const limitGlobal = response.headers.get('Request-Limit-Global');
-        const limitIp = response.headers.get('Request-Limit-Ip');
-        const retryAfterHeader = response.headers.get('Retry-After');
-        
-        if (remainingGlobal || remainingIp) {
-          setRateLimits({
-            remainingIp: remainingIp ? parseInt(remainingIp) : rateLimits.remainingIp,
-            remainingGlobal: remainingGlobal ? parseInt(remainingGlobal) : rateLimits.remainingGlobal,
-            limitIp: limitIp ? parseInt(limitIp) : 10000,
-            limitGlobal: limitGlobal ? parseInt(limitGlobal) : 100000
-          });
-        }
-        
-        if (retryAfterHeader) {
-          setRetryAfter(parseInt(retryAfterHeader));
-        }
-        
-        setLastApiCall(new Date());
-        
-        if (response.status === 429) {
-          console.warn('Rate limit exceeded');
-        }
       } catch (error) {
         console.error('Failed to check rate limits:', error);
+        setCorsError(true);
       }
     };
 
-    // Check rate limits every 30 seconds
-    const interval = setInterval(checkRateLimits, 30000);
+    // Check rate limits every 60 seconds (reduced frequency)
+    const interval = setInterval(checkRateLimits, 60000);
     checkRateLimits(); // Initial check
 
     return () => clearInterval(interval);
@@ -89,6 +67,16 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
+      {corsError && (
+        <Card className="md:col-span-2 border-yellow-500/50 bg-yellow-500/10">
+          <CardContent className="py-4">
+            <p className="text-center text-yellow-600 text-sm">
+              ⚠️ API monitoring temporarily disabled due to CORS policy restrictions
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Connection Status */}
       <Card>
         <CardHeader>
@@ -104,13 +92,15 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
           
           <div className="flex items-center justify-between">
             <span>API Status</span>
-            <Badge variant="default">Operational</Badge>
+            <Badge variant={corsError ? "destructive" : "default"}>
+              {corsError ? "CORS Blocked" : "Operational"}
+            </Badge>
           </div>
           
           <div className="flex items-center justify-between">
             <span>Last API Check</span>
             <span className="text-sm text-muted-foreground">
-              {lastApiCall ? lastApiCall.toLocaleTimeString() : 'Never'}
+              {corsError ? 'Disabled' : (lastApiCall ? lastApiCall.toLocaleTimeString() : 'Never')}
             </span>
           </div>
 
@@ -136,22 +126,22 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span>IP Rate Limit</span>
-              <span>{rateLimits.remainingIp.toLocaleString()}/{rateLimits.limitIp.toLocaleString()}</span>
+              <span>{corsError ? 'Unknown' : `${rateLimits.remainingIp.toLocaleString()}/${rateLimits.limitIp.toLocaleString()}`}</span>
             </div>
-            <Progress value={(rateLimits.remainingIp / rateLimits.limitIp) * 100} />
+            <Progress value={corsError ? 0 : (rateLimits.remainingIp / rateLimits.limitIp) * 100} />
             <div className="text-xs text-muted-foreground mt-1">
-              Resets every 10 minutes
+              {corsError ? 'Monitoring disabled' : 'Resets every 10 minutes'}
             </div>
           </div>
 
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span>Global Rate Limit</span>
-              <span>{rateLimits.remainingGlobal.toLocaleString()}/{rateLimits.limitGlobal.toLocaleString()}</span>
+              <span>{corsError ? 'Unknown' : `${rateLimits.remainingGlobal.toLocaleString()}/${rateLimits.limitGlobal.toLocaleString()}`}</span>
             </div>
-            <Progress value={(rateLimits.remainingGlobal / rateLimits.limitGlobal) * 100} />
+            <Progress value={corsError ? 0 : (rateLimits.remainingGlobal / rateLimits.limitGlobal) * 100} />
             <div className="text-xs text-muted-foreground mt-1">
-              Resets every hour
+              {corsError ? 'Monitoring disabled' : 'Resets every hour'}
             </div>
           </div>
         </CardContent>
@@ -171,20 +161,20 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
               <div className="text-sm text-muted-foreground">WebSocket Uptime</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {lastApiCall ? '✓' : '✗'}
+              <div className="text-2xl font-bold text-red-600">
+                {corsError ? '✗' : '✓'}
               </div>
               <div className="text-sm text-muted-foreground">API Reachable</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {Math.round((rateLimits.remainingIp / rateLimits.limitIp) * 100)}%
+                {corsError ? '?%' : `${Math.round((rateLimits.remainingIp / rateLimits.limitIp) * 100)}%`}
               </div>
               <div className="text-sm text-muted-foreground">IP Quota Left</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {Math.round((rateLimits.remainingGlobal / rateLimits.limitGlobal) * 100)}%
+                {corsError ? '?%' : `${Math.round((rateLimits.remainingGlobal / rateLimits.limitGlobal) * 100)}%`}
               </div>
               <div className="text-sm text-muted-foreground">Global Quota Left</div>
             </div>

@@ -1,29 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface Item {
-  item_id: string;
-  display_name: string;
-  icon: string;
-  rarity: string | null;
-  price: string;
-  currency: string;
-  description: string;
-  last_seen: string;
-  duration: string;
-}
-
-interface Pet {
-  name: string;
-  mutations: string[];
-  description: string;
-  rarity: string;
-}
 
 interface Mutation {
   name: string;
@@ -38,53 +18,8 @@ interface Mutation {
 
 export const ItemEncyclopedia = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [items, setItems] = useState<Item[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [loading, setLoading] = useState(true);
-  
-  // Pet data - this could be moved to API later
-  const [pets] = useState<Pet[]>([
-    {
-      name: 'Dragonfly',
-      mutations: ['Gold'],
-      description: 'A shimmering dragonfly that can turn crops golden with its touch.',
-      rarity: 'Rare'
-    },
-    {
-      name: 'Polar Bear',
-      mutations: ['Frozen', 'Chilled'],
-      description: 'A majestic polar bear that brings the chill of winter to crops.',
-      rarity: 'Epic'
-    },
-    {
-      name: 'Disco Bee',
-      mutations: ['Rainbow'],
-      description: 'A groovy bee that adds rainbow colors to everything it touches.',
-      rarity: 'Legendary'
-    },
-    {
-      name: 'Wind Sprite',
-      mutations: ['Windstruck'],
-      description: 'An ethereal being that carries the power of wind.',
-      rarity: 'Uncommon'
-    },
-    {
-      name: 'Dragon',
-      mutations: ['Burnt'],
-      description: 'A fierce dragon whose breath can char crops.',
-      rarity: 'Epic'
-    },
-    {
-      name: 'Chef',
-      mutations: ['Cooked'],
-      description: 'A culinary master that can perfectly cook crops.',
-      rarity: 'Rare'
-    }
-  ]);
 
-  // Mutation data from wiki
-  const [mutations] = useState<Mutation[]>([
-    // Growth Mutations - Standard
+  const mutations: Mutation[] = [
     {
       name: 'Ripe',
       appearance: 'RipeSugarApple.webp',
@@ -113,7 +48,6 @@ export const ItemEncyclopedia = () => {
       type: 'standard',
       category: 'growth'
     },
-    // Environmental Mutations - Standard
     {
       name: 'Wet',
       appearance: 'WetMutation.png',
@@ -222,8 +156,6 @@ export const ItemEncyclopedia = () => {
       type: 'standard',
       category: 'environmental'
     },
-
-    // Limited Mutations
     {
       name: 'Pollinated',
       appearance: 'Pollinated_Banana.png',
@@ -396,67 +328,7 @@ export const ItemEncyclopedia = () => {
       category: 'environmental',
       cropSpecific: 'Sunflower'
     }
-  ]);
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  const fetchItems = async () => {
-    try {
-      const response = await fetch('https://api.joshlei.com/v2/growagarden/info/');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setItems(data);
-    } catch (error) {
-      console.error('Failed to fetch items:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Filter items by category
-  const getFilteredItems = () => {
-    let filtered = items;
-    
-    if (selectedCategory !== 'all') {
-      // Filter by item category (you can adjust these categories based on your data structure)
-      filtered = items.filter(item => {
-        switch (selectedCategory) {
-          case 'seeds':
-            return item.item_id.includes('seed') || item.display_name.toLowerCase().includes('seed');
-          case 'tools':
-            return item.item_id.includes('tool') || item.display_name.toLowerCase().includes('tool') || 
-                   item.item_id.includes('sprinkler') || item.display_name.toLowerCase().includes('sprinkler');
-          case 'cosmetics':
-            return item.item_id.includes('crate') || item.item_id.includes('decoration') || 
-                   item.display_name.toLowerCase().includes('decoration');
-          case 'eggs':
-            return item.item_id.includes('egg') || item.display_name.toLowerCase().includes('egg');
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Apply search filter
-    return filtered.filter(item =>
-      item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.rarity && item.rarity.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  };
-
-  const filteredItems = getFilteredItems();
-
-  const filteredPets = pets.filter(pet =>
-    pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pet.mutations.some(mutation => mutation.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    pet.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ];
 
   const filteredMutations = mutations.filter(mutation =>
     mutation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -464,249 +336,192 @@ export const ItemEncyclopedia = () => {
     mutation.visualDescription.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getRarityColor = (rarity: string | null) => {
-    if (!rarity) return 'secondary';
-    
-    switch (rarity.toLowerCase()) {
-      case 'common': return 'secondary';
-      case 'uncommon': return 'outline';  
-      case 'rare': return 'default';
-      case 'epic': return 'destructive';
-      case 'legendary': return 'default';
-      case 'mythical': return 'default';
-      default: return 'secondary';
-    }
-  };
+  const standardMutations = filteredMutations.filter(m => m.type === 'standard');
+  const limitedMutations = filteredMutations.filter(m => m.type === 'limited');
+  const growthMutations = filteredMutations.filter(m => m.category === 'growth');
+  const environmentalMutations = filteredMutations.filter(m => m.category === 'environmental');
 
-  const formatDuration = (durationStr: string) => {
-    const seconds = parseInt(durationStr);
-    if (seconds === 0 || isNaN(seconds)) return 'N/A';
-    
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-  };
-
-  const formatPrice = (price: string) => {
-    const priceNum = parseInt(price);
-    if (priceNum === 0 || isNaN(priceNum)) return 'Free';
-    return priceNum.toLocaleString();
-  };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="py-8">
-          <p className="text-center text-muted-foreground">Loading encyclopedia data...</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const renderMutationTable = (mutationList: Mutation[]) => (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Multiplier</TableHead>
+            <TableHead>Obtainment Methods</TableHead>
+            <TableHead>Visual Description</TableHead>
+            <TableHead>Special Notes</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {mutationList.map((mutation) => (
+            <TableRow key={mutation.name} className="hover:bg-accent/50">
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-accent rounded border flex items-center justify-center text-xs">
+                    🧬
+                  </div>
+                  {mutation.name}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge variant={mutation.multiplier.startsWith('x') ? 'default' : 'secondary'}>
+                  {mutation.multiplier}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  {mutation.obtainment.map((method, index) => (
+                    <div key={index} className="text-sm bg-muted/50 px-2 py-1 rounded">
+                      {method}
+                    </div>
+                  ))}
+                </div>
+              </TableCell>
+              <TableCell className="max-w-xs">
+                <p className="text-sm">{mutation.visualDescription}</p>
+              </TableCell>
+              <TableCell>
+                {mutation.cropSpecific && (
+                  <Badge variant="outline" className="mb-1">
+                    {mutation.cropSpecific} Only
+                  </Badge>
+                )}
+                {mutation.type === 'limited' && (
+                  <Badge variant="destructive">Limited</Badge>
+                )}
+                {mutation.category === 'growth' && (
+                  <Badge variant="secondary">Growth</Badge>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          📚 Game Encyclopedia
+          📚 Encyclopedia
         </CardTitle>
         <div className="flex gap-4 items-center">
           <Input
-            placeholder="Search items, pets, and mutations..."
+            placeholder="Search mutations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
           />
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter items" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Items</SelectItem>
-              <SelectItem value="seeds">Seeds</SelectItem>
-              <SelectItem value="tools">Tools</SelectItem>
-              <SelectItem value="cosmetics">Cosmetics</SelectItem>
-              <SelectItem value="eggs">Eggs</SelectItem>
-            </SelectContent>
-          </Select>
           <Badge variant="secondary">
-            {filteredItems.length + filteredPets.length + filteredMutations.length} results
+            {filteredMutations.length} mutations found
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="items" className="space-y-6">
+        <Tabs defaultValue="mutations" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="items">Items ({filteredItems.length})</TabsTrigger>
-            <TabsTrigger value="mutations">Mutations ({filteredMutations.length})</TabsTrigger>
-            <TabsTrigger value="pets">Pets ({filteredPets.length})</TabsTrigger>
-            <TabsTrigger value="crops">Crops (Coming Soon)</TabsTrigger>
+            <TabsTrigger value="mutations">
+              🧬 Mutations ({filteredMutations.length})
+            </TabsTrigger>
+            <TabsTrigger value="items" disabled>
+              📦 Items (Coming Soon)
+            </TabsTrigger>
+            <TabsTrigger value="pets" disabled>
+              🐾 Pets (Coming Soon)
+            </TabsTrigger>
+            <TabsTrigger value="crops" disabled>
+              🌱 Crops (Coming Soon)
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="items">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Rarity</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Details</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.item_id} className="hover:bg-accent/50">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <img 
-                            src={item.icon}
-                            alt={item.display_name}
-                            className="w-8 h-8 object-contain"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                          <div>
-                            <div className="font-medium">{item.display_name}</div>
-                            <div className="text-xs text-muted-foreground">ID: {item.item_id}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getRarityColor(item.rarity)}>
-                          {item.rarity || 'Unknown'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">
-                          {formatPrice(item.price)} {item.currency}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-xs">
-                        <p className="text-sm">{item.description || 'No description available'}</p>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1 text-xs">
-                          {item.last_seen !== '0' && (
-                            <div>Last seen: {new Date(parseInt(item.last_seen) * 1000).toLocaleDateString()}</div>
-                          )}
-                          {item.duration !== '0' && (
-                            <div>Duration: {formatDuration(item.duration)}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-
           <TabsContent value="mutations">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Multiplier</TableHead>
-                    <TableHead>Obtainment Methods</TableHead>
-                    <TableHead>Visual Description</TableHead>
-                    <TableHead>Special Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMutations.map((mutation) => (
-                    <TableRow key={mutation.name} className="hover:bg-accent/50">
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-accent rounded border flex items-center justify-center text-xs">
-                            IMG
-                          </div>
-                          {mutation.name}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={mutation.multiplier.startsWith('x') ? 'default' : 'secondary'}>
-                          {mutation.multiplier}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {mutation.obtainment.map((method, index) => (
-                            <div key={index} className="text-sm bg-muted/50 px-2 py-1 rounded">
-                              {method}
-                            </div>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-xs">
-                        <p className="text-sm">{mutation.visualDescription}</p>
-                      </TableCell>
-                      <TableCell>
-                        {mutation.cropSpecific && (
-                          <Badge variant="outline" className="mb-1">
-                            {mutation.cropSpecific} Only
-                          </Badge>
-                        )}
-                        {mutation.type === 'limited' && (
-                          <Badge variant="destructive">Limited</Badge>
-                        )}
-                        {mutation.category === 'growth' && (
-                          <Badge variant="secondary">Growth</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
+            <Tabs defaultValue="all" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="all">
+                  All ({filteredMutations.length})
+                </TabsTrigger>
+                <TabsTrigger value="growth">
+                  Growth ({growthMutations.length})
+                </TabsTrigger>
+                <TabsTrigger value="environmental">
+                  Environmental ({environmentalMutations.length})
+                </TabsTrigger>
+                <TabsTrigger value="standard">
+                  Standard ({standardMutations.length})
+                </TabsTrigger>
+                <TabsTrigger value="limited">
+                  Limited ({limitedMutations.length})
+                </TabsTrigger>
+                <TabsTrigger value="trivia">
+                  Trivia & Facts
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="pets">
-            <div className="grid gap-4 md:grid-cols-2">
-              {filteredPets.map((pet) => (
-                <Card key={pet.name} className="mutation-card">
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{pet.name}</h3>
-                        <Badge variant={getRarityColor(pet.rarity)}>
-                          {pet.rarity}
-                        </Badge>
+              <TabsContent value="all">
+                {renderMutationTable(filteredMutations)}
+              </TabsContent>
+
+              <TabsContent value="growth">
+                {renderMutationTable(growthMutations)}
+              </TabsContent>
+
+              <TabsContent value="environmental">
+                {renderMutationTable(environmentalMutations)}
+              </TabsContent>
+
+              <TabsContent value="standard">
+                {renderMutationTable(standardMutations)}
+              </TabsContent>
+
+              <TabsContent value="limited">
+                {renderMutationTable(limitedMutations)}
+              </TabsContent>
+
+              <TabsContent value="trivia">
+                <div className="space-y-4">
+                  <Card className="mutation-card">
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-2">Key Facts</h3>
+                      <ul className="space-y-2 text-sm">
+                        <li>• <strong>Dawnbound</strong> is exclusive to Sunflowers and can only be obtained during Sun God events.</li>
+                        <li>• <strong>Ripe</strong> is exclusive to Sugar Apples and represents natural maturation.</li>
+                        <li>• The highest possible mutation multiplier is 47,950x for most crops, but 56,300x for Sunflowers.</li>
+                        <li>• <strong>Paradisal</strong> automatically replaces Sundried + Verdant combinations.</li>
+                        <li>• Only one growth mutation (Ripe, Gold, Rainbow) can be active at a time.</li>
+                        <li>• <strong>Dawnbound</strong> is the only mutation that can be given when fruit is picked up.</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="mutation-card">
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-2">Mutation Restrictions</h3>
+                      <ul className="space-y-2 text-sm">
+                        <li>• Only one of: Gold or Rainbow can be applied</li>
+                        <li>• Only one of: Chilled, Wet, or Frozen can be applied</li>
+                        <li>• Only one of: Burnt or Cooked can be applied</li>
+                        <li>• Sundried + Verdant combine to form Paradisal</li>
+                        <li>• A Paradisal plant can then gain either Verdant OR Sundried (but not both)</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="mutation-card">
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-2">Price Calculation Formula</h3>
+                      <div className="bg-muted p-4 rounded-lg font-mono text-sm">
+                        Total Price = Fruit Constant × Mass² × Growth Mutation × (1 + ΣMutations - Number of Mutations)
                       </div>
-                      
-                      <p className="text-sm text-muted-foreground">
-                        {pet.description}
+                      <p className="text-sm mt-2 text-muted-foreground">
+                        Where ΣMutations is the sum of all environmental mutation bonuses, and Number of Mutations is the count of unique environmental mutations applied.
                       </p>
-                      
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Can Apply Mutations:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {pet.mutations.map((mutation) => (
-                            <Badge key={mutation} variant="outline" className="text-xs">
-                              {mutation}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="crops">
-            <Card className="text-center py-8">
-              <CardContent>
-                <h3 className="text-lg font-semibold mb-2">Crops Database Coming Soon!</h3>
-                <p className="text-muted-foreground">
-                  This section will contain detailed information about all available crops, 
-                  their growth times, base values, and special properties.
-                </p>
-              </CardContent>
-            </Card>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </CardContent>
