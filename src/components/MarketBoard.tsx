@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,7 +22,8 @@ interface MarketData {
   egg_stock: MarketItem[];
   cosmetic_stock: MarketItem[];
   eventshop_stock: MarketItem[];
-  notification: any[];
+  notifications: any[];
+  discord_invite: string;
 }
 
 interface MarketBoardProps {
@@ -36,133 +38,64 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
     egg_stock: [],
     cosmetic_stock: [],
     eventshop_stock: [],
-    notification: []
+    notifications: [],
+    discord_invite: ''
   });
   
-  const wsRef = useRef<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttempts = 5;
-
-  // Generate a unique session ID for this browser session
-  const sessionIdRef = useRef<string>(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   useEffect(() => {
-    console.log('MarketBoard: Component mounted, connecting WebSocket');
-    connectWebSocket();
+    console.log('MarketBoard: Component mounted, fetching market data');
+    fetchMarketData();
     
-    // Cleanup function to close WebSocket when component unmounts
+    // Refresh market data every 30 seconds
+    const interval = setInterval(fetchMarketData, 30000);
+    
     return () => {
-      console.log('MarketBoard: Component unmounting, closing WebSocket');
-      if (wsRef.current) {
-        wsRef.current.close(1000, 'Component unmounting'); // Normal closure
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
+      console.log('MarketBoard: Component unmounting, clearing interval');
+      clearInterval(interval);
     };
-  }, []); // Empty dependency array to run only once
+  }, []);
 
-  const connectWebSocket = () => {
-    // Clear any existing reconnection timeout
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    // Close existing connection if it exists
-    if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
-      console.log('MarketBoard: Closing existing WebSocket connection');
-      wsRef.current.close(1000, 'Creating new connection');
-    }
-
-    onStatusChange('connecting');
-    setError(null);
-    
-    // Use unique session ID instead of demo_user
-    const userId = sessionIdRef.current;
-    const wsUrl = `wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`;
-    
-    console.log('MarketBoard: Connecting to WebSocket with user ID:', userId);
-    
+  const fetchMarketData = async () => {
     try {
-      wsRef.current = new WebSocket(wsUrl);
+      onStatusChange('connecting');
+      setError(null);
       
-      wsRef.current.onopen = () => {
-        console.log('MarketBoard: WebSocket connection established');
-        setIsConnected(true);
-        onStatusChange('connected');
-        reconnectAttemptsRef.current = 0;
-        
+      console.log('MarketBoard: Fetching market data from API');
+      const response = await fetch('https://api.joshlei.com/v2/growagarden/stock');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('MarketBoard: Market data received', data);
+      
+      setMarketData(data);
+      onNotifications(data.notifications || []);
+      onStatusChange('connected');
+      
+      if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
         toast({
-          title: "Market Board Connected",
-          description: "Live market data is now streaming.",
+          title: "Market Updated",
+          description: "New items available in the market!",
         });
-      };
-
-      wsRef.current.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('MarketBoard: WebSocket message received');
-          
-          setMarketData(data);
-          onNotifications(data.notification || []);
-          
-          if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
-            toast({
-              title: "Market Updated",
-              description: "New items available in the market!",
-            });
-          }
-        } catch (error) {
-          console.error('MarketBoard: Failed to parse WebSocket message:', error);
-        }
-      };
-
-      wsRef.current.onerror = (error) => {
-        console.error('MarketBoard: WebSocket error:', error);
-        setError('WebSocket connection failed');
-        onStatusChange('disconnected');
-      };
-
-      wsRef.current.onclose = (event) => {
-        console.log('MarketBoard: WebSocket connection closed', event.code, event.reason);
-        setIsConnected(false);
-        onStatusChange('disconnected');
-        
-        // Handle different close codes
-        if (event.code === 4001) {
-          setError('Another connection was established. Using single connection mode.');
-          // Don't reconnect automatically for 4001 - this is expected behavior
-          return;
-        }
-        
-        // Only attempt to reconnect for unexpected closures
-        if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-          reconnectAttemptsRef.current++;
-          
-          setError(`Connection lost. Reconnecting in ${delay/1000}s... (Attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
-          
-          reconnectTimeoutRef.current = setTimeout(() => {
-            if (!isConnected) {
-              connectWebSocket();
-            }
-          }, delay);
-        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-          setError('Maximum reconnection attempts reached. Please refresh the page.');
-          toast({
-            title: "Connection Failed",
-            description: "Unable to maintain WebSocket connection. Please refresh the page.",
-            variant: "destructive"
-          });
-        }
-      };
+      }
+      
     } catch (error) {
-      console.error('MarketBoard: Failed to create WebSocket connection:', error);
-      setError('Failed to create WebSocket connection');
+      console.error('MarketBoard: Failed to fetch market data:', error);
+      setError('Failed to fetch market data');
       onStatusChange('disconnected');
+      
+      toast({
+        title: "Market Update Failed",
+        description: "Unable to fetch latest market data.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,7 +125,7 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
       <CardContent>
         {items.length === 0 ? (
           <p className="text-muted-foreground text-center py-8">
-            {error ? 'Waiting for connection...' : 'No items available'}
+            {loading ? 'Loading items...' : 'No items available'}
           </p>
         ) : (
           <div className="grid gap-3">
@@ -226,13 +159,25 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
     </Card>
   );
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">Loading market data...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {error && (
-        <Card className="border-yellow-500/50 bg-yellow-500/10">
+        <Card className="border-red-500/50 bg-red-500/10">
           <CardContent className="py-4">
-            <p className="text-center text-yellow-600 text-sm">
-              ⚠️ {error}
+            <p className="text-center text-red-600 text-sm">
+              ❌ {error}
             </p>
           </CardContent>
         </Card>
@@ -241,8 +186,8 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            📈 Live Market Board
-            {isConnected && <div className="w-2 h-2 bg-green-500 rounded-full pulse-glow" />}
+            📈 Market Board
+            <div className="w-2 h-2 bg-green-500 rounded-full pulse-glow" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -266,7 +211,7 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
                 {renderMarketSection(marketData.egg_stock, 'Eggs')}
               </TabsContent>
               <TabsContent value="cosmetics">
-                {renderMarketSection(marketData.cosmetic_stock, 'Cosmetics')}
+                {renderMarketSection(marketData.cosmetic_stock || [], 'Cosmetics')}
               </TabsContent>
               <TabsContent value="event">
                 {renderMarketSection(marketData.eventshop_stock, 'Event Shop')}

@@ -13,6 +13,10 @@ interface Weather {
   start_duration_unix: number;
 }
 
+interface WeatherResponse {
+  weather: Weather[];
+}
+
 export const WeatherStatus = () => {
   const [weatherData, setWeatherData] = useState<Weather[]>([]);
   const [currentWeather, setCurrentWeather] = useState<Weather | null>(null);
@@ -22,7 +26,7 @@ export const WeatherStatus = () => {
   useEffect(() => {
     fetchWeatherData();
     
-    // Refresh weather data every 60 seconds (increased from 30 to reduce API calls)
+    // Refresh weather data every 60 seconds
     const interval = setInterval(fetchWeatherData, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -30,28 +34,26 @@ export const WeatherStatus = () => {
   const fetchWeatherData = async () => {
     try {
       setError(null);
-      // Temporarily disable API calls due to CORS issues
-      console.log('Weather API temporarily disabled due to CORS policy');
+      console.log('WeatherStatus: Fetching weather data from API');
       
-      // Mock data for demonstration
-      const mockWeather: Weather[] = [
-        {
-          weather_id: '1',
-          weather_name: 'Clear Skies',
-          icon: '☀️',
-          active: true,
-          end_duration_unix: 0,
-          duration: 0,
-          start_duration_unix: Math.floor(Date.now() / 1000)
-        }
-      ];
+      const response = await fetch('https://api.joshlei.com/v2/growagarden/weather');
       
-      setWeatherData(mockWeather);
-      setCurrentWeather(mockWeather[0]);
-      setError('API temporarily unavailable due to CORS policy');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: WeatherResponse = await response.json();
+      console.log('WeatherStatus: Weather data received', data);
+      
+      const weatherArray = data.weather || [];
+      setWeatherData(weatherArray);
+      
+      // Find active weather or use the first one
+      const activeWeather = weatherArray.find(w => w.active);
+      setCurrentWeather(activeWeather || weatherArray[0] || null);
       
     } catch (error) {
-      console.error('Failed to fetch weather data:', error);
+      console.error('WeatherStatus: Failed to fetch weather data:', error);
       setError('Failed to fetch weather data');
     } finally {
       setLoading(false);
@@ -65,6 +67,8 @@ export const WeatherStatus = () => {
   };
 
   const formatTimeRemaining = (endUnix: number) => {
+    if (endUnix === 0) return 'No end time';
+    
     const now = Math.floor(Date.now() / 1000);
     const remaining = endUnix - now;
     
@@ -91,10 +95,10 @@ export const WeatherStatus = () => {
   return (
     <div className="space-y-4">
       {error && (
-        <Card className="border-yellow-500/50 bg-yellow-500/10">
+        <Card className="border-red-500/50 bg-red-500/10">
           <CardContent className="py-4">
-            <p className="text-center text-yellow-600 text-sm">
-              ⚠️ {error}
+            <p className="text-center text-red-600 text-sm">
+              ❌ {error}
             </p>
           </CardContent>
         </Card>
@@ -116,20 +120,20 @@ export const WeatherStatus = () => {
                     <img 
                       src={currentWeather.icon}
                       alt={currentWeather.weather_name}
-                      className="w-16 h-16 object-contain"
+                      className="w-16 h-16 object-contain mx-auto"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
                     />
                   ) : (
-                    currentWeather.icon
+                    <span>🌤️</span>
                   )}
                 </div>
               </div>
               <div>
                 <h3 className="text-xl font-semibold">{currentWeather.weather_name}</h3>
-                <Badge variant="default" className="mt-2">
-                  Active
+                <Badge variant={currentWeather.active ? "default" : "secondary"} className="mt-2">
+                  {currentWeather.active ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
               {currentWeather.end_duration_unix > 0 && (
@@ -147,7 +151,7 @@ export const WeatherStatus = () => {
               <div>
                 <h3 className="text-xl font-semibold">Clear Skies</h3>
                 <Badge variant="secondary" className="mt-2">
-                  No Active Weather
+                  No Weather Data
                 </Badge>
               </div>
             </div>
@@ -175,7 +179,7 @@ export const WeatherStatus = () => {
                       }}
                     />
                   ) : (
-                    <span className="text-xl">{weather.icon}</span>
+                    <span className="text-xl">🌤️</span>
                   )}
                   <span className="font-medium">{weather.weather_name}</span>
                 </div>
@@ -186,7 +190,7 @@ export const WeatherStatus = () => {
             ))}
             {weatherData.filter(w => !w.active).length === 0 && (
               <p className="text-center text-muted-foreground py-4">
-                No forecast data available
+                {weatherData.length === 0 ? 'No weather data available' : 'No inactive weather to show'}
               </p>
             )}
           </div>
