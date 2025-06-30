@@ -1,25 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
-interface Weather {
-  weather_id: string;
-  weather_name: string;
-  icon: string;
-  active: boolean;
-  end_duration_unix: number;
-  duration: number;
-  start_duration_unix: number;
-}
-
-interface WeatherResponse {
-  weather: Weather[];
-}
+import type { WeatherData } from '@/types/api';
 
 export const WeatherStatus = () => {
-  const [weatherData, setWeatherData] = useState<Weather[]>([]);
-  const [currentWeather, setCurrentWeather] = useState<Weather | null>(null);
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
+  const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,10 +28,10 @@ export const WeatherStatus = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: WeatherResponse = await response.json();
+      const data = await response.json();
       console.log('WeatherStatus: Weather data received', data);
       
-      const weatherArray = data.weather || [];
+      const weatherArray: WeatherData[] = data.weather || [];
       setWeatherData(weatherArray);
       
       // Find active weather or use the first one

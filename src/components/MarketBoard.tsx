@@ -3,30 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-
-interface MarketItem {
-  item_id: string;
-  display_name: string;
-  icon: string;
-  quantity: number;
-  Date_Start: string;
-  Date_End: string;
-  start_date_unix: number;
-  end_date_unix: number;
-}
-
-interface MarketData {
-  seed_stock: MarketItem[];
-  gear_stock: MarketItem[];
-  egg_stock: MarketItem[];
-  cosmetic_stock: MarketItem[];
-  eventshop_stock: MarketItem[];
-  notifications: Array<{
-    message: string;
-    timestamp: string;
-  }>;
-  discord_invite: string;
-}
+import type { MarketItem, StockData } from '@/types/api';
 
 interface MarketBoardProps {
   onStatusChange: (status: 'connecting' | 'connected' | 'disconnected') => void;
@@ -34,7 +11,7 @@ interface MarketBoardProps {
 }
 
 export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProps) => {
-  const [marketData, setMarketData] = useState<MarketData>({
+  const [marketData, setMarketData] = useState<StockData>({
     seed_stock: [],
     gear_stock: [],
     egg_stock: [],
