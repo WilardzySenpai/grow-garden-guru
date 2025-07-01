@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -228,22 +227,22 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
             
             <div className="mt-6">
               <TabsContent value="seeds">
-                {renderMarketSection(marketData.seed_stock, 'Seeds')}
+                {renderMarketSection(marketData.seed_stock || [], 'Seeds')}
               </TabsContent>
               <TabsContent value="gear">
-                {renderMarketSection(marketData.gear_stock, 'Gear')}
+                {renderMarketSection(marketData.gear_stock || [], 'Gear')}
               </TabsContent>
               <TabsContent value="eggs">
-                {renderMarketSection(marketData.egg_stock, 'Eggs')}
+                {renderMarketSection(marketData.egg_stock || [], 'Eggs')}
               </TabsContent>
               <TabsContent value="cosmetics">
                 {renderMarketSection(marketData.cosmetic_stock || [], 'Cosmetics')}
               </TabsContent>
               <TabsContent value="event">
-                {renderMarketSection(marketData.eventshop_stock, 'Event Shop')}
+                {renderMarketSection(marketData.eventshop_stock || [], 'Event Shop')}
               </TabsContent>
               <TabsContent value="merchant">
-                {renderMarketSection(marketData.travelingmerchant_stock, 'Traveling Merchant')}
+                {renderMarketSection(marketData.travelingmerchant_stock || [], 'Traveling Merchant')}
               </TabsContent>
             </div>
           </Tabs>
