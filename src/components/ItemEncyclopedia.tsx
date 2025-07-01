@@ -1,28 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-interface Mutation {
-  name: string;
-  appearance: string;
-  multiplier: string;
-  obtainment: string[];
-  visualDescription: string;
-  type: 'standard' | 'limited';
-  category: 'growth' | 'environmental';
-  cropSpecific?: string;
-}
+import { toast } from '@/hooks/use-toast';
+import type { ItemInfo, WeatherData } from '@/types/api';
 
 export const ItemEncyclopedia = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [items, setItems] = useState<ItemInfo[]>([]);
+  const [weatherItems, setWeatherItems] = useState<WeatherData[]>([]);
 
-  const mutations: Mutation[] = [
+  useEffect(() => {
+    fetchEncyclopediaData();
+  }, []);
+
+  const fetchEncyclopediaData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('ItemEncyclopedia: Fetching data from API');
+      
+      // Fetch all items
+      const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info/');
+      if (!itemsResponse.ok) {
+        throw new Error(`Items API error! status: ${itemsResponse.status}`);
+      }
+      const itemsData = await itemsResponse.json();
+      setItems(Array.isArray(itemsData) ? itemsData : []);
+      
+      // Fetch weather data for weather items
+      const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/weather');
+      if (!weatherResponse.ok) {
+        throw new Error(`Weather API error! status: ${weatherResponse.status}`);
+      }
+      const weatherData = await weatherResponse.json();
+      setWeatherItems(weatherData.weather || []);
+      
+      console.log('ItemEncyclopedia: Data loaded successfully');
+      
+    } catch (error) {
+      console.error('ItemEncyclopedia: Failed to fetch data:', error);
+      setError('Failed to fetch encyclopedia data');
+      toast({
+        title: "Encyclopedia Error",
+        description: "Failed to load encyclopedia data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mutations = [
+    // Growth Mutations - Standard
     {
       name: 'Ripe',
-      appearance: 'RipeSugarApple.webp',
       multiplier: 'x2',
       obtainment: ['Has a rare chance to replace the normal variant', 'Can stack with Gold or Rainbow', 'Sugar Apple only'],
       visualDescription: 'Purple in color, fading darker towards the bottom',
@@ -32,7 +69,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Gold',
-      appearance: 'GoldenMutation.png',
       multiplier: 'x20',
       obtainment: ['1% chance to grow replacing the normal variant', 'Can be applied by the Dragonfly pet'],
       visualDescription: 'Shining, Golden in color, will emit a shimmering sound',
@@ -41,16 +77,15 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Rainbow',
-      appearance: 'Tomato Rainbow.gif',
       multiplier: 'x50',
       obtainment: ['0.1% chance to grow replacing the normal variant', 'Can be applied by the Butterfly pet when a crop has 5+ mutations (removes all previous mutations)'],
       visualDescription: 'Continuously changes color, emits yellow particles and a rainbow above it',
       type: 'standard',
       category: 'growth'
     },
+    // Environmental Mutations - Standard
     {
       name: 'Wet',
-      appearance: 'WetMutation.png',
       multiplier: 'x2',
       obtainment: ['During Rain or Thunderstorm', 'Small chance from sprinklers', 'Can be applied by Sea Turtle', 'During admin event Under The Sea'],
       visualDescription: 'Dripping with water particles',
@@ -59,7 +94,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Windstruck',
-      appearance: 'WindstruckDr.png',
       multiplier: 'x2',
       obtainment: ['During Windy weather', 'During Gale weather'],
       visualDescription: 'Has wind gusts swoop around the crop',
@@ -68,7 +102,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Moonlit',
-      appearance: 'Strawberry Moonlit.png',
       multiplier: 'x2',
       obtainment: ['During Night weather', 'Max of 6 plants being moonlit every 2 minutes during Night'],
       visualDescription: 'Glowing purple aroma, purple in color',
@@ -77,7 +110,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Chilled',
-      appearance: '(Chilled).png',
       multiplier: 'x2',
       obtainment: ['During Frost weather', 'Can be applied by Polar Bear', 'Can be applied using Mutation Spray Chilled'],
       visualDescription: 'Slightly bluish in color, emits frost particles',
@@ -86,7 +118,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Choc',
-      appearance: 'Strawberry Choc Png.png',
       multiplier: 'x3',
       obtainment: ['From Chocolate Sprinkler', 'During Chocolate Rain', 'Using Mutation Choc Spray'],
       visualDescription: 'Brown in color, dripping with chocolate syrup',
@@ -95,7 +126,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Bloodlit',
-      appearance: 'Bloodlitdragonfruit png.png',
       multiplier: 'x4',
       obtainment: ['During Blood Moon (chance to replace Night every 4 hours)'],
       visualDescription: 'Shining, red in color',
@@ -104,7 +134,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Twisted',
-      appearance: 'Twistedcocovineba.png',
       multiplier: 'x5',
       obtainment: ['During Tornado weather'],
       visualDescription: 'Has tornado-like swirls coming out of it, similar to Windstruck',
@@ -113,7 +142,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Drenched',
-      appearance: 'Drenched.png',
       multiplier: 'x5',
       obtainment: ['Given to crops during Tropical Rain'],
       visualDescription: 'Large water droplets fall from the crop',
@@ -122,7 +150,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Frozen',
-      appearance: 'Mango Frozen.png',
       multiplier: 'x10',
       obtainment: ['If a crop has both Wet and Chilled mutations', 'Can be applied by Polar Bear', 'Can be applied by Flower Froster Sprinkler (flowers only)'],
       visualDescription: 'Encased in an ice block',
@@ -131,7 +158,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Aurora',
-      appearance: 'aurora gif.gif',
       multiplier: 'x90',
       obtainment: ['Given during Aurora Borealis weather'],
       visualDescription: 'Pulses between blues and purples, releases faint smoke from above the crop',
@@ -140,7 +166,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Shocked',
-      appearance: 'ShockedMutation.png',
       multiplier: 'x100',
       obtainment: ['When a crop is struck during Thunderstorm', 'When a crop is struck during Jandel Storm', 'Using Mutation Spray Shocked'],
       visualDescription: 'Neon, won\'t have the classic studded texture',
@@ -149,16 +174,15 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Celestial',
-      appearance: 'Strawberry Celestial.PNG',
       multiplier: 'x120',
       obtainment: ['When a crop is struck during Meteor Shower'],
       visualDescription: 'Slightly reflectant, sparkling yellow and purple',
       type: 'standard',
       category: 'environmental'
     },
+    // Limited Mutations
     {
       name: 'Pollinated',
-      appearance: 'Pollinated_Banana.png',
       multiplier: 'x3',
       obtainment: ['During Bee Swarm or Worker Bee Swarm', 'Can be applied by certain bee pets', 'Using Mutation Spray Pollinated'],
       visualDescription: 'Shining, yellow in color, emits yellow gas-like particles',
@@ -167,7 +191,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Burnt',
-      appearance: 'Obraz 2025-06-07 173233267.png',
       multiplier: 'x4',
       obtainment: ['Can be applied by Cooked Owl pet', 'Can be applied by Mutation Spray Burnt'],
       visualDescription: 'Black in color when unharvested (sparking), emits ash particles when harvested',
@@ -176,7 +199,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Verdant',
-      appearance: 'pineapple_verdant.png',
       multiplier: 'x4',
       obtainment: ['Small chance to be applied by Scarlet Macaw pet'],
       visualDescription: 'Green in color, emits green rectangular particles',
@@ -185,7 +207,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Wiltproof',
-      appearance: 'Placeholder.png',
       multiplier: 'x4',
       obtainment: ['Obtainable in Drought weather'],
       visualDescription: 'Unknown visual appearance',
@@ -194,7 +215,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Cloudtouched',
-      appearance: 'CloudtouchedPricklyPear.png',
       multiplier: 'x5',
       obtainment: ['Can be applied by Mutation Spray Cloudtouched', 'Small chance to be applied by Hyacinth Macaw pet'],
       visualDescription: 'Cloud-like aura all around',
@@ -203,7 +223,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'HoneyGlazed',
-      appearance: 'Honeyglazed template fr2.png',
       multiplier: 'x5',
       obtainment: ['From Honey Sprinkler', 'Can be applied by Bear Bee pet'],
       visualDescription: 'Emits yellow fog, dripping in honey',
@@ -212,7 +231,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Plasma',
-      appearance: 'Plasma tomato.png',
       multiplier: 'x5',
       obtainment: ['During Laser Storm/Jandel Laser (admin only)'],
       visualDescription: 'Neon, pinkish purple in color, emits flashing red glints',
@@ -221,7 +239,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Heavenly',
-      appearance: 'MoonBlossomHeavenlyAnimated.gif',
       multiplier: 'x5',
       obtainment: ['During Floating Jandel event (admin only)'],
       visualDescription: 'Emits golden, shining stars from the base',
@@ -230,7 +247,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Fried',
-      appearance: 'Fried tomato2.png',
       multiplier: 'x8',
       obtainment: ['During Fried Chicken event'],
       visualDescription: 'Small yellow particles fall from the crop',
@@ -239,7 +255,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Cooked',
-      appearance: 'Ember_Lily_Cooked.PNG',
       multiplier: 'x25',
       obtainment: ['Small chance to be applied by Cooked Owl pet'],
       visualDescription: 'Orange in color, emits white steam and red swirls',
@@ -248,7 +263,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Zombified',
-      appearance: 'Cactus Zombified.png',
       multiplier: 'x25',
       obtainment: ['Can be applied by Chicken Zombie pet'],
       visualDescription: 'Emits green fog, dripping with green liquid',
@@ -257,7 +271,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Molten',
-      appearance: 'Nectarine_Molten.png',
       multiplier: 'x25',
       obtainment: ['During Volcano event'],
       visualDescription: 'Neon, orange/yellow/red in color',
@@ -266,7 +279,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Sundried',
-      appearance: 'Sundriedbeans.png',
       multiplier: 'x85',
       obtainment: ['During Heatwave event', 'Can redirect with Tanning Mirror'],
       visualDescription: 'Dark brown tint applied',
@@ -275,7 +287,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Paradisal',
-      appearance: 'Moon Mango Paradisal.png',
       multiplier: 'x100',
       obtainment: ['Occurs when a plant is both Verdant and Sundried', 'Replaces both mutations'],
       visualDescription: 'Lime green in color, emits sun ray-like particles',
@@ -284,7 +295,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Alienlike',
-      appearance: 'Alienlikegif.gif',
       multiplier: 'x100',
       obtainment: ['During Alien Invasion event'],
       visualDescription: 'Cyan in color, cyan particles emitted, parts can be transparent/invisible',
@@ -293,7 +303,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Galactic',
-      appearance: 'GalacticBeanstalk.png',
       multiplier: 'x120',
       obtainment: ['During Space Travel event'],
       visualDescription: 'Light purple/pink in color, some areas are neon, glimmers pink sparkles',
@@ -302,7 +311,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Disco',
-      appearance: 'Disco Mutation.gif',
       multiplier: 'x125',
       obtainment: ['During Disco event (admin only)', 'Can be applied by Disco Bee pet'],
       visualDescription: 'Shining, flashing red/pink/yellow/green/blue constantly',
@@ -311,7 +319,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Voidtouched',
-      appearance: 'Voidblueberrry.jpg',
       multiplier: 'x135',
       obtainment: ['During Black Hole event (admin only)'],
       visualDescription: 'Emits black hole particles',
@@ -320,7 +327,6 @@ export const ItemEncyclopedia = () => {
     },
     {
       name: 'Dawnbound',
-      appearance: 'Dawnbound Sunflower.png',
       multiplier: 'x150',
       obtainment: ['During Sun God event with 4 players holding 4 Sunflowers touching in front of Sun God', 'Sunflower only'],
       visualDescription: 'Glows pure white',
@@ -330,18 +336,83 @@ export const ItemEncyclopedia = () => {
     }
   ];
 
+  // Filter functions
+  const filteredItems = items.filter(item =>
+    item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.item_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.rarity.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const filteredMutations = mutations.filter(mutation =>
     mutation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     mutation.obtainment.some(method => method.toLowerCase().includes(searchTerm.toLowerCase())) ||
     mutation.visualDescription.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredWeather = weatherItems.filter(weather =>
+    weather.weather_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    weather.weather_id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Category filters
+  const seedItems = filteredItems.filter(item => item.type === 'seed');
+  const gearItems = filteredItems.filter(item => item.type === 'gear');
+  const eggItems = filteredItems.filter(item => item.type === 'egg');
+  const cosmeticItems = filteredItems.filter(item => item.type === 'cosmetic');
+  const eventItems = filteredItems.filter(item => item.type === 'event');
+
   const standardMutations = filteredMutations.filter(m => m.type === 'standard');
   const limitedMutations = filteredMutations.filter(m => m.type === 'limited');
   const growthMutations = filteredMutations.filter(m => m.category === 'growth');
   const environmentalMutations = filteredMutations.filter(m => m.category === 'environmental');
 
-  const renderMutationTable = (mutationList: Mutation[]) => (
+  const renderItemTable = (itemList: ItemInfo[]) => (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Item</TableHead>
+            <TableHead>ID</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Rarity</TableHead>
+            <TableHead>Price</TableHead>
+            <TableHead>Currency</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {itemList.map((item) => (
+            <TableRow key={item.item_id} className="hover:bg-accent/50">
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={item.icon}
+                    alt={item.display_name}
+                    className="w-8 h-8 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  {item.display_name}
+                </div>
+              </TableCell>
+              <TableCell className="font-mono text-xs">{item.item_id}</TableCell>
+              <TableCell>
+                <Badge variant="outline">{item.type}</Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary">{item.rarity}</Badge>
+              </TableCell>
+              <TableCell>{item.price || 'N/A'}</TableCell>
+              <TableCell>{item.currency || 'N/A'}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  const renderMutationTable = (mutationList: typeof mutations) => (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
@@ -401,6 +472,57 @@ export const ItemEncyclopedia = () => {
     </div>
   );
 
+  const renderWeatherTable = (weatherList: WeatherData[]) => (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Weather</TableHead>
+            <TableHead>ID</TableHead>
+            <TableHead>Duration</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {weatherList.map((weather) => (
+            <TableRow key={weather.weather_id} className="hover:bg-accent/50">
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={weather.icon}
+                    alt={weather.weather_name}
+                    className="w-8 h-8 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  {weather.weather_name}
+                </div>
+              </TableCell>
+              <TableCell className="font-mono text-xs">{weather.weather_id}</TableCell>
+              <TableCell>{weather.duration}s</TableCell>
+              <TableCell>
+                <Badge variant={weather.active ? "default" : "secondary"}>
+                  {weather.active ? 'Active' : 'Inactive'}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <p className="text-center text-muted-foreground">Loading encyclopedia data...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -409,32 +531,83 @@ export const ItemEncyclopedia = () => {
         </CardTitle>
         <div className="flex gap-4 items-center">
           <Input
-            placeholder="Search mutations..."
+            placeholder="Search items, mutations, weather..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
           />
           <Badge variant="secondary">
-            {filteredMutations.length} mutations found
+            {filteredItems.length + filteredMutations.length + filteredWeather.length} results
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="mutations" className="space-y-6">
+        {error && (
+          <Card className="border-red-500/50 bg-red-500/10 mb-6">
+            <CardContent className="py-4">
+              <p className="text-center text-red-600 text-sm">
+                ❌ {error}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        <Tabs defaultValue="items" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="items">
+              📦 Items ({filteredItems.length})
+            </TabsTrigger>
             <TabsTrigger value="mutations">
               🧬 Mutations ({filteredMutations.length})
             </TabsTrigger>
-            <TabsTrigger value="items" disabled>
-              📦 Items (Coming Soon)
-            </TabsTrigger>
-            <TabsTrigger value="pets" disabled>
-              🐾 Pets (Coming Soon)
-            </TabsTrigger>
-            <TabsTrigger value="crops" disabled>
-              🌱 Crops (Coming Soon)
+            <TabsTrigger value="weather">
+              🌦️ Weather ({filteredWeather.length})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="items">
+            <Tabs defaultValue="all" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="all">
+                  All ({filteredItems.length})
+                </TabsTrigger>
+                <TabsTrigger value="seeds">
+                  Seeds ({seedItems.length})
+                </TabsTrigger>
+                <TabsTrigger value="gear">
+                  Gear ({gearItems.length})
+                </TabsTrigger>
+                <TabsTrigger value="eggs">
+                  Eggs ({eggItems.length})
+                </TabsTrigger>
+                <TabsTrigger value="cosmetics">
+                  Cosmetics ({cosmeticItems.length})
+                </TabsTrigger>
+                <TabsTrigger value="events">
+                  Events ({eventItems.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all">
+                {renderItemTable(filteredItems)}
+              </TabsContent>
+              <TabsContent value="seeds">
+                {renderItemTable(seedItems)}
+              </TabsContent>
+              <TabsContent value="gear">
+                {renderItemTable(gearItems)}
+              </TabsContent>
+              <TabsContent value="eggs">
+                {renderItemTable(eggItems)}
+              </TabsContent>
+              <TabsContent value="cosmetics">
+                {renderItemTable(cosmeticItems)}
+              </TabsContent>
+              <TabsContent value="events">
+                {renderItemTable(eventItems)}
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
 
           <TabsContent value="mutations">
             <Tabs defaultValue="all" className="space-y-6">
@@ -462,23 +635,18 @@ export const ItemEncyclopedia = () => {
               <TabsContent value="all">
                 {renderMutationTable(filteredMutations)}
               </TabsContent>
-
               <TabsContent value="growth">
                 {renderMutationTable(growthMutations)}
               </TabsContent>
-
               <TabsContent value="environmental">
                 {renderMutationTable(environmentalMutations)}
               </TabsContent>
-
               <TabsContent value="standard">
                 {renderMutationTable(standardMutations)}
               </TabsContent>
-
               <TabsContent value="limited">
                 {renderMutationTable(limitedMutations)}
               </TabsContent>
-
               <TabsContent value="trivia">
                 <div className="space-y-4">
                   <Card className="mutation-card">
@@ -522,6 +690,10 @@ export const ItemEncyclopedia = () => {
                 </div>
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          <TabsContent value="weather">
+            {renderWeatherTable(filteredWeather)}
           </TabsContent>
         </Tabs>
       </CardContent>
