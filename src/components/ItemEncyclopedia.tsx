@@ -336,12 +336,12 @@ export const ItemEncyclopedia = () => {
     }
   ];
 
-  // Filter functions
+  // Filter functions with null safety
   const filteredItems = items.filter(item =>
-    item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.item_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.rarity.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.display_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.item_id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.rarity?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const filteredMutations = mutations.filter(mutation =>
@@ -351,8 +351,8 @@ export const ItemEncyclopedia = () => {
   );
 
   const filteredWeather = weatherItems.filter(weather =>
-    weather.weather_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    weather.weather_id.toLowerCase().includes(searchTerm.toLowerCase())
+    (weather.weather_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (weather.weather_id?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   // Category filters
