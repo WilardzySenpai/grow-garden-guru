@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { TrendingUp } from 'lucide-react';
+import type { ItemInfo } from '@/types/api';
 
 interface CalculateResponse {
   base_price: number;
@@ -27,9 +28,9 @@ interface EnvironmentalMutationData {
 export const FruitCalculator = () => {
   const [cropName, setCropName] = useState('');
   const [mass, setMass] = useState('');
-  const [fruitConstant, setFruitConstant] = useState<number | null>(null);
-  const [availableCrops, setAvailableCrops] = useState<string[]>([]);
+  const [availableCrops, setAvailableCrops] = useState<ItemInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cropsLoading, setCropsLoading] = useState(true);
   
   // Growth mutations (only one allowed)
   const [growthMutation, setGrowthMutation] = useState<string>('');
@@ -72,19 +73,17 @@ export const FruitCalculator = () => {
   const [calculationResult, setCalculationResult] = useState<{
     totalPrice: number;
     breakdown: {
-      fruitConstant: number;
+      basePrice: number;
       mass: number;
-      growthMultiplier: number;
-      environmentalMultiplier: number;
-      mutationSum: number;
-      mutationCount: number;
+      variant: string;
+      mutations: string[];
     };
   } | null>(null);
 
   const growthMutations = [
-    { value: 'ripe', label: 'Ripe (x2)', multiplier: 2, cropSpecific: 'Sugar Apple' },
-    { value: 'gold', label: 'Gold (x20)', multiplier: 20 },
-    { value: 'rainbow', label: 'Rainbow (x50)', multiplier: 50 }
+    { value: 'Ripe', label: 'Ripe (x2)', multiplier: 2, cropSpecific: 'Sugar Apple' },
+    { value: 'Gold', label: 'Gold (x20)', multiplier: 20 },
+    { value: 'Rainbow', label: 'Rainbow (x50)', multiplier: 50 }
   ];
 
   const environmentalMutationData: {[key: string]: EnvironmentalMutationData} = {
@@ -130,48 +129,33 @@ export const FruitCalculator = () => {
   }, []);
 
   const loadAvailableCrops = async () => {
+    setCropsLoading(true);
     try {
-      const response = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data: CalculateResponse = await response.json();
-      setAvailableCrops(['cactus', 'sugar_apple', 'sunflower', 'watermelon', 'pumpkin', 'tomato']);
-    } catch (error) {
-      console.error('Failed to load available crops:', error);
-      setAvailableCrops(['cactus', 'sugar_apple', 'sunflower', 'watermelon', 'pumpkin', 'tomato']);
-    }
-  };
-
-  const fetchFruitConstant = async (name: string) => {
-    setLoading(true);
-    try {
-      const itemId = name.toLowerCase().replace(/ /g, "_");
-      const response = await fetch(`https://api.joshlei.com/v2/growagarden/calculate?Name=${encodeURIComponent(itemId)}&Weight=1`);
+      console.log('FruitCalculator: Fetching available crops');
+      const response = await fetch('https://api.joshlei.com/v2/growagarden/info?type=seed');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: CalculateResponse = await response.json();
-      const constant = data.base_price || 1.0;
-      setFruitConstant(constant);
+      const data: ItemInfo[] = await response.json();
+      console.log('FruitCalculator: Crops loaded', data);
+      setAvailableCrops(data || []);
       
       toast({
-        title: "Fruit constant loaded",
-        description: `${name}: ${constant}`,
+        title: "Crops Loaded",
+        description: `Found ${data?.length || 0} available crops`,
       });
     } catch (error) {
-      console.error('Failed to fetch fruit constant:', error);
+      console.error('FruitCalculator: Failed to load available crops:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch fruit constant. Using default value.",
+        description: "Failed to load available crops.",
         variant: "destructive"
       });
-      setFruitConstant(1.0);
+      setAvailableCrops([]);
     } finally {
-      setLoading(false);
+      setCropsLoading(false);
     }
   };
 
@@ -217,11 +201,11 @@ export const FruitCalculator = () => {
     }
   };
 
-  const calculatePrice = () => {
-    if (!fruitConstant || !mass) {
+  const calculatePrice = async () => {
+    if (!cropName || !mass) {
       toast({
         title: "Missing Information",
-        description: "Please select a crop and enter mass.",
+        description: "Please select a crop and enter weight.",
         variant: "destructive"
       });
       return;
@@ -230,50 +214,70 @@ export const FruitCalculator = () => {
     const massNum = parseFloat(mass);
     if (massNum <= 0) {
       toast({
-        title: "Invalid Mass",
-        description: "Mass must be greater than 0.",
+        title: "Invalid Weight",
+        description: "Weight must be greater than 0.",
         variant: "destructive"
       });
       return;
     }
 
-    // Growth multiplier
-    const growthMultiplier = growthMutation ? 
-      growthMutations.find(m => m.value === growthMutation)?.multiplier || 1 : 1;
+    setLoading(true);
+    try {
+      // Build API parameters
+      const params = new URLSearchParams({
+        Name: cropName,
+        Weight: mass
+      });
 
-    // Environmental multiplier calculation using wiki formula
-    const activeEnvironmentalMutations = Object.entries(environmentalMutations)
-      .filter(([_, active]) => active)
-      .map(([mutation, _]) => mutation);
-    
-    const mutationSum = activeEnvironmentalMutations.reduce((sum, mutation) => {
-      return sum + environmentalMutationData[mutation].multiplier;
-    }, 0);
-    
-    const mutationCount = activeEnvironmentalMutations.length;
-    
-    // Wiki formula: (1 + ΣMutations - Number of Mutations)
-    const environmentalMultiplier = mutationCount > 0 ? (1 + mutationSum - mutationCount) : 1;
-
-    // Final calculation: TotalPrice = FruitConstant × Mass² × GrowthMutation × EnvironmentalMultiplier
-    const totalPrice = fruitConstant * Math.pow(massNum, 2) * growthMultiplier * environmentalMultiplier;
-
-    setCalculationResult({
-      totalPrice,
-      breakdown: {
-        fruitConstant,
-        mass: massNum,
-        growthMultiplier,
-        environmentalMultiplier,
-        mutationSum,
-        mutationCount
+      // Add variant if selected
+      if (growthMutation) {
+        params.append('Variant', growthMutation);
       }
-    });
 
-    toast({
-      title: "Calculation Complete",
-      description: `Total price: ${Math.round(totalPrice).toLocaleString()} Sheckles`,
-    });
+      // Add mutations if selected
+      const activeMutations = Object.entries(environmentalMutations)
+        .filter(([_, active]) => active)
+        .map(([mutation, _]) => environmentalMutationData[mutation].label);
+      
+      if (activeMutations.length > 0) {
+        params.append('Mutation', activeMutations.join(','));
+      }
+
+      console.log('FruitCalculator: Calculating with params:', params.toString());
+      const response = await fetch(`https://api.joshlei.com/v2/growagarden/calculate?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: CalculateResponse = await response.json();
+      console.log('FruitCalculator: Calculation result:', data);
+
+      setCalculationResult({
+        totalPrice: data.base_price,
+        breakdown: {
+          basePrice: data.base_price,
+          mass: massNum,
+          variant: growthMutation,
+          mutations: activeMutations
+        }
+      });
+
+      toast({
+        title: "Calculation Complete",
+        description: `Total price: ${Math.round(data.base_price).toLocaleString()} Sheckles`,
+      });
+
+    } catch (error) {
+      console.error('FruitCalculator: Calculation failed:', error);
+      toast({
+        title: "Calculation Failed",
+        description: "Unable to calculate fruit price. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const standardMutations = Object.entries(environmentalMutationData).filter(([_, data]) => data.type === 'standard');
@@ -290,24 +294,26 @@ export const FruitCalculator = () => {
           {/* Crop Selection */}
           <div className="space-y-2">
             <Label>Crop Type</Label>
-            <Select value={cropName} onValueChange={(value) => {
-              setCropName(value);
-              fetchFruitConstant(value);
-            }}>
+            <Select value={cropName} onValueChange={setCropName} disabled={cropsLoading}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a crop" />
+                <SelectValue placeholder={cropsLoading ? "Loading crops..." : "Select a crop"} />
               </SelectTrigger>
               <SelectContent>
                 {availableCrops.map((crop) => (
-                  <SelectItem key={crop} value={crop}>
-                    {crop.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  <SelectItem key={crop.item_id} value={crop.item_id}>
+                    <div className="flex items-center gap-2">
+                      {crop.icon && (
+                        <img src={crop.icon} alt={crop.display_name} className="w-4 h-4" />
+                      )}
+                      {crop.display_name}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {fruitConstant !== null && (
+            {cropName && (
               <Badge variant="secondary">
-                Base Price: {fruitConstant}
+                Selected: {availableCrops.find(c => c.item_id === cropName)?.display_name}
               </Badge>
             )}
           </div>
@@ -341,7 +347,7 @@ export const FruitCalculator = () => {
                   onChange={(e) => setGrowthMutation(e.target.value)}
                   className="w-4 h-4"
                 />
-                <Label htmlFor="none">None (x1)</Label>
+                <Label htmlFor="none">None</Label>
               </div>
               {growthMutations.map((mutation) => (
                 <div key={mutation.value} className="flex items-center space-x-2">
@@ -352,12 +358,12 @@ export const FruitCalculator = () => {
                     value={mutation.value}
                     checked={growthMutation === mutation.value}
                     onChange={(e) => setGrowthMutation(e.target.value)}
-                    disabled={mutation.cropSpecific && !cropName.toLowerCase().includes(mutation.cropSpecific.toLowerCase().replace(/ /g, '_'))}
+                    disabled={mutation.cropSpecific && !availableCrops.find(c => c.item_id === cropName)?.display_name?.includes(mutation.cropSpecific)}
                     className="w-4 h-4"
                   />
                   <Label 
                     htmlFor={mutation.value}
-                    className={`${mutation.cropSpecific && !cropName.toLowerCase().includes(mutation.cropSpecific.toLowerCase().replace(/ /g, '_')) ? 'text-muted-foreground' : ''}`}
+                    className={`${mutation.cropSpecific && !availableCrops.find(c => c.item_id === cropName)?.display_name?.includes(mutation.cropSpecific) ? 'text-muted-foreground' : ''}`}
                   >
                     {mutation.label}
                     {mutation.cropSpecific && (
@@ -383,11 +389,11 @@ export const FruitCalculator = () => {
                     id={key}
                     checked={environmentalMutations[key]}
                     onCheckedChange={(checked) => handleEnvironmentalMutationChange(key, checked as boolean)}
-                    disabled={data.cropSpecific && !cropName.toLowerCase().includes(data.cropSpecific.toLowerCase().replace(/ /g, '_'))}
+                    disabled={data.cropSpecific && !availableCrops.find(c => c.item_id === cropName)?.display_name?.includes(data.cropSpecific)}
                   />
                   <Label 
                     htmlFor={key}
-                    className={`text-sm ${data.cropSpecific && !cropName.toLowerCase().includes(data.cropSpecific.toLowerCase().replace(/ /g, '_')) ? 'text-muted-foreground' : ''}`}
+                    className={`text-sm ${data.cropSpecific && !availableCrops.find(c => c.item_id === cropName)?.display_name?.includes(data.cropSpecific) ? 'text-muted-foreground' : ''}`}
                   >
                     {data.label} (x{data.multiplier})
                     {data.cropSpecific && (
@@ -413,11 +419,11 @@ export const FruitCalculator = () => {
                     id={`limited-${key}`}
                     checked={environmentalMutations[key]}
                     onCheckedChange={(checked) => handleEnvironmentalMutationChange(key, checked as boolean)}
-                    disabled={data.cropSpecific && !cropName.toLowerCase().includes(data.cropSpecific.toLowerCase().replace(/ /g, '_'))}
+                    disabled={data.cropSpecific && !availableCrops.find(c => c.item_id === cropName)?.display_name?.includes(data.cropSpecific)}
                   />
                   <Label 
                     htmlFor={`limited-${key}`}
-                    className={`text-sm ${data.cropSpecific && !cropName.toLowerCase().includes(data.cropSpecific.toLowerCase().replace(/ /g, '_')) ? 'text-muted-foreground' : ''}`}
+                    className={`text-sm ${data.cropSpecific && !availableCrops.find(c => c.item_id === cropName)?.display_name?.includes(data.cropSpecific) ? 'text-muted-foreground' : ''}`}
                   >
                     {data.label} (x{data.multiplier})
                     {data.cropSpecific && (
@@ -434,9 +440,9 @@ export const FruitCalculator = () => {
           <Button 
             onClick={calculatePrice} 
             className="w-full"
-            disabled={loading || !fruitConstant || !mass}
+            disabled={loading || cropsLoading || !cropName || !mass}
           >
-            {loading ? 'Loading...' : 'Calculate Price'}
+            {loading ? 'Calculating...' : 'Calculate Price'}
           </Button>
         </CardContent>
       </Card>
@@ -459,39 +465,42 @@ export const FruitCalculator = () => {
               <Separator />
 
               <div className="space-y-4">
-                <h3 className="font-semibold">Calculation Breakdown</h3>
+                <h3 className="font-semibold">Calculation Details</h3>
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Fruit Constant:</span>
-                    <span className="font-medium">{calculationResult.breakdown.fruitConstant}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span>Mass²:</span>
+                    <span>Crop:</span>
                     <span className="font-medium">
-                      {calculationResult.breakdown.mass}² = {Math.pow(calculationResult.breakdown.mass, 2)}
+                      {availableCrops.find(c => c.item_id === cropName)?.display_name}
                     </span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span>Growth Multiplier:</span>
-                    <span className="font-medium">x{calculationResult.breakdown.growthMultiplier}</span>
+                    <span>Weight:</span>
+                    <span className="font-medium">{calculationResult.breakdown.mass} kg</span>
                   </div>
                   
-                  <div className="flex justify-between">
-                    <span>Environmental Calculation:</span>
-                    <span className="font-medium">
-                      (1 + {calculationResult.breakdown.mutationSum} - {calculationResult.breakdown.mutationCount}) = x{calculationResult.breakdown.environmentalMultiplier.toFixed(0)}
-                    </span>
-                  </div>
+                  {calculationResult.breakdown.variant && (
+                    <div className="flex justify-between">
+                      <span>Variant:</span>
+                      <span className="font-medium">{calculationResult.breakdown.variant}</span>
+                    </div>
+                  )}
+                  
+                  {calculationResult.breakdown.mutations.length > 0 && (
+                    <div className="flex justify-between">
+                      <span>Mutations:</span>
+                      <span className="font-medium text-right">
+                        {calculationResult.breakdown.mutations.join(', ')}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <Separator />
 
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <div>Formula: Fruit Constant × Mass² × Growth Multiplier × Environmental Multiplier</div>
-                  <div>Environmental: (1 + Sum of Mutations - Count of Mutations)</div>
+                <div className="text-xs text-muted-foreground">
+                  <div>Calculated using the official Grow A Garden API</div>
                 </div>
               </div>
             </div>
