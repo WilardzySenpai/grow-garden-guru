@@ -39,6 +39,7 @@ export interface StockData {
   egg_stock: MarketItem[];
   cosmetic_stock: MarketItem[];
   eventshop_stock: MarketItem[];
+  travelingmerchant_stock: MarketItem[];
   notifications: Array<{
     message: string;
     timestamp: string;

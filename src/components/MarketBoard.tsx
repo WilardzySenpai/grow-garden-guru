@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import type { MarketItem, StockData } from '@/types/api';
 
@@ -17,6 +19,7 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
     egg_stock: [],
     cosmetic_stock: [],
     eventshop_stock: [],
+    travelingmerchant_stock: [],
     notifications: [],
     discord_invite: ''
   });
@@ -102,9 +105,27 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {items.length === 0 ? (
+        {loading ? (
+          <div className="grid gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-8 h-8" />
+                  <div>
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <Skeleton className="h-5 w-16 mb-1" />
+                  <Skeleton className="h-3 w-12" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
           <p className="text-muted-foreground text-center py-8">
-            {loading ? 'Loading items...' : 'No items available'}
+            No items available
           </p>
         ) : (
           <div className="grid gap-3">
@@ -142,8 +163,33 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
     return (
       <div className="space-y-6">
         <Card>
-          <CardContent className="py-8">
-            <p className="text-center text-muted-foreground">Loading market data...</p>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              📈 Market Board
+              <div className="w-2 h-2 bg-yellow-500 rounded-full pulse-glow" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <div className="grid gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-8 h-8" />
+                      <div>
+                        <Skeleton className="h-4 w-32 mb-1" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Skeleton className="h-5 w-20 mb-1" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -171,12 +217,13 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="seeds">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="seeds">Seeds</TabsTrigger>
               <TabsTrigger value="gear">Gear</TabsTrigger>
               <TabsTrigger value="eggs">Eggs</TabsTrigger>
               <TabsTrigger value="cosmetics">Cosmetics</TabsTrigger>
               <TabsTrigger value="event">Event Shop</TabsTrigger>
+              <TabsTrigger value="merchant">Merchant</TabsTrigger>
             </TabsList>
             
             <div className="mt-6">
@@ -194,6 +241,9 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
               </TabsContent>
               <TabsContent value="event">
                 {renderMarketSection(marketData.eventshop_stock, 'Event Shop')}
+              </TabsContent>
+              <TabsContent value="merchant">
+                {renderMarketSection(marketData.travelingmerchant_stock, 'Traveling Merchant')}
               </TabsContent>
             </div>
           </Tabs>
