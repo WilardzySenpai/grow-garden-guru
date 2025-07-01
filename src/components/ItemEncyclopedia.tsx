@@ -56,6 +56,103 @@ export const ItemEncyclopedia = () => {
     }
   };
 
+  const pets = [
+    // Common Obtainable
+    { name: 'Starfish', rarity: 'Common', obtainable: true, trait: 'Unknown', description: 'A common sea creature pet' },
+    { name: 'Crab', rarity: 'Common', obtainable: true, trait: 'Unknown', description: 'A common crustacean pet' },
+    { name: 'Seagull', rarity: 'Common', obtainable: true, trait: 'Unknown', description: 'A common bird pet' },
+    { name: 'Bunny', rarity: 'Common', obtainable: true, trait: 'Carrot Chomper', description: 'Runs to carrots, eats them, and grants bonus Sheckles' },
+    { name: 'Dog', rarity: 'Common', obtainable: true, trait: 'Unknown', description: 'A loyal canine companion' },
+    { name: 'Golden Lab', rarity: 'Common', obtainable: true, trait: 'Digging Friend', description: 'Occasionally digs up a random seed at a higher chance' },
+    
+    // Uncommon Obtainable
+    { name: 'Bee', rarity: 'Uncommon', obtainable: true, trait: 'Pollinated', description: 'Grants Pollinated mutation to crops' },
+    { name: 'Black Bunny', rarity: 'Uncommon', obtainable: true, trait: 'Unknown', description: 'A darker variant of the common bunny' },
+    { name: 'Cat', rarity: 'Uncommon', obtainable: true, trait: 'Cat Nap', description: 'Naps in a random spot, emitting an aura that boosts nearby fruit size' },
+    { name: 'Chicken', rarity: 'Uncommon', obtainable: true, trait: 'Eggcelerator', description: 'Decreases the time needed to hatch other eggs' },
+    { name: 'Deer', rarity: 'Uncommon', obtainable: true, trait: 'Forester', description: 'When harvesting berry plants, there is a chance the fruit will remain' },
+    
+    // Rare Obtainable
+    { name: 'Monkey', rarity: 'Rare', obtainable: true, trait: 'Unknown', description: 'A playful primate pet' },
+    { name: 'Orange Tabby', rarity: 'Rare', obtainable: true, trait: 'Orange Tabby', description: 'Naps in a random spot, emitting an aura that boosts nearby fruit size' },
+    { name: 'Pig', rarity: 'Rare', obtainable: true, trait: 'Fertilizer Frenzy', description: 'Occasionally releases a fertilizing AOE boosting plant size and mutation chance. Can give Gold/Rainbow mutations' },
+    { name: 'Rooster', rarity: 'Rare', obtainable: true, trait: 'Unknown', description: 'A proud farmyard bird' },
+    { name: 'Spotted Deer', rarity: 'Rare', obtainable: true, trait: 'Unknown', description: 'A spotted variant of deer' },
+    { name: 'Flamingo', rarity: 'Rare', obtainable: true, trait: 'Unknown', description: 'An elegant pink bird' },
+    { name: 'Toucan', rarity: 'Rare', obtainable: true, trait: 'Gold/Rainbow Giver', description: 'Can grant Gold or Rainbow mutations' },
+    { name: 'Sea Turtle', rarity: 'Rare', obtainable: true, trait: 'Wet', description: 'Grants Wet mutation to crops' },
+    { name: 'Orangutan', rarity: 'Rare', obtainable: true, trait: 'Unknown', description: 'A large primate pet' },
+    { name: 'Seal', rarity: 'Rare', obtainable: true, trait: 'Unknown', description: 'A marine mammal pet' },
+    { name: 'Honey Bee', rarity: 'Rare', obtainable: true, trait: 'Pollinated', description: 'Grants Pollinated mutation to crops' },
+    { name: 'Wasp', rarity: 'Rare', obtainable: true, trait: 'Stinger & Pollinated', description: 'Grants Pollinated mutation and stings pets with highest cooldown' },
+    { name: 'Hedgehog', rarity: 'Rare', obtainable: true, trait: 'Prickly Lover', description: 'Makes prickly fruit grow bigger' },
+    { name: 'Kiwi', rarity: 'Rare', obtainable: true, trait: 'Nocturnal Nursery', description: 'Occasionally reduces the hatch time of the egg with the most hatch time left' },
+    
+    // Legendary Obtainable
+    { name: 'Tarantula Hawk', rarity: 'Legendary', obtainable: true, trait: 'Pollinated', description: 'Grants Pollinated mutation to crops' },
+    { name: 'Turtle', rarity: 'Legendary', obtainable: true, trait: 'Turtle Tinkerer', description: 'Slowing aura that makes sprinklers last longer' },
+    { name: 'Petal Bee', rarity: 'Legendary', obtainable: true, trait: 'Pollinated', description: 'Grants Pollinated mutation to crops' },
+    { name: 'Moth', rarity: 'Legendary', obtainable: true, trait: 'Silksong', description: 'Sings to a random pet and magically restore its hunger' },
+    { name: 'Moon Cat', rarity: 'Legendary', obtainable: true, trait: 'Moon Nap & Moon Harvest', description: 'Boosts nearby fruit size and grants chance for Night type plants to replant when harvested' },
+    { name: 'Frog', rarity: 'Legendary', obtainable: true, trait: 'Croak', description: 'Will occasionally advance a nearby plant\'s growth by 24 hours' },
+    { name: 'Mole', rarity: 'Legendary', obtainable: true, trait: 'Treasure Hunter', description: 'Will occasionally dig down to find gear or Sheckles' },
+    { name: 'Scarlet Macaw', rarity: 'Legendary', obtainable: true, trait: 'Verdant', description: 'Small chance to apply Verdant mutation' },
+    { name: 'Ostrich', rarity: 'Legendary', obtainable: true, trait: 'Unknown', description: 'A large flightless bird' },
+    { name: 'Peacock', rarity: 'Legendary', obtainable: true, trait: 'Unknown', description: 'A beautiful bird with magnificent plumage' },
+    { name: 'Capybara', rarity: 'Legendary', obtainable: true, trait: 'Unknown', description: 'The world\'s largest rodent' },
+    { name: 'Sand Snake', rarity: 'Legendary', obtainable: true, trait: 'Unknown', description: 'A desert dwelling serpent' },
+    { name: 'Meerkat', rarity: 'Legendary', obtainable: true, trait: 'Unknown', description: 'A vigilant desert creature' },
+    
+    // Mythical Obtainable
+    { name: 'Brown Mouse', rarity: 'Mythical', obtainable: true, trait: 'Unknown', description: 'A small rodent pet' },
+    { name: 'Caterpillar', rarity: 'Mythical', obtainable: true, trait: 'Leaf Lover Passive', description: 'Boosts nearby Leafy plants growth rate' },
+    { name: 'Giant Ant', rarity: 'Mythical', obtainable: true, trait: 'For the Blue Colony & Harvester', description: 'Small chance to duplicate harvested plants & increased chance to duplicate candy type plants' },
+    { name: 'Grey Mouse', rarity: 'Mythical', obtainable: true, trait: 'Unknown', description: 'A grey variant of mouse' },
+    { name: 'Praying Mantis', rarity: 'Mythical', obtainable: true, trait: 'Gold/Rainbow Giver', description: 'Can grant Gold or Rainbow mutations' },
+    { name: 'Red Fox', rarity: 'Mythical', obtainable: true, trait: 'Scoundrel', description: 'Goes to another player\'s plot and tries to steal a seed from a random plant' },
+    { name: 'Red Giant Ant', rarity: 'Mythical', obtainable: true, trait: 'Unknown', description: 'A red variant of Giant Ant' },
+    { name: 'Snail', rarity: 'Mythical', obtainable: true, trait: 'Slow and Steady', description: 'Increased lucky harvest chance' },
+    { name: 'Squirrel', rarity: 'Mythical', obtainable: true, trait: 'Seed Stash', description: 'Planting seeds have a small chance to not be consumed' },
+    { name: 'Bear Bee', rarity: 'Mythical', obtainable: true, trait: 'HoneyGlazed', description: 'Grants HoneyGlazed mutation' },
+    { name: 'Butterfly', rarity: 'Mythical', obtainable: true, trait: 'Rainbow', description: 'Can apply Rainbow mutation when a crop has 5+ mutations' },
+    { name: 'Echo Frog', rarity: 'Mythical', obtainable: true, trait: 'Echo Croak', description: 'Will occasionally advance a nearby plant\'s growth by 24 hours' },
+    { name: 'Pack Bee', rarity: 'Mythical', obtainable: true, trait: 'Unknown', description: 'A bee that works in packs' },
+    { name: 'Mimic Octopus', rarity: 'Mythical', obtainable: true, trait: 'Unknown', description: 'A shape-shifting sea creature' },
+    { name: 'Hyacinth Macaw', rarity: 'Mythical', obtainable: true, trait: 'Cloudtouched', description: 'Small chance to apply Cloudtouched mutation' },
+    { name: 'Axolotl', rarity: 'Mythical', obtainable: true, trait: 'Unknown', description: 'An aquatic salamander' },
+    { name: 'Hamster', rarity: 'Mythical', obtainable: true, trait: 'Unknown', description: 'A small, furry rodent' },
+    { name: 'Blood Kiwi', rarity: 'Mythical', obtainable: true, trait: 'Crimson Cradle', description: 'Occasionally reduces the hatch time and boosts egg hatch speed' },
+    
+    // Divine Obtainable
+    { name: 'Dragonfly', rarity: 'Divine', obtainable: true, trait: 'Gold', description: 'Can apply Gold mutation' },
+    { name: 'Night Owl', rarity: 'Divine', obtainable: true, trait: 'King of the Night', description: 'Grants bonus experience per second gain to all active pets' },
+    { name: 'Queen Bee', rarity: 'Divine', obtainable: true, trait: 'For the Queen & Pollinated', description: 'Occasionally refreshes the pet with the highest cooldown ability and grants Pollinated mutation' },
+    { name: 'Raccoon', rarity: 'Divine', obtainable: true, trait: 'Rascal', description: 'Occasionally steals (duplicates) fruit from other player\'s plot and hands it to Player' },
+    { name: 'Disco Bee', rarity: 'Divine', obtainable: true, trait: 'Disco', description: 'Grants Disco mutation' },
+    { name: 'Fennec Fox', rarity: 'Divine', obtainable: true, trait: 'Unknown', description: 'A small desert fox' },
+    
+    // Legendary Unobtainable
+    { name: 'Cow', rarity: 'Legendary', obtainable: false, trait: 'Milk of the Land', description: 'Fertilizing aura that boosts nearby plant growth speed' },
+    { name: 'Polar Bear', rarity: 'Legendary', obtainable: false, trait: 'Chilled/Frozen', description: 'Can grant Chilled or Frozen mutations' },
+    { name: 'Sea Otter', rarity: 'Legendary', obtainable: false, trait: 'Water Spray', description: 'Waters plants randomly like a watering can' },
+    { name: 'Silver Monkey', rarity: 'Legendary', obtainable: false, trait: 'Cheeky Refund', description: '3% chance for the player to get their fruit back when they sell it' },
+    { name: 'Panda', rarity: 'Legendary', obtainable: false, trait: 'Bamboozle', description: 'Waddles to bamboo, eats it, and grants bonus Sheckles' },
+    { name: 'Blood Hedgehog', rarity: 'Legendary', obtainable: false, trait: 'Sanguine Spike', description: 'Makes prickly fruit have increased variant chance and grow bigger' },
+    
+    // Mythical Unobtainable
+    { name: 'Chicken Zombie', rarity: 'Mythical', obtainable: false, trait: 'Zombified & Eggcelerator', description: 'Grants Zombified mutation and decreases egg hatch time' },
+    { name: 'Firefly', rarity: 'Mythical', obtainable: false, trait: 'Unknown', description: 'A bioluminescent insect' },
+    { name: 'Owl', rarity: 'Mythical', obtainable: false, trait: 'Prince of the Night', description: 'Grants bonus experience per second gain to all active pets' },
+    { name: 'Golden Bee', rarity: 'Mythical', obtainable: false, trait: 'Unknown', description: 'A rare golden variant of bee' },
+    { name: 'Cooked Owl', rarity: 'Mythical', obtainable: false, trait: 'King of the Grill & Burnt/Cooked', description: 'Grants bonus experience to all pets and can apply Burnt/Cooked mutations' },
+    
+    // Divine Unobtainable
+    { name: 'Blood Owl', rarity: 'Divine', obtainable: false, trait: 'Monarch of Midnight', description: 'Grants bonus experience per second gain to all active pets' },
+    
+    // Unknown Unobtainable
+    { name: 'Red Dragon', rarity: 'Unknown', obtainable: false, trait: 'Unknown', description: 'A legendary mythical dragon' }
+  ];
+
   const mutations = [
     // Growth Mutations - Standard
     {
@@ -355,6 +452,13 @@ export const ItemEncyclopedia = () => {
     (weather.weather_id?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
+  const filteredPets = pets.filter(pet =>
+    pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pet.rarity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pet.trait.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pet.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Category filters
   const seedItems = filteredItems.filter(item => item.type === 'seed');
   const gearItems = filteredItems.filter(item => item.type === 'gear');
@@ -366,6 +470,17 @@ export const ItemEncyclopedia = () => {
   const limitedMutations = filteredMutations.filter(m => m.type === 'limited');
   const growthMutations = filteredMutations.filter(m => m.category === 'growth');
   const environmentalMutations = filteredMutations.filter(m => m.category === 'environmental');
+
+  // Pet category filters
+  const obtainablePets = filteredPets.filter(pet => pet.obtainable);
+  const unobtainablePets = filteredPets.filter(pet => !pet.obtainable);
+  const commonPets = filteredPets.filter(pet => pet.rarity === 'Common');
+  const uncommonPets = filteredPets.filter(pet => pet.rarity === 'Uncommon');
+  const rarePets = filteredPets.filter(pet => pet.rarity === 'Rare');
+  const legendaryPets = filteredPets.filter(pet => pet.rarity === 'Legendary');
+  const mythicalPets = filteredPets.filter(pet => pet.rarity === 'Mythical');
+  const divinePets = filteredPets.filter(pet => pet.rarity === 'Divine');
+  const unknownPets = filteredPets.filter(pet => pet.rarity === 'Unknown');
 
   const renderItemTable = (itemList: ItemInfo[]) => (
     <div className="rounded-md border">
@@ -513,6 +628,60 @@ export const ItemEncyclopedia = () => {
     </div>
   );
 
+  const renderPetTable = (petList: typeof pets) => (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Pet</TableHead>
+            <TableHead>Rarity</TableHead>
+            <TableHead>Trait</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Availability</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {petList.map((pet) => (
+            <TableRow key={pet.name} className="hover:bg-accent/50">
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-accent rounded border flex items-center justify-center text-xs">
+                    🐾
+                  </div>
+                  {pet.name}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge variant={
+                  pet.rarity === 'Common' ? 'outline' :
+                  pet.rarity === 'Uncommon' ? 'secondary' :
+                  pet.rarity === 'Rare' ? 'default' :
+                  pet.rarity === 'Legendary' ? 'destructive' :
+                  pet.rarity === 'Mythical' ? 'destructive' :
+                  pet.rarity === 'Divine' ? 'destructive' :
+                  'outline'
+                }>
+                  {pet.rarity}
+                </Badge>
+              </TableCell>
+              <TableCell className="max-w-xs">
+                <p className="text-sm font-medium">{pet.trait}</p>
+              </TableCell>
+              <TableCell className="max-w-md">
+                <p className="text-sm">{pet.description}</p>
+              </TableCell>
+              <TableCell>
+                <Badge variant={pet.obtainable ? 'default' : 'outline'}>
+                  {pet.obtainable ? 'Obtainable' : 'Unobtainable'}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
   if (loading) {
     return (
       <Card>
@@ -537,7 +706,7 @@ export const ItemEncyclopedia = () => {
             className="max-w-sm"
           />
           <Badge variant="secondary">
-            {filteredItems.length + filteredMutations.length + filteredWeather.length} results
+            {filteredItems.length + filteredMutations.length + filteredWeather.length + filteredPets.length} results
           </Badge>
         </div>
       </CardHeader>
@@ -562,6 +731,9 @@ export const ItemEncyclopedia = () => {
             </TabsTrigger>
             <TabsTrigger value="weather">
               🌦️ Weather ({filteredWeather.length})
+            </TabsTrigger>
+            <TabsTrigger value="pets">
+              🐾 Pets ({filteredPets.length})
             </TabsTrigger>
           </TabsList>
 
@@ -694,6 +866,183 @@ export const ItemEncyclopedia = () => {
 
           <TabsContent value="weather">
             {renderWeatherTable(filteredWeather)}
+          </TabsContent>
+
+          <TabsContent value="pets">
+            <Tabs defaultValue="all" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="all">
+                  All ({filteredPets.length})
+                </TabsTrigger>
+                <TabsTrigger value="obtainable">
+                  Obtainable ({obtainablePets.length})
+                </TabsTrigger>
+                <TabsTrigger value="unobtainable">
+                  Unobtainable ({unobtainablePets.length})
+                </TabsTrigger>
+                <TabsTrigger value="common">
+                  Common ({commonPets.length})
+                </TabsTrigger>
+                <TabsTrigger value="uncommon">
+                  Uncommon ({uncommonPets.length})
+                </TabsTrigger>
+                <TabsTrigger value="rare">
+                  Rare ({rarePets.length})
+                </TabsTrigger>
+                <TabsTrigger value="legendary">
+                  Legendary ({legendaryPets.length})
+                </TabsTrigger>
+                <TabsTrigger value="mythical">
+                  Mythical ({mythicalPets.length})
+                </TabsTrigger>
+                <TabsTrigger value="divine">
+                  Divine ({divinePets.length})
+                </TabsTrigger>
+                <TabsTrigger value="info">
+                  Pet Info & Mechanics
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all">
+                {renderPetTable(filteredPets)}
+              </TabsContent>
+              <TabsContent value="obtainable">
+                {renderPetTable(obtainablePets)}
+              </TabsContent>
+              <TabsContent value="unobtainable">
+                {renderPetTable(unobtainablePets)}
+              </TabsContent>
+              <TabsContent value="common">
+                {renderPetTable(commonPets)}
+              </TabsContent>
+              <TabsContent value="uncommon">
+                {renderPetTable(uncommonPets)}
+              </TabsContent>
+              <TabsContent value="rare">
+                {renderPetTable(rarePets)}
+              </TabsContent>
+              <TabsContent value="legendary">
+                {renderPetTable(legendaryPets)}
+              </TabsContent>
+              <TabsContent value="mythical">
+                {renderPetTable(mythicalPets)}
+              </TabsContent>
+              <TabsContent value="divine">
+                {renderPetTable(divinePets)}
+              </TabsContent>
+              <TabsContent value="info">
+                <div className="space-y-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-2">Pet Overview</h3>
+                      <ul className="space-y-2 text-sm">
+                        <li>• Players start with <strong>3</strong> equip slots, can get additional <strong>5</strong> slots from aged pets</li>
+                        <li>• Maximum <strong>60</strong> pets can be held in inventory</li>
+                        <li>• Pets have unique abilities that can stack when multiple of the same type are equipped</li>
+                        <li>• Pet age increases through XP, improving their traits with shorter cooldowns and better chances</li>
+                        <li>• Pets cannot age if their hunger reaches 0 - they must be fed to continue gaining XP</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-2">Pet Equip Slot Upgrades</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>+1 Slot (Age 20):</span>
+                            <span className="font-medium">249 Robux</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>+2 Slots (Age 30):</span>
+                            <span className="font-medium">399 Robux</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>+3 Slots (Age 45):</span>
+                            <span className="font-medium">799 Robux</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>+4 Slots (Age 60):</span>
+                            <span className="font-medium">1,699 Robux</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>+5 Slots (Age 75):</span>
+                            <span className="font-medium">1,699 Robux</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-2">Pet Trait Categories</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-medium mb-2">🌱 Growth & Harvest Boosters</h4>
+                          <p className="text-sm text-muted-foreground mb-2">Pets that enhance crop growth, size, and harvest rates</p>
+                          <div className="text-xs space-y-1">
+                            <div>• Cat Nap, Moon Nap - Boost nearby fruit size</div>
+                            <div>• Croak, Echo Croak - Advance plant growth by 24 hours</div>
+                            <div>• Fertilizer Frenzy - AOE growth boost</div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-2">🧬 Mutation Effects</h4>
+                          <p className="text-sm text-muted-foreground mb-2">Pets that apply specific mutations to crops</p>
+                          <div className="text-xs space-y-1">
+                            <div>• Bee types - Apply Pollinated mutation</div>
+                            <div>• Dragonfly - Applies Gold mutation</div>
+                            <div>• Butterfly - Applies Rainbow mutation</div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-2">⚡ Experience Boosters</h4>
+                          <p className="text-sm text-muted-foreground mb-2">Pets that boost XP gain for other pets</p>
+                          <div className="text-xs space-y-1">
+                            <div>• Night Owl - King of the Night</div>
+                            <div>• Blood Owl - Monarch of Midnight</div>
+                            <div>• Cooked Owl - King of the Grill</div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-2">💰 Resource Gatherers</h4>
+                          <p className="text-sm text-muted-foreground mb-2">Pets that help gather resources and currency</p>
+                          <div className="text-xs space-y-1">
+                            <div>• Mole - Digs up gear and Sheckles</div>
+                            <div>• Bunny - Eats carrots for bonus Sheckles</div>
+                            <div>• Squirrel - Seeds have chance not to be consumed</div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-2">Pet Mechanics</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-medium mb-1">Hunger & Feeding</h4>
+                          <p className="text-sm text-muted-foreground">Pets must be fed crops to maintain hunger above 0. Hunger level affects XP gain and mutation effectiveness.</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-1">Age & XP Requirements</h4>
+                          <p className="text-sm text-muted-foreground">XP requirements increase exponentially with age. Formula: floor(20*n^2.02). Age 100 requires 7,458,160 total XP.</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-1">Special Names</h4>
+                          <p className="text-sm text-muted-foreground">Developer name "math.random(1, 4^X...)" grants ~100x efficiency boost. "Jandel" is another developer-exclusive name.</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </CardContent>
