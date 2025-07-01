@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Search } from 'lucide-react';
 import type { ItemInfo } from '@/types/api';
 
 interface CalculateResponse {
@@ -28,6 +28,7 @@ interface EnvironmentalMutationData {
 export const FruitCalculator = () => {
   const [cropName, setCropName] = useState('');
   const [mass, setMass] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [availableCrops, setAvailableCrops] = useState<ItemInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [cropsLoading, setCropsLoading] = useState(true);
@@ -140,12 +141,23 @@ export const FruitCalculator = () => {
       
       const data: ItemInfo[] = await response.json();
       console.log('FruitCalculator: Crops loaded', data);
-      setAvailableCrops(data || []);
       
-      toast({
-        title: "Crops Loaded",
-        description: `Found ${data?.length || 0} available crops`,
-      });
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setAvailableCrops(data);
+        toast({
+          title: "Crops Loaded",
+          description: `Found ${data.length} available crops`,
+        });
+      } else {
+        console.error('FruitCalculator: API returned non-array data:', data);
+        setAvailableCrops([]);
+        toast({
+          title: "Warning",
+          description: "Invalid crop data format received",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error('FruitCalculator: Failed to load available crops:', error);
       toast({
@@ -280,6 +292,12 @@ export const FruitCalculator = () => {
     }
   };
 
+  // Filter crops based on search term
+  const filteredCrops = (availableCrops || []).filter(crop => 
+    crop?.display_name?.toLowerCase()?.includes(searchTerm.toLowerCase()) || 
+    crop?.item_id?.toLowerCase()?.includes(searchTerm.toLowerCase())
+  );
+
   const standardMutations = Object.entries(environmentalMutationData).filter(([_, data]) => data.type === 'standard');
   const limitedMutations = Object.entries(environmentalMutationData).filter(([_, data]) => data.type === 'limited');
 
@@ -292,25 +310,61 @@ export const FruitCalculator = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Crop Selection */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>Crop Type</Label>
-            <Select value={cropName} onValueChange={setCropName} disabled={cropsLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder={cropsLoading ? "Loading crops..." : "Select a crop"} />
-              </SelectTrigger>
-              <SelectContent>
-                {availableCrops.map((crop) => (
-                  <SelectItem key={crop.item_id} value={crop.item_id}>
+            
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search crops..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                disabled={cropsLoading}
+              />
+            </div>
+
+            {/* Crop Selection Grid */}
+            {cropsLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="p-3 border rounded-lg">
                     <div className="flex items-center gap-2">
-                      {crop.icon && (
-                        <img src={crop.icon} alt={crop.display_name} className="w-4 h-4" />
-                      )}
-                      {crop.display_name}
+                      <Skeleton className="w-6 h-6" />
+                      <Skeleton className="h-4 w-16" />
                     </div>
-                  </SelectItem>
+                  </div>
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto border rounded-lg p-2">
+                {filteredCrops.length > 0 ? (
+                  filteredCrops.map((crop) => (
+                    <Button
+                      key={crop.item_id}
+                      variant={cropName === crop.item_id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCropName(crop.item_id)}
+                      className="justify-start h-auto p-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        {crop.icon && (
+                          <img src={crop.icon} alt={crop.display_name} className="w-4 h-4" />
+                        )}
+                        <span className="text-xs truncate">{crop.display_name}</span>
+                      </div>
+                    </Button>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center text-muted-foreground py-4">
+                    {searchTerm ? 'No crops found matching your search' : 'No crops available'}
+                  </div>
+                )}
+              </div>
+            )}
+            
             {cropName && (
               <Badge variant="secondary">
                 Selected: {availableCrops.find(c => c.item_id === cropName)?.display_name}
