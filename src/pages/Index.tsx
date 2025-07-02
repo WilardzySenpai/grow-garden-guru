@@ -235,25 +235,12 @@ const Index = () => {
                             </div>
                             
                             {!loading && (
-                                user ? (
+                                user && !('isGuest' in user) ? (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="sm" className="gap-2">
-                                                {'isGuest' in user ? (
-                                                    <>
-                                                        <img 
-                                                            src={user.avatar_url} 
-                                                            alt="Avatar" 
-                                                            className="h-4 w-4 rounded-full"
-                                                        />
-                                                        {user.display_name}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <User className="h-4 w-4" />
-                                                        {user.user_metadata?.full_name || user.email}
-                                                    </>
-                                                )}
+                                                <User className="h-4 w-4" />
+                                                {user.user_metadata?.full_name || user.email}
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-card border-border">
