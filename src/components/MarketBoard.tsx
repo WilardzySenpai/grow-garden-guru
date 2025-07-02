@@ -7,247 +7,247 @@ import { toast } from '@/hooks/use-toast';
 import type { MarketItem, StockData } from '@/types/api';
 
 interface MarketBoardProps {
-  onStatusChange: (status: 'connecting' | 'connected' | 'disconnected') => void;
-  onNotifications: (notifications: any[]) => void;
+    onStatusChange: (status: 'connecting' | 'connected' | 'disconnected') => void;
+    onNotifications: (notifications: any[]) => void;
 }
 
 export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProps) => {
-  const [marketData, setMarketData] = useState<StockData>({
-    seed_stock: [],
-    gear_stock: [],
-    egg_stock: [],
-    cosmetic_stock: [],
-    eventshop_stock: [],
-    travelingmerchant_stock: [],
-    notifications: [],
-    discord_invite: ''
-  });
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [marketData, setMarketData] = useState<StockData>({
+        seed_stock: [],
+        gear_stock: [],
+        egg_stock: [],
+        cosmetic_stock: [],
+        eventshop_stock: [],
+        travelingmerchant_stock: [],
+        notifications: [],
+        discord_invite: ''
+    });
 
-  useEffect(() => {
-    console.log('MarketBoard: Component mounted, fetching market data');
-    fetchMarketData();
-    
-    // Refresh market data every 30 seconds
-    const interval = setInterval(fetchMarketData, 30000);
-    
-    return () => {
-      console.log('MarketBoard: Component unmounting, clearing interval');
-      clearInterval(interval);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        console.log('MarketBoard: Component mounted, fetching market data');
+        fetchMarketData();
+
+        // Refresh market data every 30 seconds
+        const interval = setInterval(fetchMarketData, 30000);
+
+        return () => {
+            console.log('MarketBoard: Component unmounting, clearing interval');
+            clearInterval(interval);
+        };
+    }, []);
+
+    const fetchMarketData = async () => {
+        try {
+            onStatusChange('connecting');
+            setError(null);
+
+            console.log('MarketBoard: Fetching market data from API');
+            const response = await fetch('https://api.joshlei.com/v2/growagarden/stock');
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('MarketBoard: Market data received', data);
+
+            setMarketData(data);
+            onNotifications(data.notifications || []);
+            onStatusChange('connected');
+
+            if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
+                toast({
+                    title: "Market Updated",
+                    description: "New items available in the market!",
+                });
+            }
+
+        } catch (error) {
+            console.error('MarketBoard: Failed to fetch market data:', error);
+            setError('Failed to fetch market data');
+            onStatusChange('disconnected');
+
+            toast({
+                title: "Market Update Failed",
+                description: "Unable to fetch latest market data.",
+                variant: "destructive"
+            });
+        } finally {
+            setLoading(false);
+        }
     };
-  }, []);
 
-  const fetchMarketData = async () => {
-    try {
-      onStatusChange('connecting');
-      setError(null);
-      
-      console.log('MarketBoard: Fetching market data from API');
-      const response = await fetch('https://api.joshlei.com/v2/growagarden/stock');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('MarketBoard: Market data received', data);
-      
-      setMarketData(data);
-      onNotifications(data.notifications || []);
-      onStatusChange('connected');
-      
-      if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
-        toast({
-          title: "Market Updated",
-          description: "New items available in the market!",
-        });
-      }
-      
-    } catch (error) {
-      console.error('MarketBoard: Failed to fetch market data:', error);
-      setError('Failed to fetch market data');
-      onStatusChange('disconnected');
-      
-      toast({
-        title: "Market Update Failed",
-        description: "Unable to fetch latest market data.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    const formatTimeRemaining = (endUnix: number) => {
+        const now = Math.floor(Date.now() / 1000);
+        const remaining = endUnix - now;
 
-  const formatTimeRemaining = (endUnix: number) => {
-    const now = Math.floor(Date.now() / 1000);
-    const remaining = endUnix - now;
-    
-    if (remaining <= 0) return 'Expired';
-    
-    const days = Math.floor(remaining / (24 * 60 * 60));
-    const hours = Math.floor((remaining % (24 * 60 * 60)) / (60 * 60));
-    const minutes = Math.floor((remaining % (60 * 60)) / 60);
-    
-    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
-  };
+        if (remaining <= 0) return 'Expired';
 
-  const renderMarketSection = (items: MarketItem[], title: string) => (
-    <Card className="market-card">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          {title}
-          <Badge variant="secondary">{items.length} items</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="grid gap-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="w-8 h-8" />
-                  <div>
-                    <Skeleton className="h-4 w-24 mb-1" />
-                    <Skeleton className="h-3 w-16" />
-                  </div>
-                </div>
-                <div className="text-right">
-                  <Skeleton className="h-5 w-16 mb-1" />
-                  <Skeleton className="h-3 w-12" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">
-            No items available
-          </p>
-        ) : (
-          <div className="grid gap-3">
-            {items.map((item, index) => (
-              <div key={`${item.item_id}-${index}`} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <img 
-                    src={item.icon} 
-                    alt={item.display_name}
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                  <div>
-                    <h4 className="font-medium">{item.display_name}</h4>
-                    <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <Badge variant="outline" className="mb-1">
-                    {formatTimeRemaining(item.end_date_unix)}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground">ID: {item.item_id}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+        const days = Math.floor(remaining / (24 * 60 * 60));
+        const hours = Math.floor((remaining % (24 * 60 * 60)) / (60 * 60));
+        const minutes = Math.floor((remaining % (60 * 60)) / 60);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              📈 Market Board
-              <div className="w-2 h-2 bg-yellow-500 rounded-full pulse-glow" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <div className="grid gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="w-8 h-8" />
-                      <div>
-                        <Skeleton className="h-4 w-32 mb-1" />
-                        <Skeleton className="h-3 w-20" />
-                      </div>
+        if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        return `${minutes}m`;
+    };
+
+    const renderMarketSection = (items: MarketItem[], title: string) => (
+        <Card className="market-card">
+            <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                    {title}
+                    <Badge variant="secondary">{items.length} items</Badge>
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {loading ? (
+                    <div className="grid gap-3">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="w-8 h-8" />
+                                    <div>
+                                        <Skeleton className="h-4 w-24 mb-1" />
+                                        <Skeleton className="h-3 w-16" />
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <Skeleton className="h-5 w-16 mb-1" />
+                                    <Skeleton className="h-3 w-12" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                    <div className="text-right">
-                      <Skeleton className="h-5 w-20 mb-1" />
-                      <Skeleton className="h-3 w-16" />
+                ) : items.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">
+                        No items available
+                    </p>
+                ) : (
+                    <div className="grid gap-3">
+                        {items.map((item, index) => (
+                            <div key={`${item.item_id}-${index}`} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
+                                <div className="flex items-center gap-3">
+                                    <img
+                                        src={item.icon}
+                                        alt={item.display_name}
+                                        className="w-8 h-8 object-contain"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                        }}
+                                    />
+                                    <div>
+                                        <h4 className="font-medium">{item.display_name}</h4>
+                                        <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <Badge variant="outline" className="mb-1">
+                                        {formatTimeRemaining(item.end_date_unix)}
+                                    </Badge>
+                                    <p className="text-xs text-muted-foreground">ID: {item.item_id}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
+                )}
+            </CardContent>
         </Card>
-      </div>
     );
-  }
 
-  return (
-    <div className="space-y-6">
-      {error && (
-        <Card className="border-red-500/50 bg-red-500/10">
-          <CardContent className="py-4">
-            <p className="text-center text-red-600 text-sm">
-              ❌ {error}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            📈 Market Board
-            <div className="w-2 h-2 bg-green-500 rounded-full pulse-glow" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="seeds">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="seeds">Seeds</TabsTrigger>
-              <TabsTrigger value="gear">Gear</TabsTrigger>
-              <TabsTrigger value="eggs">Eggs</TabsTrigger>
-              <TabsTrigger value="cosmetics">Cosmetics</TabsTrigger>
-              <TabsTrigger value="event">Event Shop</TabsTrigger>
-              <TabsTrigger value="merchant">Merchant</TabsTrigger>
-            </TabsList>
-            
-            <div className="mt-6">
-              <TabsContent value="seeds">
-                {renderMarketSection(marketData.seed_stock || [], 'Seeds')}
-              </TabsContent>
-              <TabsContent value="gear">
-                {renderMarketSection(marketData.gear_stock || [], 'Gear')}
-              </TabsContent>
-              <TabsContent value="eggs">
-                {renderMarketSection(marketData.egg_stock || [], 'Eggs')}
-              </TabsContent>
-              <TabsContent value="cosmetics">
-                {renderMarketSection(marketData.cosmetic_stock || [], 'Cosmetics')}
-              </TabsContent>
-              <TabsContent value="event">
-                {renderMarketSection(marketData.eventshop_stock || [], 'Event Shop')}
-              </TabsContent>
-              <TabsContent value="merchant">
-                {renderMarketSection(marketData.travelingmerchant_stock || [], 'Traveling Merchant')}
-              </TabsContent>
+    if (loading) {
+        return (
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            📈 Market Board
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full pulse-glow" />
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <Skeleton className="h-10 w-full" />
+                            <div className="grid gap-3">
+                                {[1, 2, 3, 4].map((i) => (
+                                    <div key={i} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
+                                        <div className="flex items-center gap-3">
+                                            <Skeleton className="w-8 h-8" />
+                                            <div>
+                                                <Skeleton className="h-4 w-32 mb-1" />
+                                                <Skeleton className="h-3 w-20" />
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <Skeleton className="h-5 w-20 mb-1" />
+                                            <Skeleton className="h-3 w-16" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
-  );
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {error && (
+                <Card className="border-red-500/50 bg-red-500/10">
+                    <CardContent className="py-4">
+                        <p className="text-center text-red-600 text-sm">
+                            ❌ {error}
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        📈 Market Board
+                        <div className="w-2 h-2 bg-green-500 rounded-full pulse-glow" />
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="seeds">
+                        <TabsList className="grid w-full grid-cols-6">
+                            <TabsTrigger value="seeds">Seeds</TabsTrigger>
+                            <TabsTrigger value="gear">Gear</TabsTrigger>
+                            <TabsTrigger value="eggs">Eggs</TabsTrigger>
+                            <TabsTrigger value="cosmetics">Cosmetics</TabsTrigger>
+                            <TabsTrigger value="event">Event Shop</TabsTrigger>
+                            <TabsTrigger value="merchant">Merchant</TabsTrigger>
+                        </TabsList>
+
+                        <div className="mt-6">
+                            <TabsContent value="seeds">
+                                {renderMarketSection(marketData.seed_stock || [], 'Seeds')}
+                            </TabsContent>
+                            <TabsContent value="gear">
+                                {renderMarketSection(marketData.gear_stock || [], 'Gear')}
+                            </TabsContent>
+                            <TabsContent value="eggs">
+                                {renderMarketSection(marketData.egg_stock || [], 'Eggs')}
+                            </TabsContent>
+                            <TabsContent value="cosmetics">
+                                {renderMarketSection(marketData.cosmetic_stock || [], 'Cosmetics')}
+                            </TabsContent>
+                            <TabsContent value="event">
+                                {renderMarketSection(marketData.eventshop_stock || [], 'Event Shop')}
+                            </TabsContent>
+                            <TabsContent value="merchant">
+                                {renderMarketSection(marketData.travelingmerchant_stock || [], 'Traveling Merchant')}
+                            </TabsContent>
+                        </div>
+                    </Tabs>
+                </CardContent>
+            </Card>
+        </div>
+    );
 };
