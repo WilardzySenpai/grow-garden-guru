@@ -53,7 +53,7 @@ export const NotificationFeed = ({ notifications: wsNotifications }: Notificatio
         id: '1',
         type: 'success',
         title: 'System Connected',
-        message: 'Successfully connected to Grow A Garden analytics system.',
+        message: 'Successfully connected to Grow A Garden Guru system.',
         timestamp: new Date(Date.now() - 1 * 60 * 1000),
         read: false
       },
