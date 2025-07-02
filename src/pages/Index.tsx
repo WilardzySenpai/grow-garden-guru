@@ -22,13 +22,23 @@ import { ItemEncyclopedia } from '@/components/ItemEncyclopedia';
 import { FruitCalculator } from '@/components/FruitCalculator';
 import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
-import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna } from 'lucide-react';
+import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAuth } from '@/hooks/useAuth';
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger,
+    DropdownMenuSeparator 
+} from '@/components/ui/dropdown-menu';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
     const [activeTab, setActiveTab] = useState('market');
     const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
     const [notifications, setNotifications] = useState<any[]>([]);
+    const { user, signOut, loading } = useAuth();
 
     // Music player state
     const [musicDialogOpen, setMusicDialogOpen] = useState(true);
@@ -223,6 +233,39 @@ const Index = () => {
                                 <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
                                 {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
                             </div>
+                            
+                            {!loading && (
+                                user ? (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="gap-2">
+                                                <User className="h-4 w-4" />
+                                                {user.user_metadata?.full_name || user.email}
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="bg-card border-border">
+                                            <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                <User className="h-4 w-4 mr-2" />
+                                                Profile
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator className="bg-border" />
+                                            <DropdownMenuItem 
+                                                onClick={signOut}
+                                                className="text-foreground hover:bg-accent"
+                                            >
+                                                <LogOut className="h-4 w-4 mr-2" />
+                                                Sign Out
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ) : (
+                                    <Link to="/auth">
+                                        <Button variant="outline" size="sm">
+                                            Sign In
+                                        </Button>
+                                    </Link>
+                                )
+                            )}
                         </div>
                     </div>
                 </div>

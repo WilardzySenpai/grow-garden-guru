@@ -81,9 +81,11 @@ const Home = () => {
                                 <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                             </Button>
                         </Link>
-                        <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                            Learn More
-                        </Button>
+                        <Link to="/auth">
+                            <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                                Sign In
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -128,12 +130,19 @@ const Home = () => {
                         <p className="text-muted-foreground text-lg">
                             Join thousands of players who use Grow A Garden Guru to maximize their farming potential.
                         </p>
-                        <Link to="/app">
-                            <Button size="lg" className="text-lg px-8 py-6">
-                                Launch Dashboard
-                                <ArrowRight className="h-5 w-5 ml-2" />
-                            </Button>
-                        </Link>
+                        <div className="flex gap-4 justify-center">
+                            <Link to="/app">
+                                <Button size="lg" className="text-lg px-8 py-6">
+                                    Launch Dashboard
+                                    <ArrowRight className="h-5 w-5 ml-2" />
+                                </Button>
+                            </Link>
+                            <Link to="/auth">
+                                <Button variant="secondary" size="lg" className="text-lg px-8 py-6">
+                                    Sign In
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </section>
