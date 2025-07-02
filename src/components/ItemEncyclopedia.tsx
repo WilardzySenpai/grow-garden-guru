@@ -7,12 +7,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from '@/hooks/use-toast';
 import type { ItemInfo, WeatherData } from '@/types/api';
 
+
 export const ItemEncyclopedia = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<ItemInfo[]>([]);
   const [weatherItems, setWeatherItems] = useState<WeatherData[]>([]);
+  // For zoom modal
+  const [zoomedPetImg, setZoomedPetImg] = useState<string | null>(null);
+  const [zoomedPetName, setZoomedPetName] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEncyclopediaData();
@@ -628,6 +632,118 @@ export const ItemEncyclopedia = () => {
     </div>
   );
 
+  // Helper to get pet image path
+  const getPetImage = (pet: { name: string; rarity: string; obtainable: boolean }) => {
+    // Normalize name for file lookup
+    const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const rarityFolder = pet.rarity;
+    const base = `/Pets/${pet.obtainable ? 'Obtainable' : 'Unobtainable'}`;
+    let folder = '';
+    switch (rarityFolder) {
+      case 'Common': folder = 'Common'; break;
+      case 'Uncommon': folder = 'Uncommon'; break;
+      case 'Rare': folder = 'Rare'; break;
+      case 'Legendary': folder = 'Legendary'; break;
+      case 'Mythical': folder = 'Mythical'; break;
+      case 'Divine': folder = 'Divine'; break;
+      case 'Unknown': folder = 'Unknown'; break;
+      default: folder = '';
+    }
+    // Map pet name to file name exceptions
+    const nameMap: Record<string, string> = {
+      'Golden Lab': 'GoldenLabPet',
+      'Starfish': 'StarfishIcon',
+      'Crab': 'CrabIcon',
+      'Seagull': 'SeagullIcon',
+      'Black Bunny': 'Black_bunny',
+      'Orange Tabby': 'Orange_tabby',
+      'Sea Turtle': 'SeaTurtle',
+      'Honey Bee': 'HoneyBee',
+      'Spotted Deer': 'Spotteddeer',
+      'Tarantula Hawk': 'Tarantula_Hawk',
+      'Petal Bee': 'Petal_Bee',
+      'Scarlet Macaw': 'scarlet_macow',
+      'Hyacinth Macaw': 'hyacinth_macaw',
+      'Bear Bee': 'bear_bee',
+      'Red Giant Ant': 'red_giant_ant',
+      'Pack Bee': 'pack_bee',
+      'Praying Mantis': 'praying_mantis',
+      'Blood Kiwi': 'blood_kiwi',
+      'Disco Bee': 'disco_bee',
+      'Queen Bee': 'queen_bee',
+      'Night Owl': 'night_owl',
+      'Fennec Fox': 'fennec_fox',
+      'Moth': 'Moth',
+      'Moon Cat': 'Moon_Cat',
+      'Mode': 'mode',
+      'Capybara': 'capybara',
+      'Turtle': 'Turtle',
+      'Peacock': 'peacock',
+      'Ostrich': 'ostrich',
+      'Meerkat': 'meerkat',
+      'Frog': 'frog',
+      'Dog': 'DogPet',
+      'Bunny': 'BunnyPet',
+      'Cat': 'Cat',
+      'Bee': 'Beee',
+      'Chicken': 'Chicken',
+      'Deer': 'Deer',
+      'Monkey': 'Monkey',
+      'Pig': 'Pig',
+      'Rooster': 'Rooster',
+      'Seal': 'Seal',
+      'Flamingo': 'FlamingoIcon',
+      'Wasp': 'Wasp',
+      'Kiwi': 'Kiwi',
+      'Orangutan': 'Orangutan',
+      'Hedgehog': 'Hedgehog',
+      'Squirrel': 'squirrel',
+      'Snail': 'snail',
+      'Hamster': 'hamster',
+      'Grey Mouse': 'grey_mouse',
+      'Brown Mouse': 'brown_mouse',
+      'Caterpillar': 'carterpillar',
+      'Giant Ant': 'giant_ant',
+      'Echo Frog': 'echo_frog',
+      'Butterfly': 'butterfly',
+      'Red Fox': 'red_fox',
+      'Mimic Octopus': 'mimic_octopus',
+      // Unobtainable
+      'Cow': 'cow',
+      'Polar Bear': 'polar_bear',
+      'Sea Otter': 'sea_otter',
+      'Silver Monkey': 'silver_monkey',
+      'Panda': 'panda',
+      'Blood Hedgehog': 'blood_hedgehog',
+      'Chicken Zombie': 'chicken_zombie',
+      'Firefly': 'firefly',
+      'Owl': 'owl',
+      'Golden Bee': 'golden_bee',
+      'Cooked Owl': 'cooked_owl',
+      'Blood Owl': 'blood_owl',
+      'Red Dragon': 'red_dragon',
+    };
+    const extMap: Record<string, string> = {
+      'disco_bee': 'gif',
+      'FlamingoIcon': 'png',
+      'StarfishIcon': 'png',
+      'CrabIcon': 'png',
+      'GoldenLabPet': 'png',
+      'BunnyPet': 'png',
+      'DogPet': 'png',
+      'SeagullIcon': 'png',
+    };
+    let file = nameMap[pet.name] || normalize(pet.name);
+    let ext = extMap[file] || 'png';
+    // Some files are .gif
+    if (file === 'disco_bee') ext = 'gif';
+    // Some folders are missing, fallback to base if needed
+    let path = `/Pets/${pet.obtainable ? 'Obtainable' : 'Unobtainable'}`;
+    if (folder) path += `/${folder}`;
+    path += `/${file}.${ext}`;
+    return path;
+  };
+
   const renderPetTable = (petList: typeof pets) => (
     <div className="rounded-md border">
       <Table>
@@ -645,7 +761,21 @@ export const ItemEncyclopedia = () => {
             <TableRow key={pet.name} className="hover:bg-accent/50">
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-accent rounded border flex items-center justify-center text-xs">
+                  <img
+                    src={getPetImage(pet)}
+                    alt={pet.name}
+                    className="w-8 h-8 object-contain bg-accent rounded border cursor-zoom-in"
+                    onClick={() => {
+                      setZoomedPetImg(getPetImage(pet));
+                      setZoomedPetName(pet.name);
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div style={{ display: 'none' }} className="w-8 h-8 bg-accent rounded border flex items-center justify-center text-xs">
                     🐾
                   </div>
                   {pet.name}
@@ -679,6 +809,36 @@ export const ItemEncyclopedia = () => {
           ))}
         </TableBody>
       </Table>
+      {/* Pet Zoom Modal */}
+      {zoomedPetImg && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 cursor-zoom-out"
+          onClick={() => { setZoomedPetImg(null); setZoomedPetName(null); }}
+        >
+          <div
+            className="relative flex flex-col items-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <img
+              src={zoomedPetImg}
+              alt={zoomedPetName || 'Pet'}
+              className="max-w-[90vw] max-h-[80vh] rounded-lg border-2 border-white shadow-2xl bg-white"
+              style={{ objectFit: 'contain', background: 'white' }}
+            />
+            <button
+              className="mt-4 px-4 py-2 rounded bg-accent text-foreground border shadow hover:bg-accent/80"
+              onClick={() => { setZoomedPetImg(null); setZoomedPetName(null); }}
+            >
+              Close
+            </button>
+            {zoomedPetName && (
+              <div className="mt-2 text-lg font-semibold text-white drop-shadow-lg text-center">
+                {zoomedPetName}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 
