@@ -244,10 +244,12 @@ const Index = () => {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-card border-border">
-                                            <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                                <User className="h-4 w-4 mr-2" />
-                                                Profile
-                                            </DropdownMenuItem>
+                                            <Link to="/profile">
+                                                <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                    <User className="h-4 w-4 mr-2" />
+                                                    Profile
+                                                </DropdownMenuItem>
+                                            </Link>
                                             <DropdownMenuSeparator className="bg-border" />
                                             <DropdownMenuItem 
                                                 onClick={signOut}
