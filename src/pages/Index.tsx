@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 // Path to the music file in public
-const MUSIC_SRC = '/Music/Morning Mood.mp3';
+const MUSIC_SRC = '/Music/Morning%20Mood.mp3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -81,11 +81,11 @@ const Index = () => {
         <div className="min-h-screen bg-background">
             {/* Music Consent Dialog */}
             <Dialog open={musicDialogOpen}>
-                <DialogContent aria-describedby="music-dialog-desc">
+                <DialogContent aria-describedby="music-dialog-description">
                     <DialogHeader>
                         <DialogTitle>Play background music?</DialogTitle>
                     </DialogHeader>
-                    <div id="music-dialog-desc" className="py-2">Would you like to play relaxing background music while you use the app?</div>
+                    <div id="music-dialog-description" className="py-2">Would you like to play relaxing background music while you use the app?</div>
                     <DialogFooter className="flex gap-2 justify-end">
                         <DialogClose asChild>
                             <Button
