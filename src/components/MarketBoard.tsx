@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import type { MarketItem, StockData } from '@/types/api';
 
 interface MarketBoardProps {
@@ -12,6 +13,8 @@ interface MarketBoardProps {
 }
 
 export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProps) => {
+    const { user } = useAuth();
+    const wsRef = useRef<WebSocket | null>(null);
     const [marketData, setMarketData] = useState<StockData>({
         seed_stock: [],
         gear_stock: [],
@@ -26,17 +29,103 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        console.log('MarketBoard: Component mounted, fetching market data');
-        fetchMarketData();
+    // Get user ID for websocket connection
+    const getUserId = () => {
+        if (!user) return null;
+        
+        // For authenticated users, use their actual user ID
+        if (!('isGuest' in user)) {
+            return user.id;
+        }
+        
+        // For guest users, use the guest ID
+        return user.id;
+    };
 
-        // Refresh market data every 30 seconds
-        const interval = setInterval(fetchMarketData, 30000);
+    // WebSocket connection
+    useEffect(() => {
+        const userId = getUserId();
+        if (!userId) {
+            console.log('MarketBoard: No user ID available, skipping websocket connection');
+            return;
+        }
+
+        console.log('MarketBoard: Connecting to websocket with user ID:', userId);
+        
+        const connectWebSocket = () => {
+            try {
+                onStatusChange('connecting');
+                const ws = new WebSocket(`wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`);
+                wsRef.current = ws;
+
+                ws.onopen = () => {
+                    console.log('MarketBoard: WebSocket connection established');
+                    onStatusChange('connected');
+                    toast({
+                        title: "Connected",
+                        description: "Real-time market updates enabled!",
+                    });
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        console.log('MarketBoard: Message from websocket:', event.data);
+                        const data = JSON.parse(event.data);
+                        
+                        // Update market data with real-time info
+                        setMarketData(data);
+                        onNotifications(data.notifications || []);
+                        
+                        toast({
+                            title: "Market Update",
+                            description: "Market data updated in real-time!",
+                        });
+                    } catch (error) {
+                        console.error('MarketBoard: Error parsing websocket message:', error);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('MarketBoard: WebSocket error:', error);
+                    onStatusChange('disconnected');
+                    setError('WebSocket connection error');
+                };
+
+                ws.onclose = () => {
+                    console.log('MarketBoard: WebSocket connection closed');
+                    onStatusChange('disconnected');
+                    
+                    // Attempt to reconnect after 5 seconds
+                    setTimeout(() => {
+                        if (wsRef.current?.readyState === WebSocket.CLOSED) {
+                            console.log('MarketBoard: Attempting to reconnect websocket...');
+                            connectWebSocket();
+                        }
+                    }, 5000);
+                };
+
+            } catch (error) {
+                console.error('MarketBoard: Failed to create websocket connection:', error);
+                onStatusChange('disconnected');
+                setError('Failed to connect to real-time updates');
+            }
+        };
+
+        connectWebSocket();
 
         return () => {
-            console.log('MarketBoard: Component unmounting, clearing interval');
-            clearInterval(interval);
+            if (wsRef.current) {
+                console.log('MarketBoard: Closing websocket connection');
+                wsRef.current.close();
+                wsRef.current = null;
+            }
         };
+    }, [user, onStatusChange, onNotifications]);
+
+    // Fallback: Fetch initial data via REST API
+    useEffect(() => {
+        console.log('MarketBoard: Fetching initial market data');
+        fetchMarketData();
     }, []);
 
     const fetchMarketData = async () => {
