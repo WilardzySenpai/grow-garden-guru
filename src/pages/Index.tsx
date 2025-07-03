@@ -25,6 +25,7 @@ import { NotificationFeed } from '@/components/NotificationFeed';
 import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
     DropdownMenu, 
     DropdownMenuContent, 
@@ -247,12 +248,22 @@ const Index = () => {
                             {!loading && (
                                 user && !('isGuest' in user) ? (
                                     <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="gap-2">
-                                                <User className="h-4 w-4" />
-                                                {user.user_metadata?.full_name || user.email}
-                                            </Button>
-                                        </DropdownMenuTrigger>
+                                         <DropdownMenuTrigger asChild>
+                                             <Button variant="ghost" size="sm" className="gap-2">
+                                                 <div className="flex items-center gap-2">
+                                                     <Avatar className="h-6 w-6">
+                                                      <AvatarImage 
+                                                          src={user.user_metadata?.avatar_url} 
+                                                          alt="Profile" 
+                                                      />
+                                                      <AvatarFallback className="text-xs">
+                                                          {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                      </AvatarFallback>
+                                                  </Avatar>
+                                                  {user.user_metadata?.full_name || user.email}
+                                                 </div>
+                                             </Button>
+                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-card border-border">
                                             <Link to="/profile">
                                                 <DropdownMenuItem className="text-foreground hover:bg-accent">
