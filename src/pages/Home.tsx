@@ -158,7 +158,7 @@ const Home = () => {
                             </span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            Made with Lovable
+                            Made with everything we love about Grow A Garden
                         </div>
                     </div>
                 </div>
