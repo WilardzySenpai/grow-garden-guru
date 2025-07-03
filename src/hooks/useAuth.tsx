@@ -101,6 +101,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Use environment variable for redirect in production, fallback to window.location.origin for dev
     const redirectUrl =
       import.meta.env.VITE_DISCORD_REDIRECT_URI || `${window.location.origin}/`;
+    console.log('[Discord OAuth] Using redirectUrl:', redirectUrl);
     await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
