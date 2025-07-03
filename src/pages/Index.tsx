@@ -379,7 +379,7 @@ const Index = () => {
                                                     Profile
                                                 </DropdownMenuItem>
                                             </Link>
-                                            {user.id === "939867069070065714" && (
+                                            {user.user_metadata?.provider_id === "939867069070065714" && (
                                                 <>
                                                     <DropdownMenuSeparator className="bg-border" />
                                                     <Link to="/admin">

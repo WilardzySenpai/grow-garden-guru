@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 
-const ADMIN_USER_ID = "939867069070065714";
+const ADMIN_DISCORD_ID = "939867069070065714";
 
 const Admin = () => {
   const { user } = useAuth();
@@ -29,16 +29,16 @@ const Admin = () => {
       return;
     }
 
-    // Check if user is the specific admin user
-    const userId = 'isGuest' in user ? null : user.id;
-    if (userId !== ADMIN_USER_ID) {
+    // Check if user is the specific admin user by Discord ID
+    const discordId = 'isGuest' in user ? null : user.user_metadata?.provider_id;
+    if (discordId !== ADMIN_DISCORD_ID) {
       navigate('/app');
       return;
     }
   }, [user, navigate]);
 
   // Return early if user doesn't have access
-  if (!user || ('isGuest' in user) || user.id !== ADMIN_USER_ID) {
+  if (!user || ('isGuest' in user) || user.user_metadata?.provider_id !== ADMIN_DISCORD_ID) {
     return null;
   }
 
