@@ -40,7 +40,113 @@ const Index = () => {
     const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
     const [notifications, setNotifications] = useState<any[]>([]);
     const [weatherData, setWeatherData] = useState<any>(null);
+    const [marketData, setMarketData] = useState<any>(null);
     const { user, signOut, loading } = useAuth();
+
+    // WebSocket connection at app level
+    const wsRef = useRef<WebSocket | null>(null);
+    
+    // Get user ID for websocket connection
+    const getUserId = () => {
+        if (!user) return null;
+        
+        // For authenticated users, use their actual user ID
+        if (!('isGuest' in user)) {
+            return user.id;
+        }
+        
+        // For guest users, use the guest ID
+        return user.id;
+    };
+
+    // WebSocket connection - stays connected across all tabs
+    useEffect(() => {
+        console.log('Index: WebSocket useEffect triggered, user:', user);
+        const userId = getUserId();
+        console.log('Index: getUserId returned:', userId);
+        
+        if (!userId) {
+            console.log('Index: No user ID available, skipping websocket connection');
+            setWsStatus('disconnected');
+            return;
+        }
+
+        console.log('Index: Connecting to websocket with user ID:', userId);
+        
+        const connectWebSocket = () => {
+            try {
+                setWsStatus('connecting');
+                const ws = new WebSocket(`wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`);
+                wsRef.current = ws;
+
+                ws.onopen = () => {
+                    console.log('Index: WebSocket connection established');
+                    setWsStatus('connected');
+                    toast({
+                        title: "Connected",
+                        description: "Real-time updates enabled!",
+                    });
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        console.log('Index: Message from websocket:', event.data);
+                        const data = JSON.parse(event.data);
+                        
+                        // Update all data received from websocket
+                        setNotifications(data.notifications || []);
+                        setMarketData(data);
+                        
+                        // Pass weather data if available
+                        if (data.weather) {
+                            setWeatherData(data.weather);
+                        }
+                        
+                        toast({
+                            title: "Live Update",
+                            description: "Market and weather data refreshed!",
+                        });
+                    } catch (error) {
+                        console.error('Index: Error parsing websocket message:', error);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('Index: WebSocket error:', error);
+                    setWsStatus('disconnected');
+                };
+
+                ws.onclose = (event) => {
+                    console.log('Index: WebSocket connection closed', event.code, event.reason);
+                    setWsStatus('disconnected');
+                    
+                    // Only attempt to reconnect if not a normal closure
+                    if (event.code !== 1000) {
+                        setTimeout(() => {
+                            if (wsRef.current?.readyState === WebSocket.CLOSED) {
+                                console.log('Index: Attempting to reconnect websocket...');
+                                connectWebSocket();
+                            }
+                        }, 5000);
+                    }
+                };
+
+            } catch (error) {
+                console.error('Index: Failed to create websocket connection:', error);
+                setWsStatus('disconnected');
+            }
+        };
+
+        connectWebSocket();
+
+        return () => {
+            if (wsRef.current) {
+                console.log('Index: Closing websocket connection');
+                wsRef.current.close();
+                wsRef.current = null;
+            }
+        };
+    }, [user]);
 
     // Music player state
     const [musicDialogOpen, setMusicDialogOpen] = useState(true);
@@ -340,7 +446,7 @@ const Index = () => {
                     <TabsContent value="market" className="space-y-6">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2">
-                                <MarketBoard onStatusChange={setWsStatus} onNotifications={setNotifications} onWeatherData={setWeatherData} />
+                                <MarketBoard marketData={marketData} onStatusChange={setWsStatus} onNotifications={setNotifications} onWeatherData={setWeatherData} />
                             </div>
                             <div>
                                 <WeatherStatus weatherData={weatherData} />

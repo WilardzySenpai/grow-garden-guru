@@ -1,142 +1,38 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 import type { MarketItem, StockData } from '@/types/api';
 
 interface MarketBoardProps {
+    marketData?: any;
     onStatusChange: (status: 'connecting' | 'connected' | 'disconnected') => void;
     onNotifications: (notifications: any[]) => void;
     onWeatherData: (weatherData: any) => void;
 }
 
-export const MarketBoard = ({ onStatusChange, onNotifications, onWeatherData }: MarketBoardProps) => {
-    const { user } = useAuth();
-    const wsRef = useRef<WebSocket | null>(null);
-    const [marketData, setMarketData] = useState<StockData>({
-        seed_stock: [],
-        gear_stock: [],
-        egg_stock: [],
-        cosmetic_stock: [],
-        eventshop_stock: [],
-        travelingmerchant_stock: [],
-        notifications: [],
-        discord_invite: ''
-    });
-
+export const MarketBoard = ({ marketData, onStatusChange, onNotifications, onWeatherData }: MarketBoardProps) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Get user ID for websocket connection
-    const getUserId = () => {
-        if (!user) return null;
-        
-        // For authenticated users, use their actual user ID
-        if (!('isGuest' in user)) {
-            return user.id;
-        }
-        
-        // For guest users, use the guest ID
-        return user.id;
-    };
-
-    // WebSocket connection
+    // Update loading state when data is received
     useEffect(() => {
-        console.log('MarketBoard: WebSocket useEffect triggered, user:', user);
-        const userId = getUserId();
-        console.log('MarketBoard: getUserId returned:', userId);
-        
-        if (!userId) {
-            console.log('MarketBoard: No user ID available, skipping websocket connection');
+        if (marketData) {
+            console.log('MarketBoard: Received market data from websocket:', marketData);
             setLoading(false);
-            setError('No user ID available for connection');
-            onStatusChange('disconnected');
-            return;
+            setError(null);
+        } else {
+            setLoading(true);
+            // Show loading message after 3 seconds
+            const timer = setTimeout(() => {
+                if (!marketData) {
+                    setError('Waiting for websocket connection...');
+                }
+            }, 3000);
+            return () => clearTimeout(timer);
         }
-
-        console.log('MarketBoard: Connecting to websocket with user ID:', userId);
-        
-        const connectWebSocket = () => {
-            try {
-                onStatusChange('connecting');
-                const ws = new WebSocket(`wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`);
-                wsRef.current = ws;
-
-                ws.onopen = () => {
-                    console.log('MarketBoard: WebSocket connection established');
-                    onStatusChange('connected');
-                    toast({
-                        title: "Connected",
-                        description: "Real-time market updates enabled!",
-                    });
-                };
-
-                ws.onmessage = (event) => {
-                    try {
-                        console.log('MarketBoard: Message from websocket:', event.data);
-                        const data = JSON.parse(event.data);
-                        
-                        // Update market data with real-time info
-                        setMarketData(data);
-                        onNotifications(data.notifications || []);
-                        
-                        // Pass weather data if available
-                        if (data.weather) {
-                            onWeatherData(data.weather);
-                        }
-                        
-                        setLoading(false);
-                        setError(null);
-                        
-                        toast({
-                            title: "Live Update",
-                            description: "Market and weather data refreshed!",
-                        });
-                    } catch (error) {
-                        console.error('MarketBoard: Error parsing websocket message:', error);
-                        setError('Error processing live data');
-                    }
-                };
-
-                ws.onerror = (error) => {
-                    console.error('MarketBoard: WebSocket error:', error);
-                    onStatusChange('disconnected');
-                    setError('WebSocket connection error');
-                };
-
-                ws.onclose = () => {
-                    console.log('MarketBoard: WebSocket connection closed');
-                    onStatusChange('disconnected');
-                    
-                    // Attempt to reconnect after 5 seconds
-                    setTimeout(() => {
-                        if (wsRef.current?.readyState === WebSocket.CLOSED) {
-                            console.log('MarketBoard: Attempting to reconnect websocket...');
-                            connectWebSocket();
-                        }
-                    }, 5000);
-                };
-
-            } catch (error) {
-                console.error('MarketBoard: Failed to create websocket connection:', error);
-                onStatusChange('disconnected');
-                setError('Failed to connect to real-time updates');
-            }
-        };
-
-        connectWebSocket();
-
-        return () => {
-            if (wsRef.current) {
-                console.log('MarketBoard: Closing websocket connection');
-                wsRef.current.close();
-                wsRef.current = null;
-            }
-        };
-    }, [user, onStatusChange, onNotifications]);
+    }, [marketData]);
 
     const formatTimeRemaining = (endUnix: number) => {
         const now = Math.floor(Date.now() / 1000);
@@ -285,22 +181,22 @@ export const MarketBoard = ({ onStatusChange, onNotifications, onWeatherData }: 
 
                         <div className="mt-6">
                             <TabsContent value="seeds">
-                                {renderMarketSection(marketData.seed_stock || [], 'Seeds')}
+                                {renderMarketSection(marketData?.seed_stock || [], 'Seeds')}
                             </TabsContent>
                             <TabsContent value="gear">
-                                {renderMarketSection(marketData.gear_stock || [], 'Gear')}
+                                {renderMarketSection(marketData?.gear_stock || [], 'Gear')}
                             </TabsContent>
                             <TabsContent value="eggs">
-                                {renderMarketSection(marketData.egg_stock || [], 'Eggs')}
+                                {renderMarketSection(marketData?.egg_stock || [], 'Eggs')}
                             </TabsContent>
                             <TabsContent value="cosmetics">
-                                {renderMarketSection(marketData.cosmetic_stock || [], 'Cosmetics')}
+                                {renderMarketSection(marketData?.cosmetic_stock || [], 'Cosmetics')}
                             </TabsContent>
                             <TabsContent value="event">
-                                {renderMarketSection(marketData.eventshop_stock || [], 'Event Shop')}
+                                {renderMarketSection(marketData?.eventshop_stock || [], 'Event Shop')}
                             </TabsContent>
                             <TabsContent value="merchant">
-                                {renderMarketSection(marketData.travelingmerchant_stock || [], 'Traveling Merchant')}
+                                {renderMarketSection(marketData?.travelingmerchant_stock || [], 'Traveling Merchant')}
                             </TabsContent>
                         </div>
                     </Tabs>
