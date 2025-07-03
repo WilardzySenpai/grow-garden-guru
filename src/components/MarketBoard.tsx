@@ -45,9 +45,15 @@ export const MarketBoard = ({ onStatusChange, onNotifications, onWeatherData }: 
 
     // WebSocket connection
     useEffect(() => {
+        console.log('MarketBoard: WebSocket useEffect triggered, user:', user);
         const userId = getUserId();
+        console.log('MarketBoard: getUserId returned:', userId);
+        
         if (!userId) {
             console.log('MarketBoard: No user ID available, skipping websocket connection');
+            setLoading(false);
+            setError('No user ID available for connection');
+            onStatusChange('disconnected');
             return;
         }
 
