@@ -15,7 +15,11 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
         const checkApiHealth = async () => {
             try {
                 setApiStatus('checking');
-                const response = await fetch('https://api.joshlei.com/v2/growagarden/info/');
+                const response = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
+                    headers: {
+                        'Jstudio-key': 'jstudio'
+                    }
+                });
 
                 if (response.ok) {
                     setApiStatus('online');

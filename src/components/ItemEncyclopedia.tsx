@@ -30,7 +30,11 @@ export const ItemEncyclopedia = () => {
             console.log('ItemEncyclopedia: Fetching data from API');
 
             // Fetch all items
-            const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info/');
+            const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
+                headers: {
+                    'Jstudio-key': 'jstudio'
+                }
+            });
             if (!itemsResponse.ok) {
                 throw new Error(`Items API error! status: ${itemsResponse.status}`);
             }
@@ -38,7 +42,11 @@ export const ItemEncyclopedia = () => {
             setItems(Array.isArray(itemsData) ? itemsData : []);
 
             // Fetch weather data for weather items
-            const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/weather');
+            const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/weather', {
+                headers: {
+                    'Jstudio-key': 'jstudio'
+                }
+            });
             if (!weatherResponse.ok) {
                 throw new Error(`Weather API error! status: ${weatherResponse.status}`);
             }

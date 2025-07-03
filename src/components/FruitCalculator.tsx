@@ -105,7 +105,11 @@ export const FruitCalculator = () => {
         setCropsLoading(true);
         try {
             console.log('FruitCalculator: Fetching available crops from calculate endpoint');
-            const response = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
+            const response = await fetch('https://api.joshlei.com/v2/growagarden/calculate', {
+                headers: {
+                    'Jstudio-key': 'jstudio'
+                }
+            });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
