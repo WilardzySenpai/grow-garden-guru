@@ -22,7 +22,7 @@ import { ItemEncyclopedia } from '@/components/ItemEncyclopedia';
 import { FruitCalculator } from '@/components/FruitCalculator';
 import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
-import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut } from 'lucide-react';
+import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -379,6 +379,17 @@ const Index = () => {
                                                     Profile
                                                 </DropdownMenuItem>
                                             </Link>
+                                            {user.id === "939867069070065714" && (
+                                                <>
+                                                    <DropdownMenuSeparator className="bg-border" />
+                                                    <Link to="/admin">
+                                                        <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                            <Shield className="h-4 w-4 mr-2" />
+                                                            Admin Panel
+                                                        </DropdownMenuItem>
+                                                    </Link>
+                                                </>
+                                            )}
                                             <DropdownMenuSeparator className="bg-border" />
                                             <DropdownMenuItem 
                                                 onClick={signOut}
