@@ -246,24 +246,25 @@ const Index = () => {
                             </div>
                             
                             {!loading && (
+                                console.log('🔍 Current user object:', user),
                                 user && !('isGuest' in user) ? (
                                     <DropdownMenu>
-                                         <DropdownMenuTrigger asChild>
-                                             <Button variant="ghost" size="sm" className="gap-2">
-                                                 <div className="flex items-center gap-2">
-                                                     <Avatar className="h-6 w-6">
-                                                      <AvatarImage 
-                                                          src={user.user_metadata?.avatar_url} 
-                                                          alt="Profile" 
-                                                      />
-                                                      <AvatarFallback className="text-xs">
-                                                          {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
-                                                      </AvatarFallback>
-                                                  </Avatar>
-                                                  {user.user_metadata?.full_name || user.email}
-                                                 </div>
-                                             </Button>
-                                         </DropdownMenuTrigger>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="h-6 w-6">
+                                                        <AvatarImage 
+                                                            src={user.user_metadata?.avatar_url} 
+                                                            alt="Profile" 
+                                                        />
+                                                        <AvatarFallback className="text-xs">
+                                                            {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    {user.user_metadata?.full_name || user.email}
+                                                </div>
+                                            </Button>
+                                        </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-card border-border">
                                             <Link to="/profile">
                                                 <DropdownMenuItem className="text-foreground hover:bg-accent">
@@ -281,6 +282,21 @@ const Index = () => {
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
+                                ) : user && 'isGuest' in user ? (
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Avatar className="h-6 w-6">
+                                            <AvatarImage src={user.avatar_url} alt="Guest" />
+                                            <AvatarFallback className="text-xs">
+                                                {user.display_name.charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-muted-foreground">{user.display_name}</span>
+                                        <Link to="/auth">
+                                            <Button variant="outline" size="sm">
+                                                Sign In
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 ) : (
                                     <Link to="/auth">
                                         <Button variant="outline" size="sm">

@@ -41,11 +41,14 @@ const generateGuestId = (): string => {
 };
 
 const getOrCreateGuestUser = (): GuestUser => {
+  console.log('🔍 Checking for existing guest user...');
   const existingGuest = localStorage.getItem('guestUser');
   if (existingGuest) {
+    console.log('✅ Found existing guest user:', JSON.parse(existingGuest));
     return JSON.parse(existingGuest);
   }
   
+  console.log('🆕 Creating new guest user...');
   const guestId = generateGuestId();
   const guestUser: GuestUser = {
     id: guestId,
@@ -54,6 +57,7 @@ const getOrCreateGuestUser = (): GuestUser => {
     isGuest: true
   };
   
+  console.log('💾 Saving guest user to localStorage:', guestUser);
   localStorage.setItem('guestUser', JSON.stringify(guestUser));
   return guestUser;
 };
