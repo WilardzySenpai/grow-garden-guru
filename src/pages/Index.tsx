@@ -48,16 +48,26 @@ const Index = () => {
     const audioRef = useRef<HTMLAudioElement>(null);
     // Play music if user accepted, even if player is closed
     useEffect(() => {
-        if (audioRef.current) {
-            if (autoPlayMusic) {
-                // Always try to play if user accepted
-                const playPromise = audioRef.current.play();
+        if (audioRef.current && autoPlayMusic) {
+            // Check if audio source is valid before playing
+            const audio = audioRef.current;
+            const canPlay = audio.canPlayType('audio/mpeg');
+            
+            if (canPlay && audio.src) {
+                const playPromise = audio.play();
                 if (playPromise !== undefined) {
-                    playPromise.catch(() => { });
+                    playPromise.catch((error) => {
+                        console.log('Audio play failed:', error);
+                        toast({
+                            title: "Audio not available",
+                            description: "Background music file could not be loaded",
+                            variant: "destructive",
+                        });
+                    });
                 }
-            } else {
-                audioRef.current.pause();
             }
+        } else if (audioRef.current) {
+            audioRef.current.pause();
         }
         // eslint-disable-next-line
     }, [autoPlayMusic, musicDialogOpen]);
