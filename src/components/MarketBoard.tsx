@@ -10,9 +10,10 @@ import type { MarketItem, StockData } from '@/types/api';
 interface MarketBoardProps {
     onStatusChange: (status: 'connecting' | 'connected' | 'disconnected') => void;
     onNotifications: (notifications: any[]) => void;
+    onWeatherData: (weatherData: any) => void;
 }
 
-export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProps) => {
+export const MarketBoard = ({ onStatusChange, onNotifications, onWeatherData }: MarketBoardProps) => {
     const { user } = useAuth();
     const wsRef = useRef<WebSocket | null>(null);
     const [marketData, setMarketData] = useState<StockData>({
@@ -76,12 +77,21 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
                         setMarketData(data);
                         onNotifications(data.notifications || []);
                         
+                        // Pass weather data if available
+                        if (data.weather) {
+                            onWeatherData(data.weather);
+                        }
+                        
+                        setLoading(false);
+                        setError(null);
+                        
                         toast({
-                            title: "Market Update",
-                            description: "Market data updated in real-time!",
+                            title: "Live Update",
+                            description: "Market and weather data refreshed!",
                         });
                     } catch (error) {
                         console.error('MarketBoard: Error parsing websocket message:', error);
+                        setError('Error processing live data');
                     }
                 };
 
@@ -121,53 +131,6 @@ export const MarketBoard = ({ onStatusChange, onNotifications }: MarketBoardProp
             }
         };
     }, [user, onStatusChange, onNotifications]);
-
-    // Fallback: Fetch initial data via REST API
-    useEffect(() => {
-        console.log('MarketBoard: Fetching initial market data');
-        fetchMarketData();
-    }, []);
-
-    const fetchMarketData = async () => {
-        try {
-            onStatusChange('connecting');
-            setError(null);
-
-            console.log('MarketBoard: Fetching market data from API');
-            const response = await fetch('https://api.joshlei.com/v2/growagarden/stock');
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('MarketBoard: Market data received', data);
-
-            setMarketData(data);
-            onNotifications(data.notifications || []);
-            onStatusChange('connected');
-
-            if (data.seed_stock?.length > 0 || data.gear_stock?.length > 0) {
-                toast({
-                    title: "Market Updated",
-                    description: "New items available in the market!",
-                });
-            }
-
-        } catch (error) {
-            console.error('MarketBoard: Failed to fetch market data:', error);
-            setError('Failed to fetch market data');
-            onStatusChange('disconnected');
-
-            toast({
-                title: "Market Update Failed",
-                description: "Unable to fetch latest market data.",
-                variant: "destructive"
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const formatTimeRemaining = (endUnix: number) => {
         const now = Math.floor(Date.now() / 1000);

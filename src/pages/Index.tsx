@@ -39,6 +39,7 @@ const Index = () => {
     const [activeTab, setActiveTab] = useState('market');
     const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
     const [notifications, setNotifications] = useState<any[]>([]);
+    const [weatherData, setWeatherData] = useState<any>(null);
     const { user, signOut, loading } = useAuth();
 
     // Music player state
@@ -339,10 +340,10 @@ const Index = () => {
                     <TabsContent value="market" className="space-y-6">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2">
-                                <MarketBoard onStatusChange={setWsStatus} onNotifications={setNotifications} />
+                                <MarketBoard onStatusChange={setWsStatus} onNotifications={setNotifications} onWeatherData={setWeatherData} />
                             </div>
                             <div>
-                                <WeatherStatus />
+                                <WeatherStatus weatherData={weatherData} />
                             </div>
                         </div>
                     </TabsContent>

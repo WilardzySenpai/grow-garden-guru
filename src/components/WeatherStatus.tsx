@@ -3,48 +3,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { WeatherData } from '@/types/api';
 
-export const WeatherStatus = () => {
-    const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
+interface WeatherStatusProps {
+    weatherData?: any;
+}
+
+export const WeatherStatus = ({ weatherData }: WeatherStatusProps) => {
     const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
+    const [allWeatherData, setAllWeatherData] = useState<WeatherData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Update weather when props change
     useEffect(() => {
-        fetchWeatherData();
-
-        // Refresh weather data every 60 seconds
-        const interval = setInterval(fetchWeatherData, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchWeatherData = async () => {
-        try {
-            setError(null);
-            console.log('WeatherStatus: Fetching weather data from API');
-
-            const response = await fetch('https://api.joshlei.com/v2/growagarden/weather');
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('WeatherStatus: Weather data received', data);
-
-            const weatherArray: WeatherData[] = data.weather || [];
-            setWeatherData(weatherArray);
-
+        if (weatherData) {
+            console.log('WeatherStatus: Received weather data from websocket:', weatherData);
+            
+            const weatherArray: WeatherData[] = weatherData || [];
+            setAllWeatherData(weatherArray);
+            
             // Find active weather or use the first one
             const activeWeather = weatherArray.find(w => w.active);
             setCurrentWeather(activeWeather || weatherArray[0] || null);
-
-        } catch (error) {
-            console.error('WeatherStatus: Failed to fetch weather data:', error);
-            setError('Failed to fetch weather data');
-        } finally {
             setLoading(false);
+            setError(null);
+        } else {
+            setLoading(true);
         }
-    };
+    }, [weatherData]);
 
     const formatDuration = (seconds: number) => {
         const hours = Math.floor(seconds / 3600);
@@ -152,7 +137,7 @@ export const WeatherStatus = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-3">
-                        {weatherData.filter(w => !w.active).slice(0, 6).map((weather) => (
+                        {allWeatherData.filter(w => !w.active).slice(0, 6).map((weather) => (
                             <div key={weather.weather_id} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
                                 <div className="flex items-center gap-3">
                                     {typeof weather.icon === 'string' && weather.icon.startsWith('http') ? (
@@ -174,9 +159,9 @@ export const WeatherStatus = () => {
                                 </div>
                             </div>
                         ))}
-                        {weatherData.filter(w => !w.active).length === 0 && (
+                        {allWeatherData.filter(w => !w.active).length === 0 && (
                             <p className="text-center text-muted-foreground py-4">
-                                {weatherData.length === 0 ? 'No weather data available' : 'No inactive weather to show'}
+                                {allWeatherData.length === 0 ? 'No weather data available' : 'No inactive weather to show'}
                             </p>
                         )}
                     </div>
