@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 // Path to the music file in public
-const MUSIC_SRC = '/Music/Morning%20Mood.mp3';
+const MUSIC_SRC = '/Music/Morning_Mood.mp3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
