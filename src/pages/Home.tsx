@@ -150,15 +150,24 @@ const Home = () => {
             {/* Footer */}
             <footer className="border-t border-border bg-card/30">
                 <div className="container mx-auto px-4 py-8">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <Leaf className="h-5 w-5 text-primary" />
                             <span className="text-sm text-muted-foreground">
                                 © 2024 Grow A Garden Guru. Built with ❤️ for the community.
                             </span>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                            Made with everything we love about Grow A Garden
+                        <div className="flex items-center gap-4">
+                            <a
+                                href="/faq"
+                                className="text-sm text-primary font-semibold hover:underline transition-colors px-3 py-1 rounded bg-accent/40 border border-accent/30 shadow-sm"
+                                aria-label="Frequently Asked Questions"
+                            >
+                                FAQ
+                            </a>
+                            <span className="text-sm text-muted-foreground">
+                                Made with everything we love about Grow A Garden
+                            </span>
                         </div>
                     </div>
                 </div>
