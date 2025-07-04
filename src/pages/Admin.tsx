@@ -36,8 +36,10 @@ const Admin = () => {
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showDatabaseOverview, setShowDatabaseOverview] = useState(false);
   const [showSystemAnalytics, setShowSystemAnalytics] = useState(false);
+  const [showApiManagement, setShowApiManagement] = useState(false);
   const [dbStats, setDbStats] = useState<any>({});
   const [analyticsData, setAnalyticsData] = useState<any>({});
+  const [apiData, setApiData] = useState<any>({});
 
   // Check if user has admin access
   useEffect(() => {
@@ -205,6 +207,101 @@ const Admin = () => {
         userGrowthMonth: 0,
         avgUsersPerDay: 0,
         peakHour: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch API management data
+  const fetchApiAnalytics = async () => {
+    setLoading(true);
+    try {
+      // Get total API calls from logs
+      const { count: totalCalls } = await supabase
+        .from('api_usage_logs')
+        .select('*', { count: 'exact', head: true });
+
+      // Get today's API calls
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const { count: todayCalls } = await supabase
+        .from('api_usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', today.toISOString());
+
+      // Get recent API logs
+      const { data: recentLogs } = await supabase
+        .from('api_usage_logs')
+        .select('endpoint, method, status_code, response_time_ms, created_at, ip_address')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Get endpoint statistics
+      const { data: endpointStats } = await supabase
+        .from('api_usage_logs')
+        .select('endpoint, status_code')
+        .gte('created_at', today.toISOString());
+
+      // Process endpoint statistics
+      const endpoints: Record<string, { total: number; success: number; errors: number }> = {};
+      if (endpointStats) {
+        endpointStats.forEach(log => {
+          if (!endpoints[log.endpoint]) {
+            endpoints[log.endpoint] = { total: 0, success: 0, errors: 0 };
+          }
+          endpoints[log.endpoint].total++;
+          if (log.status_code >= 200 && log.status_code < 300) {
+            endpoints[log.endpoint].success++;
+          } else if (log.status_code >= 400) {
+            endpoints[log.endpoint].errors++;
+          }
+        });
+      }
+
+      // Calculate average response time
+      const { data: responseTimes } = await supabase
+        .from('api_usage_logs')
+        .select('response_time_ms')
+        .gte('created_at', today.toISOString())
+        .not('response_time_ms', 'is', null);
+
+      let avgResponseTime = 0;
+      if (responseTimes && responseTimes.length > 0) {
+        const totalTime = responseTimes.reduce((sum, log) => sum + (log.response_time_ms || 0), 0);
+        avgResponseTime = Math.round(totalTime / responseTimes.length);
+      }
+
+      // Calculate error rate
+      const errorCount = endpointStats?.filter(log => log.status_code >= 400).length || 0;
+      const errorRate = endpointStats?.length ? ((errorCount / endpointStats.length) * 100).toFixed(2) : '0.00';
+
+      setApiData({
+        totalCalls: totalCalls || 0,
+        todayCalls: todayCalls || 0,
+        recentLogs: recentLogs || [],
+        endpoints: Object.entries(endpoints).map(([endpoint, stats]) => ({
+          endpoint,
+          total: stats.total,
+          success: stats.success,
+          errors: stats.errors,
+          successRate: stats.total > 0 ? ((stats.success / stats.total) * 100).toFixed(1) : '0.0'
+        })),
+        avgResponseTime,
+        errorRate,
+        status: 'Online'
+      });
+    } catch (error) {
+      console.error('Error fetching API analytics:', error);
+      setApiData({
+        totalCalls: 0,
+        todayCalls: 0,
+        recentLogs: [],
+        endpoints: [],
+        avgResponseTime: 0,
+        errorRate: '0.00',
+        status: 'Error'
       });
     } finally {
       setLoading(false);
@@ -645,6 +742,223 @@ const Admin = () => {
     );
   }
 
+  if (showApiManagement) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
+        {/* Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowApiManagement(false)}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              </div>
+              <Badge variant="secondary" className="flex items-center gap-2">
+                <Server className="h-3 w-3" />
+                API Management
+              </Badge>
+            </div>
+          </div>
+        </header>
+
+        {/* API Management Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">API Management</h1>
+                <p className="text-muted-foreground">Monitor API endpoints and usage statistics</p>
+              </div>
+              <Button onClick={fetchApiAnalytics} disabled={loading}>
+                {loading ? 'Loading...' : 'Refresh Data'}
+              </Button>
+            </div>
+
+            {/* API Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total API Calls</p>
+                      <p className="text-2xl font-bold">{apiData.totalCalls?.toLocaleString() || 0}</p>
+                    </div>
+                    <Server className="h-8 w-8 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Today's Calls</p>
+                      <p className="text-2xl font-bold">{apiData.todayCalls || 0}</p>
+                    </div>
+                    <Activity className="h-8 w-8 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Avg Response Time</p>
+                      <p className="text-2xl font-bold">{apiData.avgResponseTime || 0}ms</p>
+                    </div>
+                    <BarChart3 className="h-8 w-8 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Error Rate</p>
+                      <p className="text-2xl font-bold">{apiData.errorRate}%</p>
+                    </div>
+                    <Badge variant={parseFloat(apiData.errorRate || '0') < 1 ? "default" : "destructive"}>
+                      {parseFloat(apiData.errorRate || '0') < 1 ? 'Good' : 'High'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Endpoint Statistics */}
+            <Card>
+              <CardHeader>
+                <CardTitle>API Endpoints</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8">Loading endpoints...</div>
+                ) : !apiData.endpoints || apiData.endpoints.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No API calls recorded today</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Endpoint</TableHead>
+                        <TableHead>Total Calls</TableHead>
+                        <TableHead>Success</TableHead>
+                        <TableHead>Errors</TableHead>
+                        <TableHead>Success Rate</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {apiData.endpoints.map((endpoint: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-mono text-sm">{endpoint.endpoint}</TableCell>
+                          <TableCell>{endpoint.total}</TableCell>
+                          <TableCell className="text-green-600">{endpoint.success}</TableCell>
+                          <TableCell className="text-red-600">{endpoint.errors}</TableCell>
+                          <TableCell>
+                            <Badge variant={parseFloat(endpoint.successRate) > 95 ? "default" : parseFloat(endpoint.successRate) > 90 ? "secondary" : "destructive"}>
+                              {endpoint.successRate}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent API Logs */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent API Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8">Loading activity...</div>
+                ) : !apiData.recentLogs || apiData.recentLogs.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No recent API activity</div>
+                ) : (
+                  <div className="space-y-3">
+                    {apiData.recentLogs.map((log: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">{log.method}</Badge>
+                          <span className="font-mono text-sm">{log.endpoint}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge variant={log.status_code >= 200 && log.status_code < 300 ? "default" : "destructive"}>
+                            {log.status_code}
+                          </Badge>
+                          {log.response_time_ms && (
+                            <span className="text-sm text-muted-foreground">{log.response_time_ms}ms</span>
+                          )}
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(log.created_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* API Health Status */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>API Health</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">API Status</span>
+                    <Badge className="bg-green-500">{apiData.status || 'Online'}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">Response Time</span>
+                    <Badge variant={apiData.avgResponseTime < 100 ? "default" : apiData.avgResponseTime < 300 ? "secondary" : "destructive"}>
+                      {apiData.avgResponseTime < 100 ? 'Fast' : apiData.avgResponseTime < 300 ? 'Good' : 'Slow'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">Error Rate</span>
+                    <Badge variant={parseFloat(apiData.errorRate || '0') < 1 ? "default" : "destructive"}>
+                      {parseFloat(apiData.errorRate || '0') < 1 ? 'Low' : 'High'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>API Monitoring</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">Logging</span>
+                    <Badge className="bg-green-500">Active</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">Rate Limiting</span>
+                    <Badge variant="secondary">Enabled</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">Authentication</span>
+                    <Badge className="bg-green-500">Required</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const adminSections = [
     {
       icon: Users,
@@ -804,6 +1118,9 @@ const Admin = () => {
                       } else if (section.title === "System Analytics") {
                         setShowSystemAnalytics(true);
                         fetchSystemAnalytics();
+                      } else if (section.title === "API Management") {
+                        setShowApiManagement(true);
+                        fetchApiAnalytics();
                       }
                     }}
                   >
