@@ -1,5 +1,9 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Leaf, AlertTriangle } from 'lucide-react';
 
 const NotFound = () => {
     const location = useLocation();
@@ -12,14 +16,35 @@ const NotFound = () => {
     }, [location.pathname]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="text-center">
-                <h1 className="text-4xl font-bold mb-4">404</h1>
-                <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-                <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-                    Return to Home
-                </a>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10 flex flex-col items-center justify-center px-4">
+            <header className="absolute top-0 left-0 w-full border-b border-border bg-card/50 backdrop-blur-sm z-10">
+                <div className="container mx-auto px-4 py-4 flex items-center gap-3">
+                    <Leaf className="h-7 w-7 text-primary" />
+                    <span className="font-bold text-lg text-foreground">Grow A Garden Guru</span>
+                    <Badge variant="secondary" className="ml-3">Game Intelligence Platform</Badge>
+                </div>
+            </header>
+            <main className="flex flex-col items-center justify-center flex-1 w-full">
+                <Card className="shadow-xl border-0 bg-card/90 max-w-md w-full animate-fade-in-up">
+                    <CardHeader className="flex flex-col items-center gap-2 pb-0">
+                        <AlertTriangle className="h-12 w-12 text-yellow-500 mb-2 animate-bounce" />
+                        <CardTitle className="text-5xl font-extrabold tracking-tight text-primary mb-2">404</CardTitle>
+                        <CardDescription className="text-lg text-muted-foreground mb-2">Oops! The page you are looking for does not exist.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center gap-4 pt-0">
+                        <p className="text-base text-muted-foreground text-center mb-2">
+                            The link may be broken, or the page may have been moved.<br />
+                            If you think this is a mistake, please let us know!
+                        </p>
+                        <Button asChild size="lg" className="mt-2">
+                            <Link to="/">
+                                <Leaf className="h-5 w-5 mr-2" />
+                                Return to Home
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </main>
         </div>
     );
 };
