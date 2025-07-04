@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,12 +15,25 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const ADMIN_DISCORD_ID = "939867069070065714";
 
 const Admin = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showUserManagement, setShowUserManagement] = useState(false);
 
   // Check if user has admin access
   useEffect(() => {
@@ -37,9 +50,121 @@ const Admin = () => {
     }
   }, [user, navigate]);
 
+  // Fetch users from database
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Return early if user doesn't have access
   if (!user || ('isGuest' in user) || user.user_metadata?.provider_id !== ADMIN_DISCORD_ID) {
     return null;
+  }
+
+  if (showUserManagement) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
+        {/* Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowUserManagement(false)}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              </div>
+              <Badge variant="secondary" className="flex items-center gap-2">
+                <Users className="h-3 w-3" />
+                User Management
+              </Badge>
+            </div>
+          </div>
+        </header>
+
+        {/* User Management Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">User Management</h1>
+                <p className="text-muted-foreground">View and manage all user accounts</p>
+              </div>
+              <Button onClick={fetchUsers} disabled={loading}>
+                {loading ? 'Loading...' : 'Refresh'}
+              </Button>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>All Users ({users.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8">Loading users...</div>
+                ) : users.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No users found</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Avatar</TableHead>
+                        <TableHead>Display Name</TableHead>
+                        <TableHead>Discord ID</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Updated</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((profile) => (
+                        <TableRow key={profile.id}>
+                          <TableCell>
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={profile.avatar_url} />
+                              <AvatarFallback>
+                                {profile.display_name?.charAt(0) || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {profile.display_name || 'No name'}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">
+                            {profile.discord_id || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(profile.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(profile.updated_at).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const adminSections = [
@@ -188,7 +313,16 @@ const Admin = () => {
                       {section.count}
                     </Badge>
                   </div>
-                  <Button className="w-full" variant="outline">
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => {
+                      if (section.title === "User Management") {
+                        setShowUserManagement(true);
+                        fetchUsers();
+                      }
+                    }}
+                  >
                     Manage
                   </Button>
                 </CardContent>
