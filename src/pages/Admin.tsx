@@ -37,9 +37,25 @@ const Admin = () => {
   const [showDatabaseOverview, setShowDatabaseOverview] = useState(false);
   const [showSystemAnalytics, setShowSystemAnalytics] = useState(false);
   const [showApiManagement, setShowApiManagement] = useState(false);
+  const [showMarketAnalytics, setShowMarketAnalytics] = useState(false);
   const [dbStats, setDbStats] = useState<any>({});
   const [analyticsData, setAnalyticsData] = useState<any>({});
   const [apiData, setApiData] = useState<any>({});
+  const [marketData, setMarketData] = useState<any>(null);
+  const [marketAnalytics, setMarketAnalytics] = useState({
+    totalItems: 0,
+    activeItems: 0,
+    expiredItems: 0,
+    categoryBreakdown: {},
+    averageItemLife: '0h',
+    topCategories: [],
+    timeToExpiration: [],
+    stockLevels: {
+      low: 0,
+      medium: 0,
+      high: 0
+    }
+  });
 
   // Check if user has admin access
   useEffect(() => {
@@ -304,6 +320,103 @@ const Admin = () => {
         status: 'Error'
       });
     } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch market analytics data from WebSocket
+  const fetchMarketAnalytics = () => {
+    setLoading(true);
+    try {
+      // Connect to WebSocket for real-time market data
+      const ws = new WebSocket('ws://localhost:8080');
+      
+      ws.onopen = () => {
+        console.log('Connected to market data WebSocket');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setMarketData(data);
+          
+          // Calculate market analytics from real data
+          const allItems = [
+            ...(data.seed_stock || []),
+            ...(data.gear_stock || []),
+            ...(data.egg_stock || []),
+            ...(data.cosmetic_stock || []),
+            ...(data.eventshop_stock || []),
+            ...(data.travelingmerchant_stock || [])
+          ];
+          
+          const now = Math.floor(Date.now() / 1000);
+          const activeItems = allItems.filter(item => item.end_date_unix > now);
+          const expiredItems = allItems.filter(item => item.end_date_unix <= now);
+          
+          // Category breakdown
+          const categoryBreakdown = {
+            'Seeds': data.seed_stock?.length || 0,
+            'Gear': data.gear_stock?.length || 0,
+            'Eggs': data.egg_stock?.length || 0,
+            'Cosmetics': data.cosmetic_stock?.length || 0,
+            'Event Shop': data.eventshop_stock?.length || 0,
+            'Traveling Merchant': data.travelingmerchant_stock?.length || 0
+          };
+          
+          // Stock levels analysis
+          const stockLevels = { low: 0, medium: 0, high: 0 };
+          allItems.forEach(item => {
+            if (item.quantity <= 5) stockLevels.low++;
+            else if (item.quantity <= 20) stockLevels.medium++;
+            else stockLevels.high++;
+          });
+          
+          // Average item life calculation
+          const lifeTimes = activeItems.map(item => (item.end_date_unix - item.start_date_unix) / 3600);
+          const avgLife = lifeTimes.length > 0 ? lifeTimes.reduce((a, b) => a + b, 0) / lifeTimes.length : 0;
+          
+          // Top categories by item count
+          const topCategories = Object.entries(categoryBreakdown)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([name, count]) => ({ name, count }));
+          
+          setMarketAnalytics({
+            totalItems: allItems.length,
+            activeItems: activeItems.length,
+            expiredItems: expiredItems.length,
+            categoryBreakdown,
+            averageItemLife: `${Math.round(avgLife)}h`,
+            topCategories,
+            timeToExpiration: activeItems.map(item => ({
+              name: item.display_name,
+              timeLeft: Math.round((item.end_date_unix - now) / 3600)
+            })).sort((a, b) => a.timeLeft - b.timeLeft).slice(0, 5),
+            stockLevels
+          });
+          
+          setLoading(false);
+        } catch (error) {
+          console.error('Error parsing market data:', error);
+          setLoading(false);
+        }
+      };
+      
+      ws.onerror = () => {
+        console.error('WebSocket connection failed');
+        setLoading(false);
+      };
+      
+      // Cleanup function
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Error fetching market analytics:', error);
       setLoading(false);
     }
   };
@@ -959,6 +1072,243 @@ const Admin = () => {
     );
   }
 
+  if (showMarketAnalytics) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
+        {/* Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowMarketAnalytics(false)}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              </div>
+              <Badge variant="secondary" className="flex items-center gap-2">
+                <BarChart3 className="h-3 w-3" />
+                Market Analytics
+              </Badge>
+            </div>
+          </div>
+        </header>
+
+        {/* Market Analytics Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Market Analytics</h1>
+                <p className="text-muted-foreground">Advanced market data insights and trends</p>
+              </div>
+              <Button onClick={fetchMarketAnalytics} disabled={loading}>
+                {loading ? 'Loading...' : 'Refresh Market Data'}
+              </Button>
+            </div>
+
+            {/* Market Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Items</p>
+                      <p className="text-2xl font-bold">{marketAnalytics.totalItems}</p>
+                    </div>
+                    <BarChart3 className="h-8 w-8 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Active Items</p>
+                      <p className="text-2xl font-bold text-green-600">{marketAnalytics.activeItems}</p>
+                    </div>
+                    <Activity className="h-8 w-8 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Expired Items</p>
+                      <p className="text-2xl font-bold text-red-600">{marketAnalytics.expiredItems}</p>
+                    </div>
+                    <Server className="h-8 w-8 text-red-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Avg Item Life</p>
+                      <p className="text-2xl font-bold">{marketAnalytics.averageItemLife}</p>
+                    </div>
+                    <Badge variant="outline">Duration</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Category Breakdown */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {Object.entries(marketAnalytics.categoryBreakdown).map(([category, count]) => (
+                    <div key={category} className="p-4 rounded-lg bg-accent/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{category}</span>
+                        <Badge variant="secondary">{String(count)}</Badge>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: `${marketAnalytics.totalItems > 0 ? (Number(count) / marketAnalytics.totalItems) * 100 : 0}%` 
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Top Categories & Stock Levels */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Categories</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {marketAnalytics.topCategories.map((category, index) => (
+                    <div key={category.name} className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                      <div className="flex items-center gap-3">
+                        <Badge variant={index === 0 ? "default" : "secondary"}>
+                          #{index + 1}
+                        </Badge>
+                        <span className="font-medium">{category.name}</span>
+                      </div>
+                      <Badge variant="outline">{category.count} items</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Stock Levels</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+                    <span className="font-medium">Low Stock (≤5)</span>
+                    <Badge variant="destructive">{marketAnalytics.stockLevels.low}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10">
+                    <span className="font-medium">Medium Stock (6-20)</span>
+                    <Badge variant="secondary">{marketAnalytics.stockLevels.medium}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
+                    <span className="font-medium">High Stock (&gt;20)</span>
+                    <Badge className="bg-green-500">{marketAnalytics.stockLevels.high}</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Items Expiring Soon */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Items Expiring Soon</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {marketAnalytics.timeToExpiration.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No items expiring soon</div>
+                ) : (
+                  <div className="space-y-3">
+                    {marketAnalytics.timeToExpiration.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                        <span className="font-medium">{item.name}</span>
+                        <Badge variant={item.timeLeft <= 2 ? "destructive" : item.timeLeft <= 6 ? "secondary" : "outline"}>
+                          {item.timeLeft}h left
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Market Health Status */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Market Health</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">Market Status</span>
+                    <Badge className={marketAnalytics.activeItems > 0 ? "bg-green-500" : "bg-red-500"}>
+                      {marketAnalytics.activeItems > 0 ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">Active Ratio</span>
+                    <Badge variant="outline">
+                      {marketAnalytics.totalItems > 0 ? 
+                        `${((marketAnalytics.activeItems / marketAnalytics.totalItems) * 100).toFixed(1)}%` : 
+                        '0%'
+                      }
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
+                    <span className="font-medium">Average Item Life</span>
+                    <Badge variant="secondary">{marketAnalytics.averageItemLife}</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Market Insights</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-3 rounded-lg bg-blue-500/10 border-l-4 border-blue-500">
+                    <p className="text-sm font-medium">Most Popular Category</p>
+                    <p className="text-muted-foreground">{marketAnalytics.topCategories[0]?.name || 'N/A'}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-500/10 border-l-4 border-green-500">
+                    <p className="text-sm font-medium">Stock Health</p>
+                    <p className="text-muted-foreground">
+                      {marketAnalytics.stockLevels.high > marketAnalytics.stockLevels.low ? 'Good' : 'Needs Attention'}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-purple-500/10 border-l-4 border-purple-500">
+                    <p className="text-sm font-medium">Market Activity</p>
+                    <p className="text-muted-foreground">
+                      {marketAnalytics.activeItems > marketAnalytics.expiredItems ? 'High' : 'Low'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const adminSections = [
     {
       icon: Users,
@@ -1121,6 +1471,9 @@ const Admin = () => {
                       } else if (section.title === "API Management") {
                         setShowApiManagement(true);
                         fetchApiAnalytics();
+                      } else if (section.title === "Market Analytics") {
+                        setShowMarketAnalytics(true);
+                        fetchMarketAnalytics();
                       }
                     }}
                   >
