@@ -1,36 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { MarketItem, StockData } from '@/types/api';
 
 interface MarketBoardProps {
     marketData?: any;
-    onStatusChange: (status: 'connecting' | 'connected' | 'disconnected') => void;
-    onNotifications: (notifications: any[]) => void;
-    onWeatherData: (weatherData: any) => void;
+    loading: boolean;
+    error: string | null;
+    onRefetch: () => void;
 }
 
-export const MarketBoard = ({ marketData, onStatusChange, onNotifications, onWeatherData }: MarketBoardProps) => {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
+export const MarketBoard = ({ marketData, loading, error, onRefetch }: MarketBoardProps) => {
+    // Remove internal loading/error state since it's now passed from parent
     // Update loading state when data is received
     useEffect(() => {
         if (marketData) {
-            console.log('MarketBoard: Received market data from websocket:', marketData);
-            setLoading(false);
-            setError(null);
-        } else {
-            setLoading(true);
-            // Show loading message after 3 seconds
-            const timer = setTimeout(() => {
-                if (!marketData) {
-                    setError('Waiting for websocket connection...');
-                }
-            }, 3000);
-            return () => clearTimeout(timer);
+            console.log('MarketBoard: Received market data from API:', marketData);
         }
     }, [marketData]);
 
@@ -157,6 +145,16 @@ export const MarketBoard = ({ marketData, onStatusChange, onNotifications, onWea
                         <p className="text-center text-red-600 text-sm">
                             ❌ {error}
                         </p>
+                        <div className="flex justify-center mt-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onRefetch}
+                                className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                            >
+                                Retry
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             )}
@@ -165,7 +163,17 @@ export const MarketBoard = ({ marketData, onStatusChange, onNotifications, onWea
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         📈 Market Board
-                        <div className="w-2 h-2 bg-green-500 rounded-full pulse-glow" />
+                        <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500 pulse-glow' : error ? 'bg-red-500' : 'bg-green-500 pulse-glow'}`} />
+                        {loading && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onRefetch}
+                                className="ml-auto"
+                            >
+                                Refresh
+                            </Button>
+                        )}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>

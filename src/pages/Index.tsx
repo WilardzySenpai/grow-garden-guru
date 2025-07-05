@@ -25,6 +25,8 @@ import { NotificationFeed } from '@/components/NotificationFeed';
 import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
+import { useStockData } from '@/hooks/useStockData';
+import { useWeatherData } from '@/hooks/useWeatherData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
     DropdownMenu, 
@@ -37,16 +39,10 @@ import { Link } from 'react-router-dom';
 
 const Index = () => {
     const [activeTab, setActiveTab] = useState('market');
-    const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
     const [notifications, setNotifications] = useState<any[]>([]);
-    const [weatherData, setWeatherData] = useState<any>(null);
-    const [marketData, setMarketData] = useState<any>(null);
     const { user, signOut, loading } = useAuth();
 
-    // WebSocket connection at app level
-    const wsRef = useRef<WebSocket | null>(null);
-    
-    // Get user ID for websocket connection
+    // Get user ID for API calls
     const getUserId = () => {
         if (!user) return null;
         
@@ -59,96 +55,18 @@ const Index = () => {
         return user.id;
     };
 
-    // WebSocket connection - stays connected across all tabs
+    const userId = getUserId();
+
+    // Use separate hooks for stock data and weather data
+    const { marketData, loading: stockLoading, error: stockError, refetch } = useStockData(userId);
+    const { weatherData, wsStatus } = useWeatherData(userId);
+
+    // Update notifications from API calls or other sources
     useEffect(() => {
-        console.log('Index: WebSocket useEffect triggered, user:', user);
-        const userId = getUserId();
-        console.log('Index: getUserId returned:', userId);
-        
-        if (!userId) {
-            console.log('Index: No user ID available, skipping websocket connection');
-            setWsStatus('disconnected');
-            return;
+        if (marketData?.notifications) {
+            setNotifications(marketData.notifications);
         }
-
-        console.log('Index: Connecting to websocket with user ID:', userId);
-        
-        const connectWebSocket = () => {
-            try {
-                setWsStatus('connecting');
-                const ws = new WebSocket(`wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`);
-                wsRef.current = ws;
-
-                ws.onopen = () => {
-                    console.log('Index: WebSocket connection established');
-                    setWsStatus('connected');
-                    toast({
-                        title: "Connected",
-                        description: "Real-time updates enabled!",
-                    });
-                };
-
-                ws.onmessage = (event) => {
-                    try {
-                        console.log('Index: Message from websocket:', event.data);
-                        const data = JSON.parse(event.data);
-                        
-                        // Update all data received from websocket
-                        setNotifications(data.notifications || []);
-                        setMarketData(data);
-                        
-                        // Pass weather data if available
-                        if (data.weather) {
-                            setWeatherData(data.weather);
-                        }
-                        
-                        toast({
-                            title: "Live Update",
-                            description: "Market and weather data refreshed!",
-                        });
-                    } catch (error) {
-                        console.error('Index: Error parsing websocket message:', error);
-                    }
-                };
-
-                ws.onerror = (error) => {
-                    console.error('Index: WebSocket error:', error);
-                    setWsStatus('disconnected');
-                };
-
-                ws.onclose = (event) => {
-                    console.log('Index: WebSocket connection closed', event.code, event.reason);
-                    setWsStatus('disconnected');
-                    
-                    // Only attempt to reconnect if not a normal closure
-                    if (event.code !== 1000) {
-                        setTimeout(() => {
-                            if (wsRef.current?.readyState === WebSocket.CLOSED) {
-                                console.log('Index: Attempting to reconnect websocket...');
-                                connectWebSocket();
-                            }
-                        }, 5000);
-                    }
-                };
-
-            } catch (error) {
-                console.error('Index: Failed to create websocket connection:', error);
-                setWsStatus('disconnected');
-            }
-        };
-
-        connectWebSocket();
-
-        return () => {
-            if (wsRef.current) {
-                console.log('Index: Closing websocket connection');
-                wsRef.current.close();
-                wsRef.current = null;
-            }
-        };
-    }, [user]);
-
-    // Music player state
+    }, [marketData]);
     const [musicDialogOpen, setMusicDialogOpen] = useState(true);
     const [autoPlayMusic, setAutoPlayMusic] = useState(false);
     const [showPlayer, setShowPlayer] = useState(false);
@@ -457,7 +375,12 @@ const Index = () => {
                     <TabsContent value="market" className="space-y-6">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2">
-                                <MarketBoard marketData={marketData} onStatusChange={setWsStatus} onNotifications={setNotifications} onWeatherData={setWeatherData} />
+                                <MarketBoard 
+                                    marketData={marketData}
+                                    loading={stockLoading}
+                                    error={stockError}
+                                    onRefetch={refetch}
+                                />
                             </div>
                             <div>
                                 <WeatherStatus weatherData={weatherData} />
