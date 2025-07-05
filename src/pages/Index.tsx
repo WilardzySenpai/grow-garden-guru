@@ -25,6 +25,7 @@ import { NotificationFeed } from '@/components/NotificationFeed';
 import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 import { useStockData } from '@/hooks/useStockData';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -36,11 +37,13 @@ import {
     DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
+import { MaintenanceOverlay } from '@/components/MaintenanceOverlay';
 
 const Index = () => {
     const [activeTab, setActiveTab] = useState('market');
     const [notifications, setNotifications] = useState<any[]>([]);
     const { user, signOut, loading } = useAuth();
+    const { isInMaintenance } = useMaintenanceMode();
 
     // Get user ID for API calls
     const getUserId = () => {
@@ -373,35 +376,73 @@ const Index = () => {
                     </TabsList>
 
                     <TabsContent value="market" className="space-y-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2">
-                                <MarketBoard 
-                                    marketData={marketData}
-                                    loading={stockLoading}
-                                    error={stockError}
-                                    onRefetch={refetch}
-                                />
-                            </div>
-                            <div>
-                                <WeatherStatus weatherData={weatherData} />
+                        <div className="relative">
+                            {isInMaintenance('market') && (
+                                <MaintenanceOverlay componentName="Market Board" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isInMaintenance('market') ? 'pointer-events-none blur-sm' : ''}`}>
+                                <div className="lg:col-span-2">
+                                    <MarketBoard 
+                                        marketData={marketData}
+                                        loading={stockLoading}
+                                        error={stockError}
+                                        onRefetch={refetch}
+                                    />
+                                </div>
+                                <div className="relative">
+                                    {isInMaintenance('weather') && (
+                                        <MaintenanceOverlay componentName="Weather Status" className="absolute inset-0 z-10" />
+                                    )}
+                                    <div className={isInMaintenance('weather') ? 'pointer-events-none blur-sm' : ''}>
+                                        <WeatherStatus weatherData={weatherData} />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </TabsContent>
 
                     <TabsContent value="encyclopedia">
-                        <ItemEncyclopedia />
+                        <div className="relative">
+                            {isInMaintenance('encyclopedia') && (
+                                <MaintenanceOverlay componentName="Item Encyclopedia" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={isInMaintenance('encyclopedia') ? 'pointer-events-none blur-sm' : ''}>
+                                <ItemEncyclopedia />
+                            </div>
+                        </div>
                     </TabsContent>
 
                     <TabsContent value="calculator">
-                        <FruitCalculator />
+                        <div className="relative">
+                            {isInMaintenance('calculator') && (
+                                <MaintenanceOverlay componentName="Fruit Calculator" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={isInMaintenance('calculator') ? 'pointer-events-none blur-sm' : ''}>
+                                <FruitCalculator />
+                            </div>
+                        </div>
                     </TabsContent>
 
                     <TabsContent value="system">
-                        <SystemMonitor wsStatus={wsStatus} />
+                        <div className="relative">
+                            {isInMaintenance('system') && (
+                                <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
+                                <SystemMonitor wsStatus={wsStatus} />
+                            </div>
+                        </div>
                     </TabsContent>
 
                     <TabsContent value="notifications">
-                        <NotificationFeed notifications={notifications} />
+                        <div className="relative">
+                            {isInMaintenance('notifications') && (
+                                <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
+                                <NotificationFeed notifications={notifications} />
+                            </div>
+                        </div>
                     </TabsContent>
                 </Tabs>
             </main>

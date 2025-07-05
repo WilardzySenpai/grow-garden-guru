@@ -11,7 +11,10 @@ import {
   Activity,
   ArrowLeft,
   BarChart3,
-  Server
+  Server,
+  AlertTriangle,
+  Power,
+  PowerOff
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
@@ -25,12 +28,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 
 const ADMIN_DISCORD_ID = "939867069070065714";
 
 const Admin = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { settings: maintenanceSettings, toggleMaintenance } = useMaintenanceMode();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
@@ -38,6 +44,7 @@ const Admin = () => {
   const [showSystemAnalytics, setShowSystemAnalytics] = useState(false);
   const [showApiManagement, setShowApiManagement] = useState(false);
   const [showMarketAnalytics, setShowMarketAnalytics] = useState(false);
+  const [showMaintenanceMode, setShowMaintenanceMode] = useState(false);
   const [dbStats, setDbStats] = useState<any>({});
   const [analyticsData, setAnalyticsData] = useState<any>({});
   const [apiData, setApiData] = useState<any>({});
@@ -1309,6 +1316,113 @@ const Admin = () => {
     );
   }
 
+  if (showMaintenanceMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
+        {/* Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowMaintenanceMode(false)}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              </div>
+              <Badge variant="secondary" className="flex items-center gap-2">
+                <AlertTriangle className="h-3 w-3" />
+                Maintenance Mode
+              </Badge>
+            </div>
+          </div>
+        </header>
+
+        {/* Maintenance Mode Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Maintenance Mode Control</h1>
+                <p className="text-muted-foreground">Enable/disable app components for maintenance</p>
+              </div>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>App Components</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {Object.entries(maintenanceSettings).map(([component, isInMaintenance]) => {
+                  const componentLabels = {
+                    market: { label: 'Market Board', icon: BarChart3, description: 'Stock market data and trading information' },
+                    weather: { label: 'Weather Status', icon: Activity, description: 'Real-time weather information and alerts' },
+                    encyclopedia: { label: 'Item Encyclopedia', icon: Database, description: 'Complete database of game items' },
+                    calculator: { label: 'Fruit Calculator', icon: Settings, description: 'Fruit calculation and optimization tools' },
+                    system: { label: 'System Monitor', icon: Server, description: 'System performance and health monitoring' },
+                    notifications: { label: 'Notifications', icon: AlertTriangle, description: 'User notifications and alerts system' }
+                  };
+
+                  const componentInfo = componentLabels[component as keyof typeof componentLabels];
+                  
+                  return (
+                    <div key={component} className="flex items-center justify-between p-4 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <componentInfo.icon className={`h-5 w-5 ${isInMaintenance ? 'text-amber-500' : 'text-green-500'}`} />
+                        <div>
+                          <p className="font-medium">{componentInfo.label}</p>
+                          <p className="text-sm text-muted-foreground">{componentInfo.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge variant={isInMaintenance ? "destructive" : "default"}>
+                          {isInMaintenance ? (
+                            <>
+                              <PowerOff className="h-3 w-3 mr-1" />
+                              Maintenance
+                            </>
+                          ) : (
+                            <>
+                              <Power className="h-3 w-3 mr-1" />
+                              Active
+                            </>
+                          )}
+                        </Badge>
+                        <Switch
+                          checked={isInMaintenance}
+                          onCheckedChange={() => toggleMaintenance(component as keyof typeof maintenanceSettings)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            <Card className="border-amber-500/50 bg-amber-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  Maintenance Mode Notice
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  When a component is in maintenance mode, it will be disabled and blurred out for all users. 
+                  They will see a maintenance message instead of the component content. Use this feature to 
+                  prevent errors when components are being updated or experiencing issues.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const adminSections = [
     {
       icon: Users,
@@ -1344,6 +1458,13 @@ const Admin = () => {
       description: "Advanced market data insights",
       color: "text-indigo-500",
       count: "Live"
+    },
+    {
+      icon: AlertTriangle,
+      title: "Maintenance Mode",
+      description: "Enable/disable app components for maintenance",
+      color: "text-amber-500",
+      count: Object.values(maintenanceSettings).filter(Boolean).length.toString()
     },
     {
       icon: Settings,
@@ -1474,6 +1595,8 @@ const Admin = () => {
                       } else if (section.title === "Market Analytics") {
                         setShowMarketAnalytics(true);
                         fetchMarketAnalytics();
+                      } else if (section.title === "Maintenance Mode") {
+                        setShowMaintenanceMode(true);
                       }
                     }}
                   >
