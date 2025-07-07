@@ -44,70 +44,69 @@ export const useStockData = (userId: string | null): StockDataHook => {
     return earliestEndTime;
   }, []);
 
-  const fetchStockData = useCallback(async (stockType?: string) => {
+  const fetchStockData = useCallback(async () => {
     if (!userId) return;
 
     try {
       setError(null);
-      
-      // For initial load, fetch all stock types
-      if (!stockType) {
-        setLoading(true);
+      setLoading(true);
+
+      const response = await fetch('https://api.joshlei.com/v2/growagarden/stock', {
+        headers: {
+          'Jstudio-key': 'jstudio',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch stock data: ${response.statusText}`);
       }
 
-      const baseUrl = 'https://websocket.joshlei.com/growagarden/api';
-      const endpoints = {
-        seed: `${baseUrl}/seed_stock?user_id=${encodeURIComponent(userId)}`,
-        gear: `${baseUrl}/gear_stock?user_id=${encodeURIComponent(userId)}`,
-        egg: `${baseUrl}/egg_stock?user_id=${encodeURIComponent(userId)}`,
-        cosmetic: `${baseUrl}/cosmetic_stock?user_id=${encodeURIComponent(userId)}`,
-        eventshop: `${baseUrl}/eventshop_stock?user_id=${encodeURIComponent(userId)}`,
-        travelingmerchant: `${baseUrl}/travelingmerchant_stock?user_id=${encodeURIComponent(userId)}`,
+      const data = await response.json();
+      
+      // Transform the data to match expected structure
+      const transformedData: StockData = {
+        seed_stock: data.seed_stock || [],
+        gear_stock: data.gear_stock || [],
+        egg_stock: data.egg_stock || [],
+        cosmetic_stock: data.cosmetic_stock || [],
+        eventshop_stock: data.eventshop_stock || [],
+        travelingmerchant_stock: data.travelingmerchant_stock || [],
+        notifications: data.notifications || [],
+        discord_invite: data.discord_invite || ''
       };
 
-      const stockTypesToFetch = stockType ? [stockType] : Object.keys(endpoints);
-      const fetchPromises = stockTypesToFetch.map(async (type) => {
-        const response = await fetch(endpoints[type as keyof typeof endpoints]);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${type} stock: ${response.statusText}`);
+      setMarketData(transformedData);
+      
+      // Schedule next fetch based on the earliest expiring item across all categories
+      const allItems = [
+        ...(transformedData.seed_stock || []),
+        ...(transformedData.gear_stock || []),
+        ...(transformedData.egg_stock || []),
+        ...(transformedData.cosmetic_stock || []),
+        ...(transformedData.eventshop_stock || []),
+        ...(transformedData.travelingmerchant_stock || [])
+      ];
+
+      if (allItems.length > 0) {
+        const earliestEndTime = Math.min(...allItems.map(item => item.end_date_unix * 1000));
+        const now = Date.now();
+        const delay = Math.max(0, earliestEndTime - now);
+        
+        // Clear existing timeout
+        if (timeoutsRef.current.main) {
+          clearTimeout(timeoutsRef.current.main);
         }
-        const data = await response.json();
-        return { type, data };
-      });
-
-      const results = await Promise.allSettled(fetchPromises);
-      const newMarketData: Partial<StockData> = marketData ? { ...marketData } : {};
-
-      results.forEach((result, index) => {
-        const type = stockTypesToFetch[index];
-        if (result.status === 'fulfilled') {
-          const stockKey = `${type}_stock` as keyof StockData;
-          (newMarketData as any)[stockKey] = result.value.data;
-          
-          // Schedule next fetch for this stock type
-          const nextFetchTime = calculateNextFetch(result.value.data, type);
-          const delay = Math.max(0, nextFetchTime - Date.now());
-          
-          // Clear existing timeout for this stock type
-          if (timeoutsRef.current[type]) {
-            clearTimeout(timeoutsRef.current[type]);
-          }
-          
-          // Schedule next fetch
-          timeoutsRef.current[type] = setTimeout(() => {
-            console.log(`Scheduled fetch triggered for ${type} stock`);
-            fetchStockData(type);
-          }, delay);
-          
-          lastFetchRef.current[type] = Date.now();
-          
-          console.log(`${type} stock: scheduled next fetch in ${Math.round(delay / 1000)}s`);
-        } else {
-          console.error(`Failed to fetch ${type} stock:`, result.reason);
-        }
-      });
-
-      setMarketData(newMarketData as StockData);
+        
+        // Schedule next fetch
+        timeoutsRef.current.main = setTimeout(() => {
+          console.log('Scheduled stock refresh triggered');
+          fetchStockData();
+        }, delay);
+        
+        console.log(`Next stock refresh scheduled in ${Math.round(delay / 1000)}s`);
+      }
+      
       setLoading(false);
       
     } catch (err) {
@@ -115,7 +114,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
       setError(err instanceof Error ? err.message : 'Failed to fetch stock data');
       setLoading(false);
     }
-  }, [userId, marketData, calculateNextFetch]);
+  }, [userId]);
 
   const refetch = useCallback(() => {
     fetchStockData();
