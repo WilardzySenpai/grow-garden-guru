@@ -15,12 +15,13 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
         const checkApiHealth = async () => {
             try {
                 setApiStatus('checking');
-                // const response = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
-                //     headers: {
-                //         'Jstudio-key': 'jstudio'
-                //     }
-                // });
-                const response = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
+                const response = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
+                    headers: {
+                        'Jstudio-key': 'jstudio',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                // const response = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
                 if (response.ok) {
                     setApiStatus('online');
                     setLastApiCheck(new Date());

@@ -30,12 +30,13 @@ export const ItemEncyclopedia = () => {
             console.log('ItemEncyclopedia: Fetching data from API');
 
             // Fetch all items
-            // const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
-            //     headers: {
-            //         'Jstudio-key': 'jstudio'
-            //     }
-            // });
-            const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
+            const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
+                headers: {
+                    'Jstudio-key': 'jstudio',
+                    'Content-Type': 'application/json'
+                }
+            });
+            // const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
             if (!itemsResponse.ok) {
                 throw new Error(`Items API error! status: ${itemsResponse.status}`);
             }
@@ -43,12 +44,13 @@ export const ItemEncyclopedia = () => {
             setItems(Array.isArray(itemsData) ? itemsData : []);
 
             // Fetch weather data for weather items
-            // const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/weather', {
-            //     headers: {
-            //         'Jstudio-key': 'jstudio'
-            //     }
-            // });
-            const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
+            const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/weather', {
+                headers: {
+                    'Jstudio-key': 'jstudio',
+                    'Content-Type': 'application/json'
+                }
+            });
+            // const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/calculate');
             if (!weatherResponse.ok) {
                 throw new Error(`Weather API error! status: ${weatherResponse.status}`);
             }
