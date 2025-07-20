@@ -6,15 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
 import { ItemCard } from '@/components/ItemCard';
-
 
 import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
 
 export const ItemEncyclopedia = () => {
-    const [searchTerm, setSearchTerm] = useState('');
     const isMobile = useMediaQuery("(max-width: 768px)");
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState('items');
+    const [activeSubTab, setActiveSubTab] = useState('all');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [items, setItems] = useState<ItemInfo[]>([]);
@@ -823,44 +827,88 @@ export const ItemEncyclopedia = () => {
                     </Card>
                 )}
 
-                <Tabs defaultValue="items" className="space-y-6">
-                    <TabsList>
-                        <TabsTrigger value="items">
-                            📦 Items ({filteredItems.length})
-                        </TabsTrigger>
-                        <TabsTrigger value="mutations">
-                            🧬 Mutations ({filteredMutations.length})
-                        </TabsTrigger>
-                        <TabsTrigger value="weather">
-                            🌦️ Weather ({filteredWeather.length})
-                        </TabsTrigger>
-                        <TabsTrigger value="pets">
-                            🐾 Pets ({filteredPets.length})
-                        </TabsTrigger>
-                    </TabsList>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                    {isMobile ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-full">
+                                    <Menu className="h-4 w-4 mr-2" />
+                                    {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-full">
+                                <DropdownMenuItem onSelect={() => setActiveTab('items')}>
+                                    📦 Items ({filteredItems.length})
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setActiveTab('mutations')}>
+                                    🧬 Mutations ({filteredMutations.length})
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setActiveTab('weather')}>
+                                    🌦️ Weather ({filteredWeather.length})
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setActiveTab('pets')}>
+                                    🐾 Pets ({filteredPets.length})
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <TabsList>
+                            <TabsTrigger value="items">
+                                📦 Items ({filteredItems.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="mutations">
+                                🧬 Mutations ({filteredMutations.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="weather">
+                                🌦️ Weather ({filteredWeather.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="pets">
+                                🐾 Pets ({filteredPets.length})
+                            </TabsTrigger>
+                        </TabsList>
+                    )}
 
                     <TabsContent value="items">
-                        <Tabs defaultValue="all" className="space-y-6">
-                            <TabsList>
-                                <TabsTrigger value="all">
-                                    All ({filteredItems.length})
-                                </TabsTrigger>
-                                <TabsTrigger value="seeds">
-                                    Seeds ({seedItems.length})
-                                </TabsTrigger>
-                                <TabsTrigger value="gear">
-                                    Gear ({gearItems.length})
-                                </TabsTrigger>
-                                <TabsTrigger value="eggs">
-                                    Eggs ({eggItems.length})
-                                </TabsTrigger>
-                                <TabsTrigger value="cosmetics">
-                                    Cosmetics ({cosmeticItems.length})
-                                </TabsTrigger>
-                                <TabsTrigger value="events">
-                                    Events ({eventItems.length})
-                                </TabsTrigger>
-                            </TabsList>
+                        <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
+                            {isMobile ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="w-full">
+                                            <Menu className="h-4 w-4 mr-2" />
+                                            {activeSubTab.charAt(0).toUpperCase() + activeSubTab.slice(1)}
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-full">
+                                        <DropdownMenuItem onSelect={() => setActiveSubTab('all')}>All ({filteredItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setActiveSubTab('seeds')}>Seeds ({seedItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setActiveSubTab('gear')}>Gear ({gearItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setActiveSubTab('eggs')}>Eggs ({eggItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setActiveSubTab('cosmetics')}>Cosmetics ({cosmeticItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setActiveSubTab('events')}>Events ({eventItems.length})</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (
+                                <TabsList>
+                                    <TabsTrigger value="all">
+                                        All ({filteredItems.length})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="seeds">
+                                        Seeds ({seedItems.length})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="gear">
+                                        Gear ({gearItems.length})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="eggs">
+                                        Eggs ({eggItems.length})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="cosmetics">
+                                        Cosmetics ({cosmeticItems.length})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="events">
+                                        Events ({eventItems.length})
+                                    </TabsTrigger>
+                                </TabsList>
+                            )}
 
                             <TabsContent value="all">
                                 {renderItemTable(filteredItems)}
