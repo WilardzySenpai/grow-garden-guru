@@ -10,7 +10,6 @@ import {
     DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useMediaQuery } from '@/hooks/use-media-query';
 // Path to the music file in public
 const MUSIC_SRC = '/Music/Morning_Mood.mp3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +23,8 @@ import { FruitCalculator } from '@/components/FruitCalculator';
 import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
 import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut, Shield, Menu } from 'lucide-react';
+import { MobileNav } from '@/components/MobileNav';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
@@ -366,36 +367,17 @@ const Index = () => {
             <main className="container mx-auto p-4 space-y-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     {isMobile ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full mb-8">
-                                    <Menu className="h-4 w-4 mr-2" />
-                                    Menu
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-full">
-                                <DropdownMenuItem onSelect={() => setActiveTab('market')}>
-                                    <BarChart3 className="h-4 w-4 mr-2" />
-                                    Market Board
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setActiveTab('encyclopedia')}>
-                                    <BookOpen className="h-4 w-4 mr-2" />
-                                    Encyclopedia
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setActiveTab('calculator')}>
-                                    <Calculator className="h-4 w-4 mr-2" />
-                                    Calculator
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setActiveTab('system')}>
-                                    <Settings className="h-4 w-4 mr-2" />
-                                    System
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setActiveTab('notifications')}>
-                                    <Bell className="h-4 w-4 mr-2" />
-                                    Notifications
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <MobileNav
+                            activeTab={activeTab}
+                            setActiveTab={setActiveTab}
+                            navItems={[
+                                { value: 'market', label: 'Market Board', icon: <BarChart3 className="h-4 w-4 mr-2" /> },
+                                { value: 'encyclopedia', label: 'Encyclopedia', icon: <BookOpen className="h-4 w-4 mr-2" /> },
+                                { value: 'calculator', label: 'Calculator', icon: <Calculator className="h-4 w-4 mr-2" /> },
+                                { value: 'system', label: 'System', icon: <Settings className="h-4 w-4 mr-2" /> },
+                                { value: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4 mr-2" /> },
+                            ]}
+                        />
                     ) : (
                         <TabsList className="grid w-full grid-cols-5 mb-8">
                             <TabsTrigger value="market" className="flex items-center gap-2">
