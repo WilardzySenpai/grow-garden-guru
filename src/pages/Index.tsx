@@ -24,7 +24,7 @@ import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
 import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut, Shield, Menu } from 'lucide-react';
 import { MobileNav } from '@/components/MobileNav';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
@@ -42,7 +42,7 @@ import { Link } from 'react-router-dom';
 import { MaintenanceOverlay } from '@/components/MaintenanceOverlay';
 
 const Index = () => {
-    const isMobile = useMediaQuery("(max-width: 768px)");
+    const isMobile = useIsMobile();
     const [activeTab, setActiveTab] = useState('market');
     const [notifications, setNotifications] = useState<any[]>([]);
     const { user, signOut, loading } = useAuth();
