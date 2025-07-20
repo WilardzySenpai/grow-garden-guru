@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Menu } from 'lucide-react';
 import type { MarketItem, StockData } from '@/types/api';
@@ -17,7 +17,7 @@ interface MarketBoardProps {
 }
 
 export const MarketBoard = ({ marketData, loading, error, onRefetch }: MarketBoardProps) => {
-    const isMobile = useMediaQuery("(max-width: 768px)");
+    const isMobile = useIsMobile();
     const [activeTab, setActiveTab] = useState('seeds');
 
     // Remove internal loading/error state since it's now passed from parent
