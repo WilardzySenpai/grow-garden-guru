@@ -4,6 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Menu } from 'lucide-react';
 import type { MarketItem, StockData } from '@/types/api';
 
 interface MarketBoardProps {
@@ -14,6 +17,9 @@ interface MarketBoardProps {
 }
 
 export const MarketBoard = ({ marketData, loading, error, onRefetch }: MarketBoardProps) => {
+    const isMobile = useMediaQuery("(max-width: 768px)");
+    const [activeTab, setActiveTab] = useState('seeds');
+
     // Remove internal loading/error state since it's now passed from parent
     // Update loading state when data is received
     useEffect(() => {
@@ -177,15 +183,34 @@ export const MarketBoard = ({ marketData, loading, error, onRefetch }: MarketBoa
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Tabs defaultValue="seeds">
-                        <TabsList className="grid w-full grid-cols-6">
-                            <TabsTrigger value="seeds">Seeds</TabsTrigger>
-                            <TabsTrigger value="gear">Gear</TabsTrigger>
-                            <TabsTrigger value="eggs">Eggs</TabsTrigger>
-                            <TabsTrigger value="cosmetics">Cosmetics</TabsTrigger>
-                            <TabsTrigger value="event">Event Shop</TabsTrigger>
-                            <TabsTrigger value="merchant">Merchant</TabsTrigger>
-                        </TabsList>
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                        {isMobile ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="w-full">
+                                        <Menu className="h-4 w-4 mr-2" />
+                                        {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-full">
+                                    <DropdownMenuItem onSelect={() => setActiveTab('seeds')}>Seeds</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setActiveTab('gear')}>Gear</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setActiveTab('eggs')}>Eggs</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setActiveTab('cosmetics')}>Cosmetics</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setActiveTab('event')}>Event Shop</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setActiveTab('merchant')}>Merchant</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <TabsList className="grid w-full grid-cols-6">
+                                <TabsTrigger value="seeds">Seeds</TabsTrigger>
+                                <TabsTrigger value="gear">Gear</TabsTrigger>
+                                <TabsTrigger value="eggs">Eggs</TabsTrigger>
+                                <TabsTrigger value="cosmetics">Cosmetics</TabsTrigger>
+                                <TabsTrigger value="event">Event Shop</TabsTrigger>
+                                <TabsTrigger value="merchant">Merchant</TabsTrigger>
+                            </TabsList>
+                        )}
 
                         <div className="mt-6">
                             <TabsContent value="seeds">

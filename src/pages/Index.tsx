@@ -10,6 +10,7 @@ import {
     DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useMediaQuery } from '@/hooks/use-media-query';
 // Path to the music file in public
 const MUSIC_SRC = '/Music/Morning_Mood.mp3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +23,7 @@ import { ItemEncyclopedia } from '@/components/ItemEncyclopedia';
 import { FruitCalculator } from '@/components/FruitCalculator';
 import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
-import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut, Shield } from 'lucide-react';
+import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut, Shield, Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
@@ -40,6 +41,7 @@ import { Link } from 'react-router-dom';
 import { MaintenanceOverlay } from '@/components/MaintenanceOverlay';
 
 const Index = () => {
+    const isMobile = useMediaQuery("(max-width: 768px)");
     const [activeTab, setActiveTab] = useState('market');
     const [notifications, setNotifications] = useState<any[]>([]);
     const { user, signOut, loading } = useAuth();
@@ -363,28 +365,61 @@ const Index = () => {
             {/* Main Content */}
             <main className="container mx-auto p-4 space-y-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 mb-8">
-                        <TabsTrigger value="market" className="flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" />
-                            Market Board
-                        </TabsTrigger>
-                        <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4" />
-                            Encyclopedia
-                        </TabsTrigger>
-                        <TabsTrigger value="calculator" className="flex items-center gap-2">
-                            <Calculator className="h-4 w-4" />
-                            Calculator
-                        </TabsTrigger>
-                        <TabsTrigger value="system" className="flex items-center gap-2">
-                            <Settings className="h-4 w-4" />
-                            System
-                        </TabsTrigger>
-                        <TabsTrigger value="notifications" className="flex items-center gap-2">
-                            <Bell className="h-4 w-4" />
-                            Notifications
-                        </TabsTrigger>
-                    </TabsList>
+                    {isMobile ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-full mb-8">
+                                    <Menu className="h-4 w-4 mr-2" />
+                                    Menu
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-full">
+                                <DropdownMenuItem onSelect={() => setActiveTab('market')}>
+                                    <BarChart3 className="h-4 w-4 mr-2" />
+                                    Market Board
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setActiveTab('encyclopedia')}>
+                                    <BookOpen className="h-4 w-4 mr-2" />
+                                    Encyclopedia
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setActiveTab('calculator')}>
+                                    <Calculator className="h-4 w-4 mr-2" />
+                                    Calculator
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setActiveTab('system')}>
+                                    <Settings className="h-4 w-4 mr-2" />
+                                    System
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setActiveTab('notifications')}>
+                                    <Bell className="h-4 w-4 mr-2" />
+                                    Notifications
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <TabsList className="grid w-full grid-cols-5 mb-8">
+                            <TabsTrigger value="market" className="flex items-center gap-2">
+                                <BarChart3 className="h-4 w-4" />
+                                Market Board
+                            </TabsTrigger>
+                            <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
+                                <BookOpen className="h-4 w-4" />
+                                Encyclopedia
+                            </TabsTrigger>
+                            <TabsTrigger value="calculator" className="flex items-center gap-2">
+                                <Calculator className="h-4 w-4" />
+                                Calculator
+                            </TabsTrigger>
+                            <TabsTrigger value="system" className="flex items-center gap-2">
+                                <Settings className="h-4 w-4" />
+                                System
+                            </TabsTrigger>
+                            <TabsTrigger value="notifications" className="flex items-center gap-2">
+                                <Bell className="h-4 w-4" />
+                                Notifications
+                            </TabsTrigger>
+                        </TabsList>
+                    )}
 
                     <TabsContent value="market" className="space-y-6">
                         <div className="relative">
