@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
@@ -15,7 +15,7 @@ import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
 
 export const ItemEncyclopedia = () => {
-    const isMobile = useMediaQuery("(max-width: 768px)");
+    const isMobile = useIsMobile();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('items');
     const [activeSubTab, setActiveSubTab] = useState('all');
