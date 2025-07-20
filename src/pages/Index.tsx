@@ -120,11 +120,20 @@ const Index = () => {
         <div className="min-h-screen bg-background">
             {/* Music Consent Dialog */}
             <Dialog open={musicDialogOpen}>
-                <DialogContent aria-describedby="music-dialog-description">
+                <DialogContent 
+                    aria-labelledby="music-dialog-title"
+                    aria-describedby="music-dialog-description"
+                    role="alertdialog"
+                >
                     <DialogHeader>
-                        <DialogTitle>Play background music?</DialogTitle>
+                        <DialogTitle id="music-dialog-title">Play background music?</DialogTitle>
                     </DialogHeader>
-                    <div id="music-dialog-description" className="py-2">Would you like to play relaxing background music while you use the app?</div>
+                    <div 
+                        id="music-dialog-description" 
+                        className="py-2"
+                    >
+                        Would you like to play relaxing background music while you use the app?
+                    </div>
                     <DialogFooter className="flex gap-2 justify-end">
                         <DialogClose asChild>
                             <Button
@@ -133,6 +142,7 @@ const Index = () => {
                                     setMusicDialogOpen(false);
                                     setAutoPlayMusic(false);
                                 }}
+                                aria-label="Decline background music"
                             >
                                 No, thanks
                             </Button>
@@ -143,6 +153,7 @@ const Index = () => {
                                     setMusicDialogOpen(false);
                                     setAutoPlayMusic(true);
                                 }}
+                                aria-label="Enable background music"
                             >
                                 Yes, play music
                             </Button>

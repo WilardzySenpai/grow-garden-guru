@@ -9,6 +9,9 @@ interface StockDataHook {
 }
 
 // Stock refresh intervals in milliseconds
+const MIN_REFRESH_INTERVAL = 30 * 1000; // Minimum 30 seconds between refreshes
+const MAX_REFRESH_INTERVAL = 24 * 60 * 60 * 1000; // Maximum 24 hours between refreshes
+
 const REFRESH_INTERVALS = {
   seed: 5 * 60 * 1000,    // 5 minutes
   gear: 5 * 60 * 1000,    // 5 minutes
@@ -45,7 +48,13 @@ export const useStockData = (userId: string | null): StockDataHook => {
   }, []);
 
   const fetchStockData = useCallback(async () => {
-    if (!userId) return;
+    const now = Date.now();
+    // Rate limiting: Don't fetch if last fetch was less than MIN_REFRESH_INTERVAL ago
+    if (!userId || (lastFetchRef.current.main && now - lastFetchRef.current.main < MIN_REFRESH_INTERVAL)) {
+      return;
+    }
+    
+    lastFetchRef.current.main = now;
 
     try {
       setError(null);
@@ -66,14 +75,14 @@ export const useStockData = (userId: string | null): StockDataHook => {
       
       // Transform the data to match expected structure
       const transformedData: StockData = {
-        seed_stock: data.seed_stock || [],
-        gear_stock: data.gear_stock || [],
-        egg_stock: data.egg_stock || [],
-        cosmetic_stock: data.cosmetic_stock || [],
-        eventshop_stock: data.eventshop_stock || [],
-        travelingmerchant_stock: data.travelingmerchant_stock || [],
-        notifications: data.notifications || [],
-        discord_invite: data.discord_invite || ''
+        seed_stock: Array.isArray(data.seed_stock) ? data.seed_stock : [],
+        gear_stock: Array.isArray(data.gear_stock) ? data.gear_stock : [],
+        egg_stock: Array.isArray(data.egg_stock) ? data.egg_stock : [],
+        cosmetic_stock: Array.isArray(data.cosmetic_stock) ? data.cosmetic_stock : [],
+        eventshop_stock: Array.isArray(data.eventshop_stock) ? data.eventshop_stock : [],
+        travelingmerchant_stock: (data.travelingmerchant_stock && Array.isArray(data.travelingmerchant_stock.stock)) ? data.travelingmerchant_stock.stock : [],
+        notifications: Array.isArray(data.notifications) ? data.notifications : [],
+        discord_invite: typeof data.discord_invite === 'string' ? data.discord_invite : ''
       };
 
       setMarketData(transformedData);
@@ -89,22 +98,33 @@ export const useStockData = (userId: string | null): StockDataHook => {
       ];
 
       if (allItems.length > 0) {
+        // Find the earliest end time, ensuring we don't multiply by 1000 twice
         const earliestEndTime = Math.min(...allItems.map(item => item.end_date_unix * 1000));
-        const now = Date.now();
-        const delay = Math.max(0, earliestEndTime - now);
+        const currentTime = Date.now();
+        
+        // Calculate delay with bounds
+        let delay = Math.max(MIN_REFRESH_INTERVAL, earliestEndTime - currentTime);
+        delay = Math.min(delay, MAX_REFRESH_INTERVAL);
         
         // Clear existing timeout
         if (timeoutsRef.current.main) {
           clearTimeout(timeoutsRef.current.main);
         }
         
-        // Schedule next fetch
-        timeoutsRef.current.main = setTimeout(() => {
-          console.log('Scheduled stock refresh triggered');
-          fetchStockData();
-        }, delay);
-        
-        console.log(`Next stock refresh scheduled in ${Math.round(delay / 1000)}s`);
+        // Only schedule next fetch if delay is reasonable
+        if (delay >= MIN_REFRESH_INTERVAL && delay <= MAX_REFRESH_INTERVAL) {
+          timeoutsRef.current.main = setTimeout(() => {
+            console.log('Scheduled stock refresh triggered');
+            fetchStockData();
+          }, delay);
+          
+          console.log(`Next stock refresh scheduled in ${Math.round(delay / 1000)}s`);
+        }
+      } else {
+        // If no items, schedule refresh using default interval
+        const delay = REFRESH_INTERVALS.seed; // Use shortest default interval
+        timeoutsRef.current.main = setTimeout(fetchStockData, delay);
+        console.log(`No items found. Next refresh in ${Math.round(delay / 1000)}s`);
       }
       
       setLoading(false);
