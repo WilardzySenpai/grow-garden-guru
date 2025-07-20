@@ -5,12 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { ItemCard } from '@/components/ItemCard';
+
 
 import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
 
 export const ItemEncyclopedia = () => {
     const [searchTerm, setSearchTerm] = useState('');
+    const isMobile = useMediaQuery("(max-width: 768px)");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [items, setItems] = useState<ItemInfo[]>([]);
@@ -414,50 +418,62 @@ export const ItemEncyclopedia = () => {
     const divinePets = filteredPets.filter(pet => pet.rarity === 'Divine');
     const unknownPets = filteredPets.filter(pet => pet.rarity === 'Unknown');
 
-    const renderItemTable = (itemList: ItemInfo[]) => (
-        <div className="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Rarity</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Currency</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
+    const renderItemTable = (itemList: ItemInfo[]) => {
+        if (isMobile) {
+            return (
+                <div className="space-y-4">
                     {itemList.map((item) => (
-                        <TableRow key={item.item_id} className="hover:bg-accent/50">
-                            <TableCell className="font-medium">
-                                <div className="flex items-center gap-2">
-                                    <img
-                                        src={item.icon}
-                                        alt={item.display_name}
-                                        className="w-8 h-8 object-contain"
-                                        onError={(e) => {
-                                            e.currentTarget.style.display = 'none';
-                                        }}
-                                    />
-                                    {item.display_name}
-                                </div>
-                            </TableCell>
-                            <TableCell className="font-mono text-xs">{item.item_id}</TableCell>
-                            <TableCell>
-                                <Badge variant="outline">{item.type}</Badge>
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant="secondary">{item.rarity}</Badge>
-                            </TableCell>
-                            <TableCell>{item.price || 'N/A'}</TableCell>
-                            <TableCell>{item.currency || 'N/A'}</TableCell>
-                        </TableRow>
+                        <ItemCard key={item.item_id} item={item} />
                     ))}
-                </TableBody>
-            </Table>
-        </div>
-    );
+                </div>
+            );
+        }
+
+        return (
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Item</TableHead>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Rarity</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Currency</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {itemList.map((item) => (
+                            <TableRow key={item.item_id} className="hover:bg-accent/50">
+                                <TableCell className="font-medium">
+                                    <div className="flex items-center gap-2">
+                                        <img
+                                            src={item.icon}
+                                            alt={item.display_name}
+                                            className="w-8 h-8 object-contain"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                            }}
+                                        />
+                                        {item.display_name}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="font-mono text-xs">{item.item_id}</TableCell>
+                                <TableCell>
+                                    <Badge variant="outline">{item.type}</Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="secondary">{item.rarity}</Badge>
+                                </TableCell>
+                                <TableCell>{item.price || 'N/A'}</TableCell>
+                                <TableCell>{item.currency || 'N/A'}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        );
+    };
 
     const renderMutationTable = (mutationList: typeof mutations) => (
         <div className="rounded-md border">
