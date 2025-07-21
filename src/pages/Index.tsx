@@ -283,12 +283,11 @@ const Index = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Leaf className="h-8 w-8 text-primary" />
-                            <div>
+                            <div className="hidden md:block">
                                 <h1 className="text-2xl font-bold text-foreground">Grow A Garden Guru</h1>
                                 <p className="text-sm text-muted-foreground">Comprehensive Game Intelligence Platform</p>
                             </div>
                         </div>
-
                         <div className="flex items-center gap-4">
                             {/* Mobile Menu */}
                             <div className="block md:hidden">
@@ -305,7 +304,7 @@ const Index = () => {
                                         <MobileNav
                                             activeTab={activeTab}
                                             setActiveTab={setActiveTab}
-                                            navItems={[
+                                            navItems={[ 
                                                 { value: 'market', label: 'Market Board', icon: <BarChart3 className="h-4 w-4 mr-2" /> },
                                                 { value: 'encyclopedia', label: 'Encyclopedia', icon: <BookOpen className="h-4 w-4 mr-2" /> },
                                                 { value: 'calculator', label: 'Calculator', icon: <Calculator className="h-4 w-4 mr-2" /> },
@@ -316,105 +315,6 @@ const Index = () => {
                                     </SheetContent>
                                 </Sheet>
                             </div>
-
-                            {/* Desktop Navigation */}
-                            <div className="hidden md:flex items-center gap-4">
-                                <TabsList>
-                                    <TabsTrigger value="market" className="flex items-center gap-2">
-                                        <BarChart3 className="h-4 w-4" />
-                                        Market Board
-                                    </TabsTrigger>
-                                    <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
-                                        <BookOpen className="h-4 w-4" />
-                                        Encyclopedia
-                                    </TabsTrigger>
-                                    <TabsTrigger value="calculator" className="flex items-center gap-2">
-                                        <Calculator className="h-4 w-4" />
-                                        Calculator
-                                    </TabsTrigger>
-                                    <TabsTrigger value="system" className="flex items-center gap-2">
-                                        <Settings className="h-4 w-4" />
-                                        System
-                                    </TabsTrigger>
-                                    <TabsTrigger value="notifications" className="flex items-center gap-2">
-                                        <Bell className="h-4 w-4" />
-                                        Notifications
-                                    </TabsTrigger>
-                                </TabsList>
-                                <ThemeToggle />
-                                <div className={`status-indicator ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
-                                    <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
-                                    {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
-                                </div>
-                                {!loading && (
-                                    user && !('isGuest' in user) ? (
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="gap-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Avatar className="h-6 w-6">
-                                                            <AvatarImage
-                                                                src={user.user_metadata?.avatar_url}
-                                                                alt="Profile"
-                                                            />
-                                                            <AvatarFallback className="text-xs">
-                                                                {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        {user.user_metadata?.full_name || user.email}
-                                                    </div>
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="bg-card border-border">
-                                                <Link to="/profile">
-                                                    <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                                        <User className="h-4 w-4 mr-2" />
-                                                        Profile
-                                                    </DropdownMenuItem>
-                                                </Link>
-                                                {user.user_metadata?.provider_id === "939867069070065714" && (
-                                                    <>
-                                                        <DropdownMenuSeparator className="bg-border" />
-                                                        <Link to="/admin">
-                                                            <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                                                <Shield className="h-4 w-4 mr-2" />
-                                                                Admin Panel
-                                                            </DropdownMenuItem>
-                                                        </Link>
-                                                    </>
-                                                )}
-                                                <DropdownMenuSeparator className="bg-border" />
-                                                <DropdownMenuItem
-                                                    onClick={signOut}
-                                                    className="text-foreground hover:bg-accent"
-                                                >
-                                                    <LogOut className="h-4 w-4 mr-2" />
-                                                    Sign Out
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    ) : user && 'isGuest' in user ? (
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <Avatar className="h-6 w-6">
-                                                <AvatarImage src={user.avatar_url} alt="Guest" />
-                                                <AvatarFallback className="text-xs">G</AvatarFallback>
-                                            </Avatar>
-                                            <span className="text-muted-foreground">Guest_{user.id}</span>
-                                            <Link to="/auth">
-                                                <Button variant="outline" size="sm">
-                                                    Sign In
-                                                </Button>
-                                            </Link>
-                                        </div>
-                                    ) : (
-                                        <Link to="/auth">
-                                            <Button variant="outline" size="sm">
-                                                Sign In
-                                            </Button>
-                                        </Link>
-                                    )
-                                )}
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -422,75 +322,172 @@ const Index = () => {
 
             {/* Main Content */}
             <main className="container mx-auto p-4">
-                <TabsContent value="market" className="space-y-6">
-                    <div className="relative">
-                        {isInMaintenance('market') && (
-                            <MaintenanceOverlay componentName="Market Board" className="absolute inset-0 z-10" />
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    {/* Desktop Navigation */}
+                    <div className="hidden md:flex items-center gap-4 mb-8">
+                        <TabsList className="grid w-full grid-cols-5">
+                            <TabsTrigger value="market" className="flex items-center gap-2">
+                                <BarChart3 className="h-4 w-4" />
+                                Market Board
+                            </TabsTrigger>
+                            <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
+                                <BookOpen className="h-4 w-4" />
+                                Encyclopedia
+                            </TabsTrigger>
+                            <TabsTrigger value="calculator" className="flex items-center gap-2">
+                                <Calculator className="h-4 w-4" />
+                                Calculator
+                            </TabsTrigger>
+                            <TabsTrigger value="system" className="flex items-center gap-2">
+                                <Settings className="h-4 w-4" />
+                                System
+                            </TabsTrigger>
+                            <TabsTrigger value="notifications" className="flex items-center gap-2">
+                                <Bell className="h-4 w-4" />
+                                Notifications
+                            </TabsTrigger>
+                        </TabsList>
+                        <ThemeToggle />
+                        <div className={`status-indicator ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}> 
+                            <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
+                            {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                        </div>
+                        {!loading && (
+                            user && !('isGuest' in user) ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <Avatar className="h-6 w-6">
+                                                    <AvatarImage
+                                                        src={user.user_metadata?.avatar_url}
+                                                        alt="Profile"
+                                                    />
+                                                    <AvatarFallback className="text-xs">
+                                                        {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                {user.user_metadata?.full_name || user.email}
+                                            </div>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="bg-card border-border">
+                                        <Link to="/profile">
+                                            <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                <User className="h-4 w-4 mr-2" />
+                                                Profile
+                                            </DropdownMenuItem>
+                                        </Link>
+                                        {user.user_metadata?.provider_id === "939867069070065714" && (
+                                            <>
+                                                <DropdownMenuSeparator className="bg-border" />
+                                                <Link to="/admin">
+                                                    <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                        <Shield className="h-4 w-4 mr-2" />
+                                                        Admin Panel
+                                                    </DropdownMenuItem>
+                                                </Link>
+                                            </>
+                                        )}
+                                        <DropdownMenuSeparator className="bg-border" />
+                                        <DropdownMenuItem
+                                            onClick={signOut}
+                                            className="text-foreground hover:bg-accent"
+                                        >
+                                            <LogOut className="h-4 w-4 mr-2" />
+                                            Sign Out
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : user && 'isGuest' in user ? (
+                                <div className="flex items-center gap-2 text-sm">
+                                    <Avatar className="h-6 w-6">
+                                        <AvatarImage src={user.avatar_url} alt="Guest" />
+                                        <AvatarFallback className="text-xs">G</AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-muted-foreground">Guest_{user.id}</span>
+                                    <Link to="/auth">
+                                        <Button variant="outline" size="sm">
+                                            Sign In
+                                        </Button>
+                                    </Link>
+                                </div>
+                            ) : (
+                                <Link to="/auth">
+                                    <Button variant="outline" size="sm">
+                                        Sign In
+                                    </Button>
+                                </Link>
+                            )
                         )}
-                        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isInMaintenance('market') ? 'pointer-events-none blur-sm' : ''}`}>
-                            <div className="lg:col-span-2">
-                                <MarketBoard
-                                    marketData={marketData}
-                                    loading={stockLoading}
-                                    error={stockError}
-                                    onRefetch={refetch}
-                                />
-                            </div>
-                            <div className="relative">
-                                {isInMaintenance('weather') && (
-                                    <MaintenanceOverlay componentName="Weather Status" className="absolute inset-0 z-10" />
-                                )}
-                                <div className={isInMaintenance('weather') ? 'pointer-events-none blur-sm' : ''}>
-                                    <WeatherStatus weatherData={weatherData} />
+                    </div>
+                    {/* Tab Contents */}
+                    <TabsContent value="market" className="space-y-6">
+                        <div className="relative">
+                            {isInMaintenance('market') && (
+                                <MaintenanceOverlay componentName="Market Board" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isInMaintenance('market') ? 'pointer-events-none blur-sm' : ''}`}>
+                                <div className="lg:col-span-2">
+                                    <MarketBoard
+                                        marketData={marketData}
+                                        loading={stockLoading}
+                                        error={stockError}
+                                        onRefetch={refetch}
+                                    />
+                                </div>
+                                <div className="relative">
+                                    {isInMaintenance('weather') && (
+                                        <MaintenanceOverlay componentName="Weather Status" className="absolute inset-0 z-10" />
+                                    )}
+                                    <div className={isInMaintenance('weather') ? 'pointer-events-none blur-sm' : ''}>
+                                        <WeatherStatus weatherData={weatherData} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="encyclopedia">
-                    <div className="relative">
-                        {isInMaintenance('encyclopedia') && (
-                            <MaintenanceOverlay componentName="Item Encyclopedia" className="absolute inset-0 z-10" />
-                        )}
-                        <div className={isInMaintenance('encyclopedia') ? 'pointer-events-none blur-sm' : ''}>
-                            <ItemEncyclopedia />
+                    </TabsContent>
+                    <TabsContent value="encyclopedia">
+                        <div className="relative">
+                            {isInMaintenance('encyclopedia') && (
+                                <MaintenanceOverlay componentName="Item Encyclopedia" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={isInMaintenance('encyclopedia') ? 'pointer-events-none blur-sm' : ''}>
+                                <ItemEncyclopedia />
+                            </div>
                         </div>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="calculator">
-                    <div className="relative">
-                        {isInMaintenance('calculator') && (
-                            <MaintenanceOverlay componentName="Fruit Calculator" className="absolute inset-0 z-10" />
-                        )}
-                        <div className={isInMaintenance('calculator') ? 'pointer-events-none blur-sm' : ''}>
-                            <FruitCalculator />
+                    </TabsContent>
+                    <TabsContent value="calculator">
+                        <div className="relative">
+                            {isInMaintenance('calculator') && (
+                                <MaintenanceOverlay componentName="Fruit Calculator" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={isInMaintenance('calculator') ? 'pointer-events-none blur-sm' : ''}>
+                                <FruitCalculator />
+                            </div>
                         </div>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="system">
-                    <div className="relative">
-                        {isInMaintenance('system') && (
-                            <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
-                        )}
-                        <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
-                            <SystemMonitor wsStatus={wsStatus} />
+                    </TabsContent>
+                    <TabsContent value="system">
+                        <div className="relative">
+                            {isInMaintenance('system') && (
+                                <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
+                                <SystemMonitor wsStatus={wsStatus} />
+                            </div>
                         </div>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="notifications">
-                    <div className="relative">
-                        {isInMaintenance('notifications') && (
-                            <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
-                        )}
-                        <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
-                            <NotificationFeed notifications={notifications} />
+                    </TabsContent>
+                    <TabsContent value="notifications">
+                        <div className="relative">
+                            {isInMaintenance('notifications') && (
+                                <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
+                            )}
+                            <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
+                                <NotificationFeed notifications={notifications} />
+                            </div>
                         </div>
-                    </div>
-                </TabsContent>
+                    </TabsContent>
+                </Tabs>
             </main>
         </div>
     );
