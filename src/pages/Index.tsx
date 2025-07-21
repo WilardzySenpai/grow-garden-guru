@@ -302,175 +302,50 @@ const Index = () => {
                                         <SheetHeader className="mb-4">
                                             <SheetTitle>Menu</SheetTitle>
                                         </SheetHeader>
-                                        <div className="flex flex-col gap-4">
-                                            <ThemeToggle />
-                                            <div className={`status-indicator flex items-center gap-2 ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
-                                                <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
-                                                {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
-                                            </div>
-                                            
-                                            {!loading && user && !('isGuest' in user) && (
-                                                <div className="flex flex-col gap-2">
-                                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-accent">
-                                                        <Avatar className="h-8 w-8">
-                                                            <AvatarImage
-                                                                src={user.user_metadata?.avatar_url}
-                                                                alt="Profile"
-                                                            />
-                                                            <AvatarFallback className="text-xs">
-                                                                {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-medium">{user.user_metadata?.full_name || user.email}</span>
-                                                            <span className="text-xs text-muted-foreground">{user.email}</span>
-                                                        </div>
-                                                    </div>
-                                                    <Link to="/profile">
-                                                        <Button variant="outline" className="w-full justify-start gap-2">
-                                                            <User className="h-4 w-4" />
-                                                            Profile
-                                                        </Button>
-                                                    </Link>
-                                                    {user.user_metadata?.provider_id === "939867069070065714" && (
-                                                        <Link to="/admin">
-                                                            <Button variant="outline" className="w-full justify-start gap-2">
-                                                                <Shield className="h-4 w-4" />
-                                                                Admin Panel
-                                                            </Button>
-                                                        </Link>
-                                                    )}
-                                                    <Button
-                                                        variant="destructive"
-                                                        className="w-full justify-start gap-2"
-                                                        onClick={signOut}
-                                                    >
-                                                        <LogOut className="h-4 w-4" />
-                                                        Sign Out
-                                                    </Button>
-                                                </div>
-                                            )}
-                                            {!loading && user && 'isGuest' in user && (
-                                                <div className="flex flex-col gap-2">
-                                                    <div className="flex items-center gap-2 p-2">
-                                                        <Avatar className="h-8 w-8">
-                                                            <AvatarImage src={user.avatar_url} alt="Guest" />
-                                                            <AvatarFallback className="text-xs">G</AvatarFallback>
-                                                        </Avatar>
-                                                        <span className="text-muted-foreground">Guest_{user.id}</span>
-                                                    </div>
-                                                    <Link to="/auth">
-                                                        <Button variant="default" className="w-full">
-                                                            Sign In
-                                                        </Button>
-                                                    </Link>
-                                                </div>
-                                            )}
-                                            {!loading && !user && (
-                                                <Link to="/auth">
-                                                    <Button variant="default" className="w-full">
-                                                        Sign In
-                                                    </Button>
-                                                </Link>
-                                            )}
-                                        </div>
+                                        <MobileNav
+                                            activeTab={activeTab}
+                                            setActiveTab={setActiveTab}
+                                            navItems={[
+                                                { value: 'market', label: 'Market Board', icon: <BarChart3 className="h-4 w-4 mr-2" /> },
+                                                { value: 'encyclopedia', label: 'Encyclopedia', icon: <BookOpen className="h-4 w-4 mr-2" /> },
+                                                { value: 'calculator', label: 'Calculator', icon: <Calculator className="h-4 w-4 mr-2" /> },
+                                                { value: 'system', label: 'System', icon: <Settings className="h-4 w-4 mr-2" /> },
+                                                { value: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4 mr-2" /> }
+                                            ]}
+                                        />
                                     </SheetContent>
                                 </Sheet>
                             </div>
 
-                            {/* Desktop View Elements */}
+                            {/* Desktop Navigation */}
                             <div className="hidden md:flex items-center gap-4">
+                                <TabsList>
+                                    <TabsTrigger value="market" className="flex items-center gap-2">
+                                        <BarChart3 className="h-4 w-4" />
+                                        Market Board
+                                    </TabsTrigger>
+                                    <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
+                                        <BookOpen className="h-4 w-4" />
+                                        Encyclopedia
+                                    </TabsTrigger>
+                                    <TabsTrigger value="calculator" className="flex items-center gap-2">
+                                        <Calculator className="h-4 w-4" />
+                                        Calculator
+                                    </TabsTrigger>
+                                    <TabsTrigger value="system" className="flex items-center gap-2">
+                                        <Settings className="h-4 w-4" />
+                                        System
+                                    </TabsTrigger>
+                                    <TabsTrigger value="notifications" className="flex items-center gap-2">
+                                        <Bell className="h-4 w-4" />
+                                        Notifications
+                                    </TabsTrigger>
+                                </TabsList>
                                 <ThemeToggle />
                                 <div className={`status-indicator ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
                                     <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
                                     {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
                                 </div>
-                                    <Sheet>
-                                        <SheetTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-10 w-10">
-                                                <Menu className="h-6 w-6" />
-                                            </Button>
-                                        </SheetTrigger>
-                                        <SheetContent side="right" className="w-80">
-                                            <SheetHeader className="mb-4">
-                                                <SheetTitle>Menu</SheetTitle>
-                                            </SheetHeader>
-                                            <div className="flex flex-col gap-4">
-                                                <ThemeToggle />
-                                                <div className={`status-indicator flex items-center gap-2 ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
-                                                    <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
-                                                    {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
-                                                </div>
-                                                
-                                                {!loading && user && !('isGuest' in user) && (
-                                                    <div className="flex flex-col gap-2">
-                                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-accent">
-                                                            <Avatar className="h-8 w-8">
-                                                                <AvatarImage
-                                                                    src={user.user_metadata?.avatar_url}
-                                                                    alt="Profile"
-                                                                />
-                                                                <AvatarFallback className="text-xs">
-                                                                    {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-sm font-medium">{user.user_metadata?.full_name || user.email}</span>
-                                                                <span className="text-xs text-muted-foreground">{user.email}</span>
-                                                            </div>
-                                                        </div>
-                                                        <Link to="/profile">
-                                                            <Button variant="outline" className="w-full justify-start gap-2">
-                                                                <User className="h-4 w-4" />
-                                                                Profile
-                                                            </Button>
-                                                        </Link>
-                                                        {user.user_metadata?.provider_id === "939867069070065714" && (
-                                                            <Link to="/admin">
-                                                                <Button variant="outline" className="w-full justify-start gap-2">
-                                                                    <Shield className="h-4 w-4" />
-                                                                    Admin Panel
-                                                                </Button>
-                                                            </Link>
-                                                        )}
-                                                        <Button
-                                                            variant="destructive"
-                                                            className="w-full justify-start gap-2"
-                                                            onClick={signOut}
-                                                        >
-                                                            <LogOut className="h-4 w-4" />
-                                                            Sign Out
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                                {!loading && user && 'isGuest' in user && (
-                                                    <div className="flex flex-col gap-2">
-                                                        <div className="flex items-center gap-2 p-2">
-                                                            <Avatar className="h-8 w-8">
-                                                                <AvatarImage src={user.avatar_url} alt="Guest" />
-                                                                <AvatarFallback className="text-xs">G</AvatarFallback>
-                                                            </Avatar>
-                                                            <span className="text-muted-foreground">Guest_{user.id}</span>
-                                                        </div>
-                                                        <Link to="/auth">
-                                                            <Button variant="default" className="w-full">
-                                                                Sign In
-                                                            </Button>
-                                                        </Link>
-                                                    </div>
-                                                )}
-                                                {!loading && !user && (
-                                                    <Link to="/auth">
-                                                        <Button variant="default" className="w-full">
-                                                            Sign In
-                                                        </Button>
-                                                    </Link>
-                                                )}
-                                            </div>
-                                        </SheetContent>
-                                    </Sheet>
-                                </div>
-
                                 {!loading && (
                                     user && !('isGuest' in user) ? (
                                         <DropdownMenu>
@@ -546,115 +421,76 @@ const Index = () => {
             </header>
 
             {/* Main Content */}
-            <main className="container mx-auto p-4 space-y-6">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    {isMobile ? (
-                        <MobileNav
-                            activeTab={activeTab}
-                            setActiveTab={setActiveTab}
-                            navItems={[
-                                { value: 'market', label: 'Market Board', icon: <BarChart3 className="h-4 w-4 mr-2" /> },
-                                { value: 'encyclopedia', label: 'Encyclopedia', icon: <BookOpen className="h-4 w-4 mr-2" /> },
-                                { value: 'calculator', label: 'Calculator', icon: <Calculator className="h-4 w-4 mr-2" /> },
-                                { value: 'system', label: 'System', icon: <Settings className="h-4 w-4 mr-2" /> },
-                                { value: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4 mr-2" /> }
-                            ]}
-                        />
-                    ) : (
-                        <TabsList className="grid w-full grid-cols-5 mb-8">
-                            <TabsTrigger value="market" className="flex items-center gap-2">
-                                <BarChart3 className="h-4 w-4" />
-                                Market Board
-                            </TabsTrigger>
-                            <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
-                                <BookOpen className="h-4 w-4" />
-                                Encyclopedia
-                            </TabsTrigger>
-                            <TabsTrigger value="calculator" className="flex items-center gap-2">
-                                <Calculator className="h-4 w-4" />
-                                Calculator
-                            </TabsTrigger>
-                            <TabsTrigger value="system" className="flex items-center gap-2">
-                                <Settings className="h-4 w-4" />
-                                System
-                            </TabsTrigger>
-                            <TabsTrigger value="notifications" className="flex items-center gap-2">
-                                <Bell className="h-4 w-4" />
-                                Notifications
-                            </TabsTrigger>
-                        </TabsList>
-                    )}
-
-                    <TabsContent value="market" className="space-y-6">
-                        <div className="relative">
-                            {isInMaintenance('market') && (
-                                <MaintenanceOverlay componentName="Market Board" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isInMaintenance('market') ? 'pointer-events-none blur-sm' : ''}`}>
-                                <div className="lg:col-span-2">
-                                    <MarketBoard
-                                        marketData={marketData}
-                                        loading={stockLoading}
-                                        error={stockError}
-                                        onRefetch={refetch}
-                                    />
-                                </div>
-                                <div className="relative">
-                                    {isInMaintenance('weather') && (
-                                        <MaintenanceOverlay componentName="Weather Status" className="absolute inset-0 z-10" />
-                                    )}
-                                    <div className={isInMaintenance('weather') ? 'pointer-events-none blur-sm' : ''}>
-                                        <WeatherStatus weatherData={weatherData} />
-                                    </div>
+            <main className="container mx-auto p-4">
+                <TabsContent value="market" className="space-y-6">
+                    <div className="relative">
+                        {isInMaintenance('market') && (
+                            <MaintenanceOverlay componentName="Market Board" className="absolute inset-0 z-10" />
+                        )}
+                        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isInMaintenance('market') ? 'pointer-events-none blur-sm' : ''}`}>
+                            <div className="lg:col-span-2">
+                                <MarketBoard
+                                    marketData={marketData}
+                                    loading={stockLoading}
+                                    error={stockError}
+                                    onRefetch={refetch}
+                                />
+                            </div>
+                            <div className="relative">
+                                {isInMaintenance('weather') && (
+                                    <MaintenanceOverlay componentName="Weather Status" className="absolute inset-0 z-10" />
+                                )}
+                                <div className={isInMaintenance('weather') ? 'pointer-events-none blur-sm' : ''}>
+                                    <WeatherStatus weatherData={weatherData} />
                                 </div>
                             </div>
                         </div>
-                    </TabsContent>
+                    </div>
+                </TabsContent>
 
-                    <TabsContent value="encyclopedia">
-                        <div className="relative">
-                            {isInMaintenance('encyclopedia') && (
-                                <MaintenanceOverlay componentName="Item Encyclopedia" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={isInMaintenance('encyclopedia') ? 'pointer-events-none blur-sm' : ''}>
-                                <ItemEncyclopedia />
-                            </div>
+                <TabsContent value="encyclopedia">
+                    <div className="relative">
+                        {isInMaintenance('encyclopedia') && (
+                            <MaintenanceOverlay componentName="Item Encyclopedia" className="absolute inset-0 z-10" />
+                        )}
+                        <div className={isInMaintenance('encyclopedia') ? 'pointer-events-none blur-sm' : ''}>
+                            <ItemEncyclopedia />
                         </div>
-                    </TabsContent>
+                    </div>
+                </TabsContent>
 
-                    <TabsContent value="calculator">
-                        <div className="relative">
-                            {isInMaintenance('calculator') && (
-                                <MaintenanceOverlay componentName="Fruit Calculator" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={isInMaintenance('calculator') ? 'pointer-events-none blur-sm' : ''}>
-                                <FruitCalculator />
-                            </div>
+                <TabsContent value="calculator">
+                    <div className="relative">
+                        {isInMaintenance('calculator') && (
+                            <MaintenanceOverlay componentName="Fruit Calculator" className="absolute inset-0 z-10" />
+                        )}
+                        <div className={isInMaintenance('calculator') ? 'pointer-events-none blur-sm' : ''}>
+                            <FruitCalculator />
                         </div>
-                    </TabsContent>
+                    </div>
+                </TabsContent>
 
-                    <TabsContent value="system">
-                        <div className="relative">
-                            {isInMaintenance('system') && (
-                                <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
-                                <SystemMonitor wsStatus={wsStatus} />
-                            </div>
+                <TabsContent value="system">
+                    <div className="relative">
+                        {isInMaintenance('system') && (
+                            <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
+                        )}
+                        <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
+                            <SystemMonitor wsStatus={wsStatus} />
                         </div>
-                    </TabsContent>
+                    </div>
+                </TabsContent>
 
-                    <TabsContent value="notifications">
-                        <div className="relative">
-                            {isInMaintenance('notifications') && (
-                                <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
-                                <NotificationFeed notifications={notifications} />
-                            </div>
+                <TabsContent value="notifications">
+                    <div className="relative">
+                        {isInMaintenance('notifications') && (
+                            <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
+                        )}
+                        <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
+                            <NotificationFeed notifications={notifications} />
                         </div>
-                    </TabsContent>
-                </Tabs>
+                    </div>
+                </TabsContent>
             </main>
         </div>
     );
