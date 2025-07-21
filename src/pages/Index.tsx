@@ -283,37 +283,219 @@ const Index = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Leaf className="h-8 w-8 text-primary" />
-                            <div className="hidden md:block">
-                                <h1 className="text-2xl font-bold text-foreground">Grow A Garden Guru</h1>
-                                <p className="text-sm text-muted-foreground">Comprehensive Game Intelligence Platform</p>
+                            <div>
+                                <h1 className="text-xl md:text-2xl font-bold text-foreground">Grow A Garden Guru</h1>
+                                <p className="text-xs md:text-sm text-muted-foreground">Comprehensive Game Intelligence Platform</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                             {/* Mobile Menu */}
                             <div className="block md:hidden">
-                                <Sheet>
-                                    <SheetTrigger asChild>
+                                {/* Mobile Dropdown Menu for user controls only */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-10 w-10">
                                             <Menu className="h-6 w-6" />
                                         </Button>
-                                    </SheetTrigger>
-                                    <SheetContent side="right" className="w-80">
-                                        <SheetHeader className="mb-4">
-                                            <SheetTitle>Menu</SheetTitle>
-                                        </SheetHeader>
-                                        <MobileNav
-                                            activeTab={activeTab}
-                                            setActiveTab={setActiveTab}
-                                            navItems={[ 
-                                                { value: 'market', label: 'Market Board', icon: <BarChart3 className="h-4 w-4 mr-2" /> },
-                                                { value: 'encyclopedia', label: 'Encyclopedia', icon: <BookOpen className="h-4 w-4 mr-2" /> },
-                                                { value: 'calculator', label: 'Calculator', icon: <Calculator className="h-4 w-4 mr-2" /> },
-                                                { value: 'system', label: 'System', icon: <Settings className="h-4 w-4 mr-2" /> },
-                                                { value: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4 mr-2" /> }
-                                            ]}
-                                        />
-                                    </SheetContent>
-                                </Sheet>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="bg-card border-border w-72 p-0">
+                                        {/* Header Section */}
+                                        <div className="bg-muted/30 px-4 py-3 border-b border-border">
+                                            <h3 className="font-semibold text-base text-foreground">Account</h3>
+                                        </div>
+
+                                        {/* Controls Section */}
+                                        <div className="p-4 space-y-4">
+                                            {/* Theme Toggle Section */}
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-foreground">Theme</span>
+                                                <ThemeToggle />
+                                            </div>
+
+                                            {/* Status Section */}
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-foreground">Status</span>
+                                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${wsStatus === 'connected'
+                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                                    }`}>
+                                                    <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'
+                                                        } ${wsStatus === 'connecting' ? 'animate-pulse' : ''}`} />
+                                                    {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                                                </div>
+                                            </div>
+
+                                            <DropdownMenuSeparator className="bg-border" />
+
+                                            {/* User Section */}
+                                            <div className="space-y-3">
+                                                {!loading && (
+                                                    user && !('isGuest' in user) ? (
+                                                        // Authenticated User
+                                                        <div className="space-y-3">
+                                                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
+                                                                <Avatar className="h-10 w-10">
+                                                                    <AvatarImage
+                                                                        src={user.user_metadata?.avatar_url}
+                                                                        alt="Profile"
+                                                                    />
+                                                                    <AvatarFallback className="text-sm font-medium">
+                                                                        {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-foreground truncate">
+                                                                        {user.user_metadata?.full_name || 'User'}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground truncate">
+                                                                        {user.email}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* User Actions */}
+                                                            <div className="space-y-2">
+                                                                <Link to="/profile" className="w-full">
+                                                                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+                                                                        <User className="h-4 w-4" />
+                                                                        Profile
+                                                                    </Button>
+                                                                </Link>
+
+                                                                {user.user_metadata?.provider_id === "939867069070065714" && (
+                                                                    <Link to="/admin" className="w-full">
+                                                                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+                                                                            <Shield className="h-4 w-4" />
+                                                                            Admin Panel
+                                                                        </Button>
+                                                                    </Link>
+                                                                )}
+
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={signOut}
+                                                                    className="w-full justify-start gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                                                                >
+                                                                    <LogOut className="h-4 w-4" />
+                                                                    Sign Out
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ) : user && 'isGuest' in user ? (
+                                                        // Guest User
+                                                        <div className="space-y-3">
+                                                            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
+                                                                <Avatar className="h-10 w-10">
+                                                                    <AvatarImage src={user.avatar_url} alt="Guest" />
+                                                                    <AvatarFallback className="text-sm font-medium">G</AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-foreground">Guest User</p>
+                                                                    <p className="text-xs text-muted-foreground truncate">
+                                                                        ID: {user.id.slice(-8)}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            <Link to="/auth" className="w-full">
+                                                                <Button variant="default" size="sm" className="w-full">
+                                                                    Sign In to Save Progress
+                                                                </Button>
+                                                            </Link>
+                                                        </div>
+                                                    ) : (
+                                                        // No User
+                                                        <div className="text-center space-y-3">
+                                                            <p className="text-sm text-muted-foreground">Sign in to save your progress</p>
+                                                            <Link to="/auth" className="w-full">
+                                                                <Button variant="default" size="sm" className="w-full">
+                                                                    Sign In
+                                                                </Button>
+                                                            </Link>
+                                                        </div>
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            {/* User Controls */}
+                            <div className="hidden md:flex items-center gap-4">
+                                <ThemeToggle />
+                                <div className={`status-indicator ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
+                                    <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
+                                    {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                                </div>
+                                {!loading && (
+                                    user && !('isGuest' in user) ? (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="gap-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Avatar className="h-6 w-6">
+                                                            <AvatarImage
+                                                                src={user.user_metadata?.avatar_url}
+                                                                alt="Profile"
+                                                            />
+                                                            <AvatarFallback className="text-xs">
+                                                                {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        {user.user_metadata?.full_name || user.email}
+                                                    </div>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="bg-card border-border">
+                                                <Link to="/profile">
+                                                    <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                        <User className="h-4 w-4 mr-2" />
+                                                        Profile
+                                                    </DropdownMenuItem>
+                                                </Link>
+                                                {user.user_metadata?.provider_id === "939867069070065714" && (
+                                                    <>
+                                                        <DropdownMenuSeparator className="bg-border" />
+                                                        <Link to="/admin">
+                                                            <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                                <Shield className="h-4 w-4 mr-2" />
+                                                                Admin Panel
+                                                            </DropdownMenuItem>
+                                                        </Link>
+                                                    </>
+                                                )}
+                                                <DropdownMenuSeparator className="bg-border" />
+                                                <DropdownMenuItem
+                                                    onClick={signOut}
+                                                    className="text-foreground hover:bg-accent"
+                                                >
+                                                    <LogOut className="h-4 w-4 mr-2" />
+                                                    Sign Out
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : user && 'isGuest' in user ? (
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Avatar className="h-6 w-6">
+                                                <AvatarImage src={user.avatar_url} alt="Guest" />
+                                                <AvatarFallback className="text-xs">G</AvatarFallback>
+                                            </Avatar>
+                                            <span className="text-muted-foreground">Guest_{user.id}</span>
+                                            <Link to="/auth">
+                                                <Button variant="outline" size="sm">
+                                                    Sign In
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    ) : (
+                                        <Link to="/auth">
+                                            <Button variant="outline" size="sm">
+                                                Sign In
+                                            </Button>
+                                        </Link>
+                                    )
+                                )}
                             </div>
                         </div>
                     </div>
@@ -323,109 +505,61 @@ const Index = () => {
             {/* Main Content */}
             <main className="container mx-auto p-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center justify-between gap-4 mb-8">
-                        {/* Main Navigation */}
+                    {/* Main Navigation - hamburger on mobile, tabs on desktop */}
+                    <div className="flex items-center justify-between gap-4 mb-8">
                         <div className="flex-grow">
-                            <TabsList className="grid w-full grid-cols-5">
-                                <TabsTrigger value="market" className="flex items-center gap-2">
-                                    <BarChart3 className="h-4 w-4" />
-                                    Market Board
-                                </TabsTrigger>
-                                <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
-                                    <BookOpen className="h-4 w-4" />
-                                    Encyclopedia
-                                </TabsTrigger>
-                                <TabsTrigger value="calculator" className="flex items-center gap-2">
-                                    <Calculator className="h-4 w-4" />
-                                    Calculator
-                                </TabsTrigger>
-                                <TabsTrigger value="system" className="flex items-center gap-2">
-                                    <Settings className="h-4 w-4" />
-                                    System
-                                </TabsTrigger>
-                                <TabsTrigger value="notifications" className="flex items-center gap-2">
-                                    <Bell className="h-4 w-4" />
-                                    Notifications
-                                </TabsTrigger>
-                            </TabsList>
-                        </div>
-
-                        {/* User Controls */}
-                        <div className="flex items-center gap-4">
-                            <ThemeToggle />
-                            <div className={`status-indicator ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
-                                <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
-                                {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
-                            </div>
-                            {!loading && (
-                                user && !('isGuest' in user) ? (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="gap-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar className="h-6 w-6">
-                                                        <AvatarImage
-                                                            src={user.user_metadata?.avatar_url}
-                                                            alt="Profile"
-                                                        />
-                                                        <AvatarFallback className="text-xs">
-                                                            {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    {user.user_metadata?.full_name || user.email}
-                                                </div>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="bg-card border-border">
-                                            <Link to="/profile">
-                                                <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                                    <User className="h-4 w-4 mr-2" />
-                                                    Profile
-                                                </DropdownMenuItem>
-                                            </Link>
-                                            {user.user_metadata?.provider_id === "939867069070065714" && (
-                                                <>
-                                                    <DropdownMenuSeparator className="bg-border" />
-                                                    <Link to="/admin">
-                                                        <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                                            <Shield className="h-4 w-4 mr-2" />
-                                                            Admin Panel
-                                                        </DropdownMenuItem>
-                                                    </Link>
-                                                </>
-                                            )}
-                                            <DropdownMenuSeparator className="bg-border" />
-                                            <DropdownMenuItem
-                                                onClick={signOut}
-                                                className="text-foreground hover:bg-accent"
-                                            >
-                                                <LogOut className="h-4 w-4 mr-2" />
-                                                Sign Out
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                ) : user && 'isGuest' in user ? (
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <Avatar className="h-6 w-6">
-                                            <AvatarImage src={user.avatar_url} alt="Guest" />
-                                            <AvatarFallback className="text-xs">G</AvatarFallback>
-                                        </Avatar>
-                                        <span className="text-muted-foreground">Guest_{user.id}</span>
-                                        <Link to="/auth">
-                                            <Button variant="outline" size="sm">
-                                                Sign In
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                ) : (
-                                    <Link to="/auth">
-                                        <Button variant="outline" size="sm">
-                                            Sign In
+                            {/* Hamburger for mobile, tabs for md+ */}
+                            <div className="md:hidden">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm" className="gap-2 w-full">
+                                            <Menu className="h-5 w-5 mr-2" />
+                                            Menu
                                         </Button>
-                                    </Link>
-                                )
-                            )}
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" side="bottom" className="bg-card border-border w-screen max-w-none left-0 rounded-none shadow-lg">
+                                        <DropdownMenuItem onClick={() => setActiveTab('market')} className="flex items-center gap-2">
+                                            <BarChart3 className="h-4 w-4" /> Market Board
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setActiveTab('encyclopedia')} className="flex items-center gap-2">
+                                            <BookOpen className="h-4 w-4" /> Encyclopedia
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setActiveTab('calculator')} className="flex items-center gap-2">
+                                            <Calculator className="h-4 w-4" /> Calculator
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setActiveTab('system')} className="flex items-center gap-2">
+                                            <Settings className="h-4 w-4" /> System
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setActiveTab('notifications')} className="flex items-center gap-2">
+                                            <Bell className="h-4 w-4" /> Notifications
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            <div className="hidden md:block">
+                                <TabsList className="grid w-full grid-cols-5">
+                                    <TabsTrigger value="market" className="flex items-center gap-2">
+                                        <BarChart3 className="h-4 w-4" />
+                                        Market Board
+                                    </TabsTrigger>
+                                    <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
+                                        <BookOpen className="h-4 w-4" />
+                                        Encyclopedia
+                                    </TabsTrigger>
+                                    <TabsTrigger value="calculator" className="flex items-center gap-2">
+                                        <Calculator className="h-4 w-4" />
+                                        Calculator
+                                    </TabsTrigger>
+                                    <TabsTrigger value="system" className="flex items-center gap-2">
+                                        <Settings className="h-4 w-4" />
+                                        System
+                                    </TabsTrigger>
+                                    <TabsTrigger value="notifications" className="flex items-center gap-2">
+                                        <Bell className="h-4 w-4" />
+                                        Notifications
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
                         </div>
                     </div>
                     {/* Tab Contents */}
