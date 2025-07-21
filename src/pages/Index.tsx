@@ -296,87 +296,151 @@ const Index = () => {
                                 <h1 className="text-lg font-bold text-foreground">
                                     Grow A Garden Guru
                                 </h1>
+                                <p className="text-sm text-muted-foreground">
+                                    Comprehensive Game Intelligence
+                                </p>
                             </div>
                         </div>
 
                         {/* Actions Group - Right Side */}
                         <div className="flex items-center gap-2 sm:gap-3">
-                            {/* Live Status Indicator */}
+                            {/* Live Status Indicator - Hide text on mobile */}
                             <div className="flex items-center px-2 sm:px-3 h-8 gap-1.5 bg-card/80 border border-border rounded-lg">
                                 <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'animate-pulse' : ''}`} />
-                                <span className="text-sm font-medium text-foreground">
+                                <span className="hidden sm:block text-sm font-medium text-foreground">
                                     {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
                                 </span>
                             </div>
 
                             <ThemeToggle />
 
-                            {/* User Menu */}
-                            {!loading && (
-                                user && !('isGuest' in user) ? (
-                                    <Sheet>
-                                        <SheetTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="h-11 gap-2">
-                                                <Avatar className="h-7 w-7">
-                                                    <AvatarImage 
-                                                        src={user.user_metadata?.avatar_url} 
-                                                        alt="Profile" 
-                                                    />
-                                                    <AvatarFallback className="text-xs">
-                                                        {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <span className="hidden sm:block">
-                                                    {user.user_metadata?.full_name || user.email}
-                                                </span>
-                                            </Button>
-                                        </SheetTrigger>
-                                        <SheetContent>
-                                            <SheetHeader>
-                                                <SheetTitle>Menu</SheetTitle>
-                                            </SheetHeader>
-                                            <div className="flex flex-col gap-4 mt-6">
-                                                <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
-                                                    <User className="h-4 w-4" />
-                                                    Profile
-                                                </Link>
-                                                {user.user_metadata?.provider_id === "939867069070065714" && (
-                                                    <Link to="/admin" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
-                                                        <Shield className="h-4 w-4" />
-                                                        Admin Panel
+                            {/* Mobile Menu */}
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-11 md:hidden">
+                                        <Menu className="h-5 w-5" />
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent>
+                                    <SheetHeader>
+                                        <SheetTitle>Menu</SheetTitle>
+                                    </SheetHeader>
+                                    {!loading && (
+                                        <div className="flex flex-col gap-4 mt-6">
+                                            {user && !('isGuest' in user) ? (
+                                                <>
+                                                    <div className="flex items-center gap-2 px-4 py-2">
+                                                        <Avatar className="h-7 w-7">
+                                                            <AvatarImage 
+                                                                src={user.user_metadata?.avatar_url} 
+                                                                alt="Profile" 
+                                                            />
+                                                            <AvatarFallback className="text-xs">
+                                                                {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <span className="font-medium">
+                                                            {user.user_metadata?.full_name || user.email}
+                                                        </span>
+                                                    </div>
+                                                    <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
+                                                        <User className="h-4 w-4" />
+                                                        Profile
                                                     </Link>
-                                                )}
-                                                <button
-                                                    onClick={signOut}
-                                                    className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-left"
-                                                >
-                                                    <LogOut className="h-4 w-4" />
-                                                    Sign Out
-                                                </button>
-                                            </div>
-                                        </SheetContent>
-                                    </Sheet>
-                                ) : user && 'isGuest' in user ? (
-                                    <div className="flex items-center gap-2">
-                                        <Avatar className="h-7 w-7">
-                                            <AvatarImage src={user.avatar_url} alt="Guest" />
-                                            <AvatarFallback className="text-xs">
-                                                {user.display_name.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                                    {user.user_metadata?.provider_id === "939867069070065714" && (
+                                                        <Link to="/admin" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
+                                                            <Shield className="h-4 w-4" />
+                                                            Admin Panel
+                                                        </Link>
+                                                    )}
+                                                    <button
+                                                        onClick={signOut}
+                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-left"
+                                                    >
+                                                        <LogOut className="h-4 w-4" />
+                                                        Sign Out
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <Link to="/auth">
+                                                    <Button variant="outline" className="w-full">
+                                                        Sign In
+                                                    </Button>
+                                                </Link>
+                                            )}
+                                        </div>
+                                    )}
+                                </SheetContent>
+                            </Sheet>
+
+                            {/* User Menu - Desktop version */}
+                            {!loading && (
+                                <div className="hidden md:block">
+                                    {user && !('isGuest' in user) ? (
+                                        <Sheet>
+                                            <SheetTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="h-11 gap-2">
+                                                    <Avatar className="h-7 w-7">
+                                                        <AvatarImage 
+                                                            src={user.user_metadata?.avatar_url} 
+                                                            alt="Profile" 
+                                                        />
+                                                        <AvatarFallback className="text-xs">
+                                                            {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="hidden sm:block">
+                                                        {user.user_metadata?.full_name || user.email}
+                                                    </span>
+                                                </Button>
+                                            </SheetTrigger>
+                                            <SheetContent>
+                                                <SheetHeader>
+                                                    <SheetTitle>Menu</SheetTitle>
+                                                </SheetHeader>
+                                                <div className="flex flex-col gap-4 mt-6">
+                                                    <div className="flex items-center gap-2 px-4 py-2">
+                                                        <Avatar className="h-7 w-7">
+                                                            <AvatarImage 
+                                                                src={user.user_metadata?.avatar_url} 
+                                                                alt="Profile" 
+                                                            />
+                                                            <AvatarFallback className="text-xs">
+                                                                {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <span className="font-medium">
+                                                            {user.user_metadata?.full_name || user.email}
+                                                        </span>
+                                                    </div>
+                                                    <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
+                                                        <User className="h-4 w-4" />
+                                                        Profile
+                                                    </Link>
+                                                    {user.user_metadata?.provider_id === "939867069070065714" && (
+                                                        <Link to="/admin" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
+                                                            <Shield className="h-4 w-4" />
+                                                            Admin Panel
+                                                        </Link>
+                                                    )}
+                                                    <button
+                                                        onClick={signOut}
+                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-left"
+                                                    >
+                                                        <LogOut className="h-4 w-4" />
+                                                        Sign Out
+                                                    </button>
+                                                </div>
+                                            </SheetContent>
+                                        </Sheet>
+                                    ) : (
                                         <Link to="/auth">
-                                            <Button variant="outline" size="sm" className="h-8">
+                                            <Button variant="outline">
                                                 Sign In
                                             </Button>
                                         </Link>
-                                    </div>
-                                ) : (
-                                    <Link to="/auth">
-                                        <Button variant="outline" size="sm" className="h-8">
-                                            Sign In
-                                        </Button>
-                                    </Link>
-                                )
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
