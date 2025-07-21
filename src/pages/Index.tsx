@@ -82,7 +82,6 @@ const Index = () => {
             setNotifications(marketData.notifications);
         }
     }, [marketData]);
-    const [musicDialogOpen, setMusicDialogOpen] = useState(true);
     const [autoPlayMusic, setAutoPlayMusic] = useState(false);
     const [showPlayer, setShowPlayer] = useState(false);
     const [audioSettings, setAudioSettings] = useState({ volume: 0.7, playbackRate: 1 });
@@ -111,7 +110,7 @@ const Index = () => {
             audioRef.current.pause();
         }
         // eslint-disable-next-line
-    }, [autoPlayMusic, musicDialogOpen]);
+    }, [autoPlayMusic]);
 
     // Keep music playing even if player is hidden, unless user said no
     useEffect(() => {
@@ -131,7 +130,10 @@ const Index = () => {
     return (
         <div className="min-h-screen bg-background">
             {/* Music Consent Dialog */}
-            <Dialog open={musicDialogOpen}>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="outline" className="fixed bottom-4 left-4 z-50">Play Music?</Button>
+                </DialogTrigger>
                 <DialogContent
                     aria-labelledby="music-dialog-title"
                     aria-describedby="music-dialog-description"
@@ -151,7 +153,6 @@ const Index = () => {
                             <Button
                                 variant="secondary"
                                 onClick={() => {
-                                    setMusicDialogOpen(false);
                                     setAutoPlayMusic(false);
                                 }}
                                 aria-label="Decline background music"
@@ -162,7 +163,6 @@ const Index = () => {
                         <DialogClose asChild>
                             <Button
                                 onClick={() => {
-                                    setMusicDialogOpen(false);
                                     setAutoPlayMusic(true);
                                 }}
                                 aria-label="Enable background music"
