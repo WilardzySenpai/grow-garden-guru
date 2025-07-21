@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Search, X, Menu } from 'lucide-react';
 import { ItemCard } from '@/components/ItemCard';
 
 import type { ItemInfo, WeatherData } from '@/types/api';
@@ -35,9 +35,20 @@ export const ItemEncyclopedia = () => {
     const [items, setItems] = useState<ItemInfo[]>([]);
     const [weatherItems, setWeatherItems] = useState<WeatherData[]>([]);
     const [pets, setPets] = useState<PetInfo[]>([]);
+
     // For zoom modal
     const [zoomedPetImg, setZoomedPetImg] = useState<string | null>(null);
     const [zoomedPetName, setZoomedPetName] = useState<string | null>(null);
+
+    // Calculate totalResults for current tab
+    const totalResults =
+      activeTab === 'items' ? filteredItems.length :
+      activeTab === 'mutations' ? filteredMutations.length :
+      activeTab === 'weather' ? filteredWeather.length :
+      activeTab === 'pets' ? filteredPets.length : 0;
+
+    // Handler to clear search
+    const handleClearSearch = () => setSearchTerm('');
 
     useEffect(() => {
         fetchEncyclopediaData();
@@ -817,30 +828,75 @@ export const ItemEncyclopedia = () => {
         <Card>
             <CardHeader className="pb-2">
                 <div className="space-y-4">
+                    {/* Header Row */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xl">📚</span>
-                                <CardTitle className="text-2xl">Encyclopedia</CardTitle>
-                            </div>
+                            <span className="text-xl">📚</span>
+                            <CardTitle className="text-2xl">Encyclopedia</CardTitle>
                         </div>
-                        <Badge variant="secondary" className="h-6">
-                            {filteredItems.length + filteredMutations.length + filteredWeather.length + filteredPets.length} results
+                        <Badge variant="secondary" className="h-6 font-medium">
+                            {totalResults.toLocaleString()} results
                         </Badge>
                     </div>
-                    <div className="relative">
+
+                    {/* Enhanced Search Bar */}
+                    <div className="relative group">
+                        {/* Search Icon */}
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-4 w-4 text-gray-400 group-focus-within:text-gray-600" />
+                        </div>
+
                         <Input
                             placeholder="Search items, mutations, weather..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-secondary/50 border-0"
+                            className="w-full pl-10 pr-24 bg-gray-50/80 border-gray-200 focus:bg-white focus:border-blue-300 transition-all duration-200"
                         />
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <span className="text-muted-foreground text-sm">
-                                {searchTerm ? '755 results' : 'Type to search...'}
-                            </span>
+
+                        {/* Right Side Content */}
+                        <div className="absolute inset-y-0 right-0 flex items-center">
+                            {searchTerm && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleClearSearch}
+                                    className="h-6 w-6 p-0 mr-2 hover:bg-gray-200 rounded-full"
+                                >
+                                    <X className="h-3 w-3" />
+                                </Button>
+                            )}
+
+                            <div className="pr-3 flex items-center pointer-events-none">
+                                <span className="text-muted-foreground text-sm">
+                                    {searchTerm ? (
+                                        <span className="text-blue-600 font-medium">
+                                            {totalResults.toLocaleString()} found
+                                        </span>
+                                    ) : (
+                                        'Type to search...'
+                                    )}
+                                </span>
+                            </div>
                         </div>
                     </div>
+                    {/* Search Stats (when not searching) */}
+                    {!searchTerm && (
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span>Items: {items.length}</span>
+                            <span>Mutations: {mutations.length}</span>
+                            <span>Weather: {weatherItems.length}</span>
+                            <span>Pets: {pets.length}</span>
+                        </div>
+                    )}
+                    {/* Search Stats (when searching) */}
+                    {searchTerm && (
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span>Items: {filteredItems.length}</span>
+                            <span>Mutations: {filteredMutations.length}</span>
+                            <span>Weather: {filteredWeather.length}</span>
+                            <span>Pets: {filteredPets.length}</span>
+                        </div>
+                    )}
                 </div>
             </CardHeader>
             <CardContent>
