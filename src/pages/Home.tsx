@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, ArrowRight, Star } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, ArrowRight, Star, Menu, Activity } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Home = () => {
@@ -42,19 +43,34 @@ const Home = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
             {/* Header */}
-            <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Leaf className="h-8 w-8 text-primary" />
-                            <div>
-                                <h1 className="text-2xl font-bold text-foreground">Grow A Garden Guru</h1>
-                                <p className="text-sm text-muted-foreground">Comprehensive Game Intelligence Platform</p>
+            <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+                <nav className="container mx-auto px-3 sm:px-6">
+                    <div className="flex items-center justify-between min-h-[64px]">
+                        {/* Logo and Title Group - Left Side */}
+                        <div className="flex-1 flex items-center gap-3 sm:gap-4 min-h-[44px]">
+                            <Link 
+                                to="/" 
+                                className="flex items-center justify-center w-11 h-11 rounded-xl bg-primary/10 hover:bg-primary/15 transition-colors"
+                                aria-label="Grow A Garden Guru Home"
+                            >
+                                <Leaf className="h-6 w-6 text-primary" />
+                            </Link>
+                            <div className="flex flex-col justify-center py-3">
+                                <h1 className="text-xl sm:text-2xl tracking-tight font-bold text-foreground leading-none">
+                                    Grow A Garden Guru
+                                </h1>
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground/90 mt-1">
+                                    Comprehensive Game Intelligence
+                                </p>
                             </div>
                         </div>
-                        <ThemeToggle />
+
+                        {/* Actions Group - Right Side */}
+                        <div className="flex items-center justify-end gap-2 sm:gap-4 min-h-[44px]">
+                            <ThemeToggle />
+                        </div>
                     </div>
-                </div>
+                </nav>
             </header>
 
             {/* Hero Section */}
