@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Search, X, Menu } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { ItemCard } from '@/components/ItemCard';
 
 import type { ItemInfo, WeatherData } from '@/types/api';
@@ -39,13 +39,6 @@ export const ItemEncyclopedia = () => {
     // For zoom modal
     const [zoomedPetImg, setZoomedPetImg] = useState<string | null>(null);
     const [zoomedPetName, setZoomedPetName] = useState<string | null>(null);
-
-    // Calculate totalResults for current tab
-    const totalResults =
-      activeTab === 'items' ? filteredItems.length :
-      activeTab === 'mutations' ? filteredMutations.length :
-      activeTab === 'weather' ? filteredWeather.length :
-      activeTab === 'pets' ? filteredPets.length : 0;
 
     // Handler to clear search
     const handleClearSearch = () => setSearchTerm('');
@@ -419,6 +412,13 @@ export const ItemEncyclopedia = () => {
         pet.rarity.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // Calculate totalResults for current tab
+    const totalResults =
+      activeTab === 'items' ? filteredItems.length :
+      activeTab === 'mutations' ? filteredMutations.length :
+      activeTab === 'weather' ? filteredWeather.length :
+      activeTab === 'pets' ? filteredPets.length : 0;
 
     // Category filters
     const seedItems = filteredItems.filter(item => item.type === 'seed');
