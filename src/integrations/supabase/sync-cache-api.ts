@@ -1,57 +1,59 @@
-// Robust API endpoint for admin cache refresh
-// This file should be imported and used in your backend API route
+const { createClient } = require('@supabase/supabase-js');
 
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Supabase credentials missing');
-}
-
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL_URL;
+const SUPABASE_SERVICE_ROLE_KEY = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-async function fetchEncyclopediaData() {
-  // Fetch from API
-  const headers = {
-    'Jstudio-key': 'jstudio',
-    'Content-Type': 'application/json',
-  };
-  const [itemsRes, petsRes, weatherRes] = await Promise.all([
-    fetch('https://api.joshlei.com/v2/growagarden/info/', { headers }),
-    fetch('https://api.joshlei.com/v2/growagarden/info?type=pet', { headers }),
-    fetch('https://api.joshlei.com/v2/growagarden/weather', { headers }),
-  ]);
-  if (!itemsRes.ok || !petsRes.ok || !weatherRes.ok) {
-    throw new Error('API fetch failed');
+const endpoints = [
+  {
+    url: 'https://api.joshlei.com/v2/growagarden/info/',
+    table: 'items',
+    uniqueKey: 'item_id',
+  },
+  {
+    url: 'https://api.joshlei.com/v2/growagarden/info?type=pet',
+    table: 'pets',
+    uniqueKey: 'item_id',
+  },
+  {
+    url: 'https://api.joshlei.com/v2/growagarden/weather',
+    table: 'weather',
+    uniqueKey: 'weather_id',
+    transform: (data) => data.weather || [],
+  },
+];
+
+async function syncTable(endpoint) {
+  const response = await fetch(endpoint.url, {
+    headers: {
+      'Jstudio-key': 'jstudio',
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) {
+    console.error(`Failed to fetch ${endpoint.url}: ${response.status}`);
+    return;
   }
-  const items = await itemsRes.json();
-  const pets = await petsRes.json();
-  const weather = await weatherRes.json();
-  return { items, pets, weather: weather.weather || [] };
+  let data = await response.json();
+  if (endpoint.transform) data = endpoint.transform(data);
+  if (!Array.isArray(data)) {
+    console.error(`Unexpected data format for ${endpoint.url}`);
+    return;
+  }
+  const { error } = await supabase
+    .from(endpoint.table)
+    .upsert(data, { onConflict: endpoint.uniqueKey });
+  if (error) {
+    console.error(`Supabase upsert error for ${endpoint.table}:`, error);
+  } else {
+    console.log(`${endpoint.table} synced!`);
+  }
 }
 
-export async function syncCache(req, res) {
-  // Simple admin authentication (replace with real auth in production)
-  const adminSecret = process.env.ADMIN_SECRET;
-  if (!adminSecret || req.headers['x-admin-secret'] !== adminSecret) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  try {
-    const { items, pets, weather } = await fetchEncyclopediaData();
-    // Upsert items
-    if (Array.isArray(items)) {
-      await supabase.from('items').upsert(items, { onConflict: 'item_id' });
-    }
-    if (Array.isArray(pets)) {
-      await supabase.from('pets').upsert(pets, { onConflict: 'item_id' });
-    }
-    if (Array.isArray(weather)) {
-      await supabase.from('weather').upsert(weather, { onConflict: 'weather_id' });
-    }
-    return res.status(200).json({ success: true });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+async function main() {
+  for (const endpoint of endpoints) {
+    await syncTable(endpoint);
   }
 }
+
+main();
