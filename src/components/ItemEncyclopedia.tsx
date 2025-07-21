@@ -14,6 +14,17 @@ import { ItemCard } from '@/components/ItemCard';
 import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
 
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 export const ItemEncyclopedia = () => {
     const isMobile = useIsMobile();
     const [searchTerm, setSearchTerm] = useState('');
@@ -425,10 +436,14 @@ export const ItemEncyclopedia = () => {
     const renderItemTable = (itemList: ItemInfo[]) => {
         if (isMobile) {
             return (
-                <div className="space-y-4">
-                    {itemList.map((item) => (
-                        <ItemCard key={item.item_id} item={item} />
-                    ))}
+                <div className="space-y-4 pb-4">
+                    <ScrollArea className="h-[calc(100vh-300px)]">
+                        <div className="space-y-4 px-2">
+                            {itemList.map((item) => (
+                                <ItemCard key={item.item_id} item={item} />
+                            ))}
+                        </div>
+                    </ScrollArea>
                 </div>
             );
         }
@@ -800,20 +815,32 @@ export const ItemEncyclopedia = () => {
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    📚 Encyclopedia
-                </CardTitle>
-                <div className="flex gap-4 items-center">
-                    <Input
-                        placeholder="Search items, mutations, weather..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="max-w-sm"
-                    />
-                    <Badge variant="secondary">
-                        {filteredItems.length + filteredMutations.length + filteredWeather.length + filteredPets.length} results
-                    </Badge>
+            <CardHeader className="pb-2">
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">📚</span>
+                                <CardTitle className="text-2xl">Encyclopedia</CardTitle>
+                            </div>
+                        </div>
+                        <Badge variant="secondary" className="h-6">
+                            {filteredItems.length + filteredMutations.length + filteredWeather.length + filteredPets.length} results
+                        </Badge>
+                    </div>
+                    <div className="relative">
+                        <Input
+                            placeholder="Search items, mutations, weather..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-secondary/50 border-0"
+                        />
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span className="text-muted-foreground text-sm">
+                                {searchTerm ? '755 results' : 'Type to search...'}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -829,28 +856,43 @@ export const ItemEncyclopedia = () => {
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     {isMobile ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full">
-                                    <Menu className="h-4 w-4 mr-2" />
-                                    {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-full">
-                                <DropdownMenuItem onSelect={() => setActiveTab('items')}>
-                                    📦 Items ({filteredItems.length})
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setActiveTab('mutations')}>
-                                    🧬 Mutations ({filteredMutations.length})
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setActiveTab('weather')}>
-                                    🌦️ Weather ({filteredWeather.length})
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setActiveTab('pets')}>
-                                    🐾 Pets ({filteredPets.length})
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="space-y-4">
+                            {/* Primary Category Selection */}
+                            <Select value={activeTab} onValueChange={setActiveTab}>
+                                <SelectTrigger className="w-full bg-background border-2">
+                                    <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent className="w-full bg-background border-2">
+                                    <SelectGroup>
+                                        <SelectLabel>Categories</SelectLabel>
+                                        <SelectItem value="items">📦 Items ({filteredItems.length})</SelectItem>
+                                        <SelectItem value="mutations">🧬 Mutations ({filteredMutations.length})</SelectItem>
+                                        <SelectItem value="weather">🌦️ Weather ({filteredWeather.length})</SelectItem>
+                                        <SelectItem value="pets">🐾 Pets ({filteredPets.length})</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+
+                            {/* Secondary Category Selection - Only show if primary category is selected */}
+                            {activeTab === 'items' && (
+                                <Select value={activeSubTab} onValueChange={setActiveSubTab}>
+                                    <SelectTrigger className="w-full bg-background border-2">
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="w-full bg-background border-2">
+                                        <SelectGroup>
+                                            <SelectLabel>Item Types</SelectLabel>
+                                            <SelectItem value="all">All Items ({filteredItems.length})</SelectItem>
+                                            <SelectItem value="seeds">Seeds ({seedItems.length})</SelectItem>
+                                            <SelectItem value="gear">Gear ({gearItems.length})</SelectItem>
+                                            <SelectItem value="eggs">Eggs ({eggItems.length})</SelectItem>
+                                            <SelectItem value="cosmetics">Cosmetics ({cosmeticItems.length})</SelectItem>
+                                            <SelectItem value="events">Event Items ({eventItems.length})</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        </div>
                     ) : (
                         <TabsList>
                             <TabsTrigger value="items">
