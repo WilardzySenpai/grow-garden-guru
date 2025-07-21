@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -22,12 +21,12 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
     DropdownMenuTrigger,
-    DropdownMenuSeparator 
+    DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 
 import { toast } from '@/hooks/use-toast';
@@ -61,12 +60,12 @@ const Index = () => {
     // Get user ID for API calls
     const getUserId = () => {
         if (!user) return null;
-        
+
         // For authenticated users, use their actual user ID
         if (!('isGuest' in user)) {
             return user.id;
         }
-        
+
         // For guest users, use the guest ID
         return user.id;
     };
@@ -94,7 +93,7 @@ const Index = () => {
             // Check if audio source is valid before playing
             const audio = audioRef.current;
             const canPlay = audio.canPlayType('audio/mpeg');
-            
+
             if (canPlay && audio.src) {
                 const playPromise = audio.play();
                 if (playPromise !== undefined) {
@@ -133,7 +132,7 @@ const Index = () => {
         <div className="min-h-screen bg-background">
             {/* Music Consent Dialog */}
             <Dialog open={musicDialogOpen}>
-                <DialogContent 
+                <DialogContent
                     aria-labelledby="music-dialog-title"
                     aria-describedby="music-dialog-description"
                     role="alertdialog"
@@ -141,8 +140,8 @@ const Index = () => {
                     <DialogHeader>
                         <DialogTitle id="music-dialog-title">Play background music?</DialogTitle>
                     </DialogHeader>
-                    <div 
-                        id="music-dialog-description" 
+                    <div
+                        id="music-dialog-description"
                         className="py-2"
                     >
                         Would you like to play relaxing background music while you use the app?
@@ -280,171 +279,270 @@ const Index = () => {
 
             {/* Header */}
             <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-                <nav className="container mx-auto px-3 sm:px-6">
-                    <div className="flex items-center justify-between h-14">
-                        {/* Logo - Left Side */}
+                <div className="container mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <Link 
-                                to="/" 
-                                className="flex items-center justify-center w-11 h-11 rounded-xl bg-primary/10 hover:bg-primary/15 transition-colors"
-                                aria-label="Grow A Garden Guru Home"
-                            >
-                                <Leaf className="h-6 w-6 text-primary" />
-                            </Link>
-                            {/* App Title - Only visible on desktop */}
-                            <div className="hidden md:block">
-                                <h1 className="text-lg font-bold text-foreground">
-                                    Grow A Garden Guru
-                                </h1>
-                                <p className="text-sm text-muted-foreground">
-                                    Comprehensive Game Intelligence
-                                </p>
+                            <Leaf className="h-8 w-8 text-primary" />
+                            <div>
+                                <h1 className="text-2xl font-bold text-foreground">Grow A Garden Guru</h1>
+                                <p className="text-sm text-muted-foreground">Comprehensive Game Intelligence Platform</p>
                             </div>
                         </div>
 
-                        {/* Actions Group - Right Side */}
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            {/* Live Status Indicator - Hide text on mobile */}
-                            <div className="flex items-center px-2 sm:px-3 h-8 gap-1.5 bg-card/80 border border-border rounded-lg">
-                                <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'animate-pulse' : ''}`} />
-                                <span className="hidden sm:block text-sm font-medium text-foreground">
-                                    {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
-                                </span>
-                            </div>
-
-                            <ThemeToggle />
-
+                        <div className="flex items-center gap-4">
                             {/* Mobile Menu */}
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-11 md:hidden">
-                                        <Menu className="h-5 w-5" />
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent>
-                                    <SheetHeader>
-                                        <SheetTitle>Menu</SheetTitle>
-                                    </SheetHeader>
-                                    {!loading && (
-                                        <div className="flex flex-col gap-4 mt-6">
-                                            {user && !('isGuest' in user) ? (
-                                                <>
-                                                    <div className="flex items-center gap-2 px-4 py-2">
-                                                        <Avatar className="h-7 w-7">
-                                                            <AvatarImage 
-                                                                src={user.user_metadata?.avatar_url} 
-                                                                alt="Profile" 
+                            <div className="block md:hidden">
+                                <Sheet>
+                                    <SheetTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-10 w-10">
+                                            <Menu className="h-6 w-6" />
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent side="right" className="w-80">
+                                        <SheetHeader className="mb-4">
+                                            <SheetTitle>Menu</SheetTitle>
+                                        </SheetHeader>
+                                        <div className="flex flex-col gap-4">
+                                            <ThemeToggle />
+                                            <div className={`status-indicator flex items-center gap-2 ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
+                                                <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
+                                                {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                                            </div>
+                                            
+                                            {!loading && user && !('isGuest' in user) && (
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-accent">
+                                                        <Avatar className="h-8 w-8">
+                                                            <AvatarImage
+                                                                src={user.user_metadata?.avatar_url}
+                                                                alt="Profile"
                                                             />
                                                             <AvatarFallback className="text-xs">
                                                                 {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        <span className="font-medium">
-                                                            {user.user_metadata?.full_name || user.email}
-                                                        </span>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-medium">{user.user_metadata?.full_name || user.email}</span>
+                                                            <span className="text-xs text-muted-foreground">{user.email}</span>
+                                                        </div>
                                                     </div>
-                                                    <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
-                                                        <User className="h-4 w-4" />
-                                                        Profile
+                                                    <Link to="/profile">
+                                                        <Button variant="outline" className="w-full justify-start gap-2">
+                                                            <User className="h-4 w-4" />
+                                                            Profile
+                                                        </Button>
                                                     </Link>
                                                     {user.user_metadata?.provider_id === "939867069070065714" && (
-                                                        <Link to="/admin" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
-                                                            <Shield className="h-4 w-4" />
-                                                            Admin Panel
+                                                        <Link to="/admin">
+                                                            <Button variant="outline" className="w-full justify-start gap-2">
+                                                                <Shield className="h-4 w-4" />
+                                                                Admin Panel
+                                                            </Button>
                                                         </Link>
                                                     )}
-                                                    <button
+                                                    <Button
+                                                        variant="destructive"
+                                                        className="w-full justify-start gap-2"
                                                         onClick={signOut}
-                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-left"
                                                     >
                                                         <LogOut className="h-4 w-4" />
                                                         Sign Out
-                                                    </button>
-                                                </>
-                                            ) : (
+                                                    </Button>
+                                                </div>
+                                            )}
+                                            {!loading && user && 'isGuest' in user && (
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center gap-2 p-2">
+                                                        <Avatar className="h-8 w-8">
+                                                            <AvatarImage src={user.avatar_url} alt="Guest" />
+                                                            <AvatarFallback className="text-xs">G</AvatarFallback>
+                                                        </Avatar>
+                                                        <span className="text-muted-foreground">Guest_{user.id}</span>
+                                                    </div>
+                                                    <Link to="/auth">
+                                                        <Button variant="default" className="w-full">
+                                                            Sign In
+                                                        </Button>
+                                                    </Link>
+                                                </div>
+                                            )}
+                                            {!loading && !user && (
                                                 <Link to="/auth">
-                                                    <Button variant="outline" className="w-full">
+                                                    <Button variant="default" className="w-full">
                                                         Sign In
                                                     </Button>
                                                 </Link>
                                             )}
                                         </div>
-                                    )}
-                                </SheetContent>
-                            </Sheet>
+                                    </SheetContent>
+                                </Sheet>
+                            </div>
 
-                            {/* User Menu - Desktop version */}
-                            {!loading && (
-                                <div className="hidden md:block">
-                                    {user && !('isGuest' in user) ? (
-                                        <Sheet>
-                                            <SheetTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="h-11 gap-2">
-                                                    <Avatar className="h-7 w-7">
-                                                        <AvatarImage 
-                                                            src={user.user_metadata?.avatar_url} 
-                                                            alt="Profile" 
-                                                        />
-                                                        <AvatarFallback className="text-xs">
-                                                            {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="hidden sm:block">
-                                                        {user.user_metadata?.full_name || user.email}
-                                                    </span>
-                                                </Button>
-                                            </SheetTrigger>
-                                            <SheetContent>
-                                                <SheetHeader>
-                                                    <SheetTitle>Menu</SheetTitle>
-                                                </SheetHeader>
-                                                <div className="flex flex-col gap-4 mt-6">
-                                                    <div className="flex items-center gap-2 px-4 py-2">
-                                                        <Avatar className="h-7 w-7">
-                                                            <AvatarImage 
-                                                                src={user.user_metadata?.avatar_url} 
-                                                                alt="Profile" 
+                            {/* Desktop View Elements */}
+                            <div className="hidden md:flex items-center gap-4">
+                                <ThemeToggle />
+                                <div className={`status-indicator ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
+                                    <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
+                                    {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                                </div>
+                                    <Sheet>
+                                        <SheetTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-10 w-10">
+                                                <Menu className="h-6 w-6" />
+                                            </Button>
+                                        </SheetTrigger>
+                                        <SheetContent side="right" className="w-80">
+                                            <SheetHeader className="mb-4">
+                                                <SheetTitle>Menu</SheetTitle>
+                                            </SheetHeader>
+                                            <div className="flex flex-col gap-4">
+                                                <ThemeToggle />
+                                                <div className={`status-indicator flex items-center gap-2 ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
+                                                    <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
+                                                    {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                                                </div>
+                                                
+                                                {!loading && user && !('isGuest' in user) && (
+                                                    <div className="flex flex-col gap-2">
+                                                        <div className="flex items-center gap-2 p-2 rounded-lg bg-accent">
+                                                            <Avatar className="h-8 w-8">
+                                                                <AvatarImage
+                                                                    src={user.user_metadata?.avatar_url}
+                                                                    alt="Profile"
+                                                                />
+                                                                <AvatarFallback className="text-xs">
+                                                                    {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-medium">{user.user_metadata?.full_name || user.email}</span>
+                                                                <span className="text-xs text-muted-foreground">{user.email}</span>
+                                                            </div>
+                                                        </div>
+                                                        <Link to="/profile">
+                                                            <Button variant="outline" className="w-full justify-start gap-2">
+                                                                <User className="h-4 w-4" />
+                                                                Profile
+                                                            </Button>
+                                                        </Link>
+                                                        {user.user_metadata?.provider_id === "939867069070065714" && (
+                                                            <Link to="/admin">
+                                                                <Button variant="outline" className="w-full justify-start gap-2">
+                                                                    <Shield className="h-4 w-4" />
+                                                                    Admin Panel
+                                                                </Button>
+                                                            </Link>
+                                                        )}
+                                                        <Button
+                                                            variant="destructive"
+                                                            className="w-full justify-start gap-2"
+                                                            onClick={signOut}
+                                                        >
+                                                            <LogOut className="h-4 w-4" />
+                                                            Sign Out
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                                {!loading && user && 'isGuest' in user && (
+                                                    <div className="flex flex-col gap-2">
+                                                        <div className="flex items-center gap-2 p-2">
+                                                            <Avatar className="h-8 w-8">
+                                                                <AvatarImage src={user.avatar_url} alt="Guest" />
+                                                                <AvatarFallback className="text-xs">G</AvatarFallback>
+                                                            </Avatar>
+                                                            <span className="text-muted-foreground">Guest_{user.id}</span>
+                                                        </div>
+                                                        <Link to="/auth">
+                                                            <Button variant="default" className="w-full">
+                                                                Sign In
+                                                            </Button>
+                                                        </Link>
+                                                    </div>
+                                                )}
+                                                {!loading && !user && (
+                                                    <Link to="/auth">
+                                                        <Button variant="default" className="w-full">
+                                                            Sign In
+                                                        </Button>
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        </SheetContent>
+                                    </Sheet>
+                                </div>
+
+                                {!loading && (
+                                    user && !('isGuest' in user) ? (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="gap-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Avatar className="h-6 w-6">
+                                                            <AvatarImage
+                                                                src={user.user_metadata?.avatar_url}
+                                                                alt="Profile"
                                                             />
                                                             <AvatarFallback className="text-xs">
                                                                 {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        <span className="font-medium">
-                                                            {user.user_metadata?.full_name || user.email}
-                                                        </span>
+                                                        {user.user_metadata?.full_name || user.email}
                                                     </div>
-                                                    <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
-                                                        <User className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="bg-card border-border">
+                                                <Link to="/profile">
+                                                    <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                        <User className="h-4 w-4 mr-2" />
                                                         Profile
-                                                    </Link>
-                                                    {user.user_metadata?.provider_id === "939867069070065714" && (
-                                                        <Link to="/admin" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
-                                                            <Shield className="h-4 w-4" />
-                                                            Admin Panel
+                                                    </DropdownMenuItem>
+                                                </Link>
+                                                {user.user_metadata?.provider_id === "939867069070065714" && (
+                                                    <>
+                                                        <DropdownMenuSeparator className="bg-border" />
+                                                        <Link to="/admin">
+                                                            <DropdownMenuItem className="text-foreground hover:bg-accent">
+                                                                <Shield className="h-4 w-4 mr-2" />
+                                                                Admin Panel
+                                                            </DropdownMenuItem>
                                                         </Link>
-                                                    )}
-                                                    <button
-                                                        onClick={signOut}
-                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-left"
-                                                    >
-                                                        <LogOut className="h-4 w-4" />
-                                                        Sign Out
-                                                    </button>
-                                                </div>
-                                            </SheetContent>
-                                        </Sheet>
+                                                    </>
+                                                )}
+                                                <DropdownMenuSeparator className="bg-border" />
+                                                <DropdownMenuItem
+                                                    onClick={signOut}
+                                                    className="text-foreground hover:bg-accent"
+                                                >
+                                                    <LogOut className="h-4 w-4 mr-2" />
+                                                    Sign Out
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : user && 'isGuest' in user ? (
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Avatar className="h-6 w-6">
+                                                <AvatarImage src={user.avatar_url} alt="Guest" />
+                                                <AvatarFallback className="text-xs">G</AvatarFallback>
+                                            </Avatar>
+                                            <span className="text-muted-foreground">Guest_{user.id}</span>
+                                            <Link to="/auth">
+                                                <Button variant="outline" size="sm">
+                                                    Sign In
+                                                </Button>
+                                            </Link>
+                                        </div>
                                     ) : (
                                         <Link to="/auth">
-                                            <Button variant="outline">
+                                            <Button variant="outline" size="sm">
                                                 Sign In
                                             </Button>
                                         </Link>
-                                    )}
-                                </div>
-                            )}
+                                    )
+                                )}
+                            </div>
                         </div>
                     </div>
-                </nav>
+                </div>
             </header>
 
             {/* Main Content */}
@@ -494,7 +592,7 @@ const Index = () => {
                             )}
                             <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isInMaintenance('market') ? 'pointer-events-none blur-sm' : ''}`}>
                                 <div className="lg:col-span-2">
-                                    <MarketBoard 
+                                    <MarketBoard
                                         marketData={marketData}
                                         loading={stockLoading}
                                         error={stockError}
