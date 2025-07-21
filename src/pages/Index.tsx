@@ -1,5 +1,6 @@
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
     Dialog,
     DialogContent,
@@ -9,28 +10,18 @@ import {
     DialogTrigger,
     DialogClose,
 } from '@/components/ui/dialog';
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-// Path to the music file in public
-const MUSIC_SRC = '/Music/Morning_Mood.mp3';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/hooks/use-toast';
-import { MarketBoard } from '@/components/MarketBoard';
-import { WeatherStatus } from '@/components/WeatherStatus';
-import { ItemEncyclopedia } from '@/components/ItemEncyclopedia';
-import { FruitCalculator } from '@/components/FruitCalculator';
-import { SystemMonitor } from '@/components/SystemMonitor';
-import { NotificationFeed } from '@/components/NotificationFeed';
-import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, Dna, User, LogOut, Shield, Menu } from 'lucide-react';
-import { MobileNav } from '@/components/MobileNav';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { useAuth } from '@/hooks/useAuth';
-import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
-import { useStockData } from '@/hooks/useStockData';
-import { useWeatherData } from '@/hooks/useWeatherData';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
     DropdownMenu, 
     DropdownMenuContent, 
@@ -38,10 +29,29 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
-import { Link } from 'react-router-dom';
+
+import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/hooks/useAuth';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
+import { useStockData } from '@/hooks/useStockData';
+import { useWeatherData } from '@/hooks/useWeatherData';
+
+import { MarketBoard } from '@/components/MarketBoard';
+import { WeatherStatus } from '@/components/WeatherStatus';
+import { ItemEncyclopedia } from '@/components/ItemEncyclopedia';
+import { FruitCalculator } from '@/components/FruitCalculator';
+import { SystemMonitor } from '@/components/SystemMonitor';
+import { NotificationFeed } from '@/components/NotificationFeed';
+import { MobileNav } from '@/components/MobileNav';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { MaintenanceOverlay } from '@/components/MaintenanceOverlay';
 
+import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, User, LogOut, Shield, Menu, Activity } from 'lucide-react';
+
 const Index = () => {
+    // Path to the music file in public
+    const MUSIC_SRC = '/Music/Morning_Mood.mp3';
     const isMobile = useIsMobile();
     const [activeTab, setActiveTab] = useState('market');
     const [notifications, setNotifications] = useState<any[]>([]);
@@ -270,89 +280,99 @@ const Index = () => {
 
             {/* Header */}
             <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
+                <nav className="container mx-auto px-3 sm:px-6">
+                    <div className="flex items-center justify-between h-14">
+                        {/* Logo - Left Side */}
                         <div className="flex items-center gap-3">
-                            <Leaf className="h-8 w-8 text-primary" />
-                            <div>
-                                <h1 className="text-2xl font-bold text-foreground">Grow A Garden Guru</h1>
-                                <p className="text-sm text-muted-foreground">Comprehensive Game Intelligence Platform</p>
+                            <Link 
+                                to="/" 
+                                className="flex items-center justify-center w-11 h-11 rounded-xl bg-primary/10 hover:bg-primary/15 transition-colors"
+                                aria-label="Grow A Garden Guru Home"
+                            >
+                                <Leaf className="h-6 w-6 text-primary" />
+                            </Link>
+                            {/* App Title - Only visible on desktop */}
+                            <div className="hidden md:block">
+                                <h1 className="text-lg font-bold text-foreground">
+                                    Grow A Garden Guru
+                                </h1>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <ThemeToggle />
-                            <div className={`status-indicator ${wsStatus === 'connected' ? 'status-online' : 'status-offline'}`}>
-                                <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'pulse-glow' : ''}`} />
-                                {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                        {/* Actions Group - Right Side */}
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            {/* Live Status Indicator */}
+                            <div className="flex items-center px-2 sm:px-3 h-8 gap-1.5 bg-card/80 border border-border rounded-lg">
+                                <div className={`w-2 h-2 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-500' : 'bg-red-500'} ${wsStatus === 'connecting' ? 'animate-pulse' : ''}`} />
+                                <span className="text-sm font-medium text-foreground">
+                                    {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
+                                </span>
                             </div>
-                            
+
+                            <ThemeToggle />
+
+                            {/* User Menu */}
                             {!loading && (
-                                console.log('🔍 Current user object:', user),
                                 user && !('isGuest' in user) ? (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="gap-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar className="h-6 w-6">
-                                                        <AvatarImage 
-                                                            src={user.user_metadata?.avatar_url} 
-                                                            alt="Profile" 
-                                                        />
-                                                        <AvatarFallback className="text-xs">
-                                                            {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
-                                                        </AvatarFallback>
-                                                    </Avatar>
+                                    <Sheet>
+                                        <SheetTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="h-11 gap-2">
+                                                <Avatar className="h-7 w-7">
+                                                    <AvatarImage 
+                                                        src={user.user_metadata?.avatar_url} 
+                                                        alt="Profile" 
+                                                    />
+                                                    <AvatarFallback className="text-xs">
+                                                        {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <span className="hidden sm:block">
                                                     {user.user_metadata?.full_name || user.email}
-                                                </div>
+                                                </span>
                                             </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="bg-card border-border">
-                                            <Link to="/profile">
-                                                <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                                    <User className="h-4 w-4 mr-2" />
+                                        </SheetTrigger>
+                                        <SheetContent>
+                                            <SheetHeader>
+                                                <SheetTitle>Menu</SheetTitle>
+                                            </SheetHeader>
+                                            <div className="flex flex-col gap-4 mt-6">
+                                                <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
+                                                    <User className="h-4 w-4" />
                                                     Profile
-                                                </DropdownMenuItem>
-                                            </Link>
-                                            {user.user_metadata?.provider_id === "939867069070065714" && (
-                                                <>
-                                                    <DropdownMenuSeparator className="bg-border" />
-                                                    <Link to="/admin">
-                                                        <DropdownMenuItem className="text-foreground hover:bg-accent">
-                                                            <Shield className="h-4 w-4 mr-2" />
-                                                            Admin Panel
-                                                        </DropdownMenuItem>
+                                                </Link>
+                                                {user.user_metadata?.provider_id === "939867069070065714" && (
+                                                    <Link to="/admin" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent">
+                                                        <Shield className="h-4 w-4" />
+                                                        Admin Panel
                                                     </Link>
-                                                </>
-                                            )}
-                                            <DropdownMenuSeparator className="bg-border" />
-                                            <DropdownMenuItem 
-                                                onClick={signOut}
-                                                className="text-foreground hover:bg-accent"
-                                            >
-                                                <LogOut className="h-4 w-4 mr-2" />
-                                                Sign Out
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                                )}
+                                                <button
+                                                    onClick={signOut}
+                                                    className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-accent text-left"
+                                                >
+                                                    <LogOut className="h-4 w-4" />
+                                                    Sign Out
+                                                </button>
+                                            </div>
+                                        </SheetContent>
+                                    </Sheet>
                                 ) : user && 'isGuest' in user ? (
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <Avatar className="h-6 w-6">
+                                    <div className="flex items-center gap-2">
+                                        <Avatar className="h-7 w-7">
                                             <AvatarImage src={user.avatar_url} alt="Guest" />
                                             <AvatarFallback className="text-xs">
                                                 {user.display_name.charAt(0).toUpperCase()}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <span className="text-muted-foreground">{user.display_name}</span>
                                         <Link to="/auth">
-                                            <Button variant="outline" size="sm">
+                                            <Button variant="outline" size="sm" className="h-8">
                                                 Sign In
                                             </Button>
                                         </Link>
                                     </div>
                                 ) : (
                                     <Link to="/auth">
-                                        <Button variant="outline" size="sm">
+                                        <Button variant="outline" size="sm" className="h-8">
                                             Sign In
                                         </Button>
                                     </Link>
@@ -360,7 +380,7 @@ const Index = () => {
                             )}
                         </div>
                     </div>
-                </div>
+                </nav>
             </header>
 
             {/* Main Content */}
@@ -375,7 +395,7 @@ const Index = () => {
                                 { value: 'encyclopedia', label: 'Encyclopedia', icon: <BookOpen className="h-4 w-4 mr-2" /> },
                                 { value: 'calculator', label: 'Calculator', icon: <Calculator className="h-4 w-4 mr-2" /> },
                                 { value: 'system', label: 'System', icon: <Settings className="h-4 w-4 mr-2" /> },
-                                { value: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4 mr-2" /> },
+                                { value: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4 mr-2" /> }
                             ]}
                         />
                     ) : (
