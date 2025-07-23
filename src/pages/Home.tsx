@@ -98,8 +98,11 @@ const Home = () => {
                             </Button>
                         </Link>
                         <Link to="/auth">
-                            <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                            <Button variant="outline" size="lg" className="text-lg px-8 py-6 relative">
                                 Sign In
+                                <div className="absolute -top-2 -right-2 bg-primary/10 px-2 py-0.5 rounded-md transform rotate-12 border border-primary/20">
+                                    <span className="text-xs font-medium text-primary">Optional</span>
+                                </div>
                             </Button>
                         </Link>
                     </div>
@@ -154,8 +157,11 @@ const Home = () => {
                                 </Button>
                             </Link>
                             <Link to="/auth">
-                                <Button variant="secondary" size="lg" className="text-lg px-8 py-6">
+                                <Button variant="secondary" size="lg" className="text-lg px-8 py-6 relative">
                                     Sign In
+                                    <div className="absolute -top-2 -right-2 bg-primary/10 px-2 py-0.5 rounded-md transform rotate-12 border border-primary/20">
+                                        <span className="text-xs font-medium text-primary">Optional</span>
+                                    </div>
                                 </Button>
                             </Link>
                         </div>
