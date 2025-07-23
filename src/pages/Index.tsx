@@ -481,7 +481,9 @@ const Index = () => {
                                                 <AvatarImage src={user.avatar_url} alt="Guest" />
                                                 <AvatarFallback className="text-xs">G</AvatarFallback>
                                             </Avatar>
-                                            <span className="text-muted-foreground">Guest_{user.id}</span>
+                                            <span className="text-muted-foreground">
+                                                Guest_{user.id.slice(-8)}
+                                            </span>
                                             <Link to="/auth">
                                                 <Button variant="outline" size="sm">
                                                     Sign In
