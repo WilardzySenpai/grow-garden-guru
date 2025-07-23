@@ -2,7 +2,6 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Leaf, AlertTriangle } from 'lucide-react';
 
 const NotFound = () => {
@@ -17,13 +16,6 @@ const NotFound = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10 flex flex-col items-center justify-center px-4">
-            <header className="absolute top-0 left-0 w-full border-b border-border bg-card/50 backdrop-blur-sm z-10">
-                <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-                    <Leaf className="h-7 w-7 text-primary" />
-                    <span className="font-bold text-lg text-foreground">Grow A Garden Guru</span>
-                    <Badge variant="secondary" className="ml-3">Game Intelligence Platform</Badge>
-                </div>
-            </header>
             <main className="flex flex-col items-center justify-center flex-1 w-full">
                 <Card className="shadow-xl border-0 bg-card/90 max-w-md w-full animate-fade-in-up">
                     <CardHeader className="flex flex-col items-center gap-2 pb-0">

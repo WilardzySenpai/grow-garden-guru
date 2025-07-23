@@ -8,7 +8,7 @@ interface WeatherStatusProps {
 }
 
 export const WeatherStatus = ({ weatherData }: WeatherStatusProps) => {
-    const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
+    const [activeWeathers, setActiveWeathers] = useState<WeatherData[]>([]);
     const [allWeatherData, setAllWeatherData] = useState<WeatherData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -17,13 +17,13 @@ export const WeatherStatus = ({ weatherData }: WeatherStatusProps) => {
     useEffect(() => {
         if (weatherData) {
             console.log('WeatherStatus: Received weather data from websocket:', weatherData);
-            
+
             const weatherArray: WeatherData[] = weatherData || [];
             setAllWeatherData(weatherArray);
-            
+
             // Find active weather or use the first one
-            const activeWeather = weatherArray.find(w => w.active);
-            setCurrentWeather(activeWeather || weatherArray[0] || null);
+            const actives = weatherArray.filter(w => w.active);
+            setActiveWeathers(actives);
             setLoading(false);
             setError(null);
         } else {
@@ -79,51 +79,51 @@ export const WeatherStatus = ({ weatherData }: WeatherStatusProps) => {
             <Card className="market-card">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        🌦️ Current Weather
+                        🌦️ {activeWeathers.length > 1 ? 'Active Weather Events' : 'Current Weather'}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {currentWeather ? (
-                        <div className="text-center space-y-4">
-                            <div className="flex justify-center">
-                                <div className="text-6xl">
-                                    {typeof currentWeather.icon === 'string' && currentWeather.icon.startsWith('http') ? (
-                                        <img
-                                            src={currentWeather.icon}
-                                            alt={currentWeather.weather_name}
-                                            className="w-16 h-16 object-contain mx-auto"
-                                            onError={(e) => {
-                                                e.currentTarget.style.display = 'none';
-                                            }}
-                                        />
-                                    ) : (
-                                        <span>🌤️</span>
+                    {activeWeathers.length > 0 ? (
+                        <div className="space-y-6">
+                            {activeWeathers.map((weather) => (
+                                <div key={weather.weather_id} className="text-center space-y-4">
+                                    <div className="flex justify-center">
+                                        <div className="text-6xl">
+                                            {typeof weather.icon === 'string' && weather.icon.startsWith('http') ? (
+                                                <img
+                                                    src={weather.icon}
+                                                    alt={weather.weather_name}
+                                                    className="w-16 h-16 object-contain mx-auto"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span>🌤️</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-semibold">{weather.weather_name}</h3>
+                                        <Badge variant="default" className="mt-2">Active</Badge>
+                                    </div>
+                                    {weather.end_duration_unix > 0 && (
+                                        <div className="text-sm text-muted-foreground">
+                                            {formatTimeRemaining(weather.end_duration_unix)}
+                                        </div>
                                     )}
+                                    <div className="text-sm text-muted-foreground">
+                                        Base Duration: {formatDuration(weather.duration)}
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-semibold">{currentWeather.weather_name}</h3>
-                                <Badge variant={currentWeather.active ? "default" : "secondary"} className="mt-2">
-                                    {currentWeather.active ? 'Active' : 'Inactive'}
-                                </Badge>
-                            </div>
-                            {currentWeather.end_duration_unix > 0 && (
-                                <div className="text-sm text-muted-foreground">
-                                    {formatTimeRemaining(currentWeather.end_duration_unix)}
-                                </div>
-                            )}
-                            <div className="text-sm text-muted-foreground">
-                                Base Duration: {formatDuration(currentWeather.duration)}
-                            </div>
+                            ))}
                         </div>
                     ) : (
                         <div className="text-center space-y-4">
                             <div className="text-6xl">☀️</div>
                             <div>
                                 <h3 className="text-xl font-semibold">Clear Skies</h3>
-                                <Badge variant="secondary" className="mt-2">
-                                    No Weather Data
-                                </Badge>
+                                <Badge variant="secondary" className="mt-2">No Weather Data</Badge>
                             </div>
                         </div>
                     )}
