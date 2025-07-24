@@ -33,6 +33,8 @@ export const FruitCalculator = () => {
     } | null>(null);
     const [friendCount, setFriendCount] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
+    const [targetValue, setTargetValue] = useState('');
+    const [reverseCalcResult, setReverseCalcResult] = useState('');
 
     const filteredCrops = useMemo(() => {
         return staticCropData.filter(crop =>
@@ -294,6 +296,98 @@ export const FruitCalculator = () => {
         });
     };
 
+    // REVERSE CALCULATION LOGIC
+    const calculateWeightFromValue = () => {
+        if (!cropName || !targetValue) {
+            toast({ title: "Missing Information", description: "Please select a crop and enter a target price.", variant: "destructive" });
+            return;
+        }
+
+        // Sanitize input by removing commas and convert to number
+        const targetPriceNum = parseFloat(targetValue.replace(/,/g, ''));
+        if (isNaN(targetPriceNum) || targetPriceNum <= 0) {
+            toast({ title: "Invalid Price", description: "Please enter a valid, positive target price.", variant: "destructive" });
+            return;
+        }
+
+        // Data objects (copied from main calculator for self-containment)
+        const plantBaseValue: { [key: string]: number } = {
+            'easteregg': 2.85, 'moonflower': 1.9, 'starfruit': 2.85, 'pepper': 4.75, 'grape': 2.85, 'nightshade': 0.48, 'mint': 0.95, 'glowshroom': 0.7, 'bloodbanana': 1.42, 'beanstalk': 9.5, 'coconut': 13.31, 'candyblossom': 2.85, 'carrot': 0.24, 'strawberry': 0.29, 'blueberry': 0.17, 'orangetulip': 0.0499, 'tomato': 0.44, 'daffodil': 0.16, 'watermelon': 7.3, 'pumpkin': 6.9, 'mushroom': 25.9, 'bamboo': 3.8, 'apple': 2.85, 'corn': 1.9, 'cactus': 6.65, 'cranberry': 0.95, 'moonmelon': 7.6, 'durian': 7.6, 'peach': 1.9, 'cacao': 7.6, 'moonglow': 6.65, 'dragonfruit': 11.38, 'mango': 14.28, 'moonblossom': 2.85, 'raspberry': 0.71, 'eggplant': 4.75, 'papaya': 2.86, 'celestiberry': 1.9, 'moonmango': 14.25, 'passionfruit': 2.867, 'soulfruit': 23.75, 'chocolatecarrot': 0.2616, 'redlolipop': 3.7988, 'candysunflower': 1.428, 'lotus': 18.99, 'pineapple': 2.85, 'hive': 7.59, 'lilac': 2.846, 'rose': 0.95, 'foxglove': 1.9, 'purpledahlia': 11.4, 'sunflower': 15.65, 'pinklily': 5.699, 'nectarine': 2.807, 'honeysuckle': 11.4, 'lavender': 0.25, 'venusflytrap': 9.5, 'nectarshade': 0.75, 'manuka': 0.289, 'emberlily': 11.4, 'dandelion': 3.79, 'lumira': 5.69, 'cocovine': 13.3, 'succulent': 4.75, 'beebalm': 0.94, 'nectarthorn': 5.76, 'violetcorn': 2.85, 'bendboo': 17.09, 'crocus': 0.285, 'sugarapple': 8.55, 'cursedfruit': 22.9, 'suncoil': 9.5, 'dragonpepper': 5.69, 'cauliflower': 4.74, 'avocado': 3.32, 'kiwi': 4.75, 'greenapple': 2.85, 'banana': 1.42, 'pricklypear': 6.65, 'feijoa': 9.5, 'loquat': 6.17, 'wildcarrot': 0.286, 'pear': 2.85, 'cantaloupe': 5.22, 'parasolflower': 5.7, 'rosydelight': 9.5, 'elephantears': 17.1, 'bellpepper': 7.61, 'aloevera': 5.22, 'peacelily': 0.5, 'travelersfruit': 11.4, 'delphinium': 0.285, 'lilyofthevalley': 5.69, 'guanabana': 3.8, 'pitcherplant': 11.4, 'rafflesia': 7.6, 'fireworkflower': 19, 'libertylily': 6.176, 'boneblossom': 2.85, 'horneddinoshroom': 4.94, 'fireflyfern': 4.77, 'stonebite': 0.94, 'boneboo': 14.5, 'paradisepetal': 2.85, 'burningbud': 11.4, 'fossilight': 3.79, 'amberspine': 5.7, 'grandvolcania': 6.65, 'lingonberry': 0.485, 'giantpinecone': 5.14, 'horsetail': 2.85, 'monoblooma': 0.477, 'spikedmango': 14.25, 'taroflower': 6.64, 'serenity': 0.24, 'zenflare': 1.34, 'zenrocks': 17.1, 'hinomai': 9.5, 'mapleapple': 2.85, 'softsunshine': 1.9
+        };
+
+        const plantCalculationData: { [key: string]: { tier1Value: number; tier2Multiplier: number } } = {
+            'easteregg': { tier1Value: 2256, tier2Multiplier: 277.825 }, 'moonflower': { tier1Value: 8574, tier2Multiplier: 2381 }, 'starfruit': { tier1Value: 13538, tier2Multiplier: 1666.6 }, 'pepper': { tier1Value: 7220, tier2Multiplier: 320 }, 'grape': { tier1Value: 7085, tier2Multiplier: 872 }, 'nightshade': { tier1Value: 3159, tier2Multiplier: 13850 }, 'mint': { tier1Value: 4738, tier2Multiplier: 5230 }, 'glowshroom': { tier1Value: 271, tier2Multiplier: 532.5 }, 'bloodbanana': { tier1Value: 5415, tier2Multiplier: 2670 }, 'beanstalk': { tier1Value: 25270, tier2Multiplier: 280 }, 'coconut': { tier1Value: 361, tier2Multiplier: 2.04 }, 'candyblossom': { tier1Value: 90250, tier2Multiplier: 11111.11111 }, 'carrot': { tier1Value: 18, tier2Multiplier: 275 }, 'strawberry': { tier1Value: 14, tier2Multiplier: 165 }, 'blueberry': { tier1Value: 18, tier2Multiplier: 500 }, 'orangetulip': { tier1Value: 767, tier2Multiplier: 300000 }, 'tomato': { tier1Value: 27, tier2Multiplier: 120 }, 'daffodil': { tier1Value: 903, tier2Multiplier: 25000 }, 'watermelon': { tier1Value: 2708, tier2Multiplier: 61.25 }, 'pumpkin': { tier1Value: 3069, tier2Multiplier: 64 }, 'mushroom': { tier1Value: 136278, tier2Multiplier: 241.6 }, 'bamboo': { tier1Value: 3610, tier2Multiplier: 250 }, 'apple': { tier1Value: 248, tier2Multiplier: 30.53 }, 'corn': { tier1Value: 36, tier2Multiplier: 10 }, 'cactus': { tier1Value: 3069, tier2Multiplier: 69.4 }, 'cranberry': { tier1Value: 1805, tier2Multiplier: 2000 }, 'moonmelon': { tier1Value: 16245, tier2Multiplier: 281.2 }, 'durian': { tier1Value: 6317, tier2Multiplier: 109.37 }, 'peach': { tier1Value: 271, tier2Multiplier: 75 }, 'cacao': { tier1Value: 10830, tier2Multiplier: 187.5 }, 'moonglow': { tier1Value: 18050, tier2Multiplier: 408.45 }, 'dragonfruit': { tier1Value: 4287, tier2Multiplier: 32.99 }, 'mango': { tier1Value: 5866, tier2Multiplier: 28.89 }, 'moonblossom': { tier1Value: 60166, tier2Multiplier: 7407.4 }, 'raspberry': { tier1Value: 90, tier2Multiplier: 177.5 }, 'eggplant': { tier1Value: 6769, tier2Multiplier: 300 }, 'papaya': { tier1Value: 903, tier2Multiplier: 111.11 }, 'celestiberry': { tier1Value: 9025, tier2Multiplier: 2500 }, 'moonmango': { tier1Value: 45125, tier2Multiplier: 222.22 }, 'passionfruit': { tier1Value: 3204, tier2Multiplier: 395 }, 'soulfruit': { tier1Value: 6994, tier2Multiplier: 12.4 }, 'chocolatecarrot': { tier1Value: 9928, tier2Multiplier: 145096 }, 'redlolipop': { tier1Value: 45125, tier2Multiplier: 3125 }, 'candysunflower': { tier1Value: 72200, tier2Multiplier: 35413 }, 'lotus': { tier1Value: 15343, tier2Multiplier: 42.5 }, 'pineapple': { tier1Value: 1805, tier2Multiplier: 222.5 }, 'hive': { tier1Value: 55955, tier2Multiplier: 969 }, 'lilac': { tier1Value: 31588, tier2Multiplier: 3899 }, 'rose': { tier1Value: 4513, tier2Multiplier: 5000 }, 'foxglove': { tier1Value: 18050, tier2Multiplier: 5000 }, 'purpledahlia': { tier1Value: 67688, tier2Multiplier: 522 }, 'sunflower': { tier1Value: 144000, tier2Multiplier: 587.78 }, 'pinklily': { tier1Value: 58663, tier2Multiplier: 1806.5 }, 'nectarine': { tier1Value: 35000, tier2Multiplier: 4440 }, 'lavender': { tier1Value: 22563, tier2Multiplier: 361008 }, 'honeysuckle': { tier1Value: 90250, tier2Multiplier: 694.3 }, 'venusflytrap': { tier1Value: 76712, tier2Multiplier: 850 }, 'nectarshade': { tier1Value: 45125, tier2Multiplier: 78500 }, 'manuka': { tier1Value: 22563, tier2Multiplier: 270000 }, 'emberlily': { tier1Value: 50138, tier2Multiplier: 385.6 }, 'dandelion': { tier1Value: 45125, tier2Multiplier: 3130 }, 'lumira': { tier1Value: 76713, tier2Multiplier: 2362.5 }, 'crocus': { tier1Value: 27075, tier2Multiplier: 333333 }, 'suncoil': { tier1Value: 72200, tier2Multiplier: 800 }, 'beebalm': { tier1Value: 16245, tier2Multiplier: 18033.333 }, 'nectarthorn': { tier1Value: 30083, tier2Multiplier: 906.36 }, 'violetcorn': { tier1Value: 45125, tier2Multiplier: 5555.555 }, 'bendboo': { tier1Value: 138988, tier2Multiplier: 478.5 }, 'succulent': { tier1Value: 22563, tier2Multiplier: 1000 }, 'sugarapple': { tier1Value: 43320, tier2Multiplier: 592.6 }, 'cursedfruit': { tier1Value: 15000, tier2Multiplier: 28.6 }, 'cocovine': { tier1Value: 60166, tier2Multiplier: 340 }, 'dragonpepper': { tier1Value: 80000, tier2Multiplier: 2470 }, 'cauliflower': { tier1Value: 36, tier2Multiplier: 1.6 }, 'avocado': { tier1Value: 80, tier2Multiplier: 7.24 }, 'greenapple': { tier1Value: 271, tier2Multiplier: 33.36 }, 'kiwi': { tier1Value: 2482, tier2Multiplier: 110 }, 'banana': { tier1Value: 1805, tier2Multiplier: 893.3 }, 'pricklypear': { tier1Value: 6319, tier2Multiplier: 142.9 }, 'feijoa': { tier1Value: 11733, tier2Multiplier: 130 }, 'loquat': { tier1Value: 7220, tier2Multiplier: 189.65 }, 'wildcarrot': { tier1Value: 22563, tier2Multiplier: 275000 }, 'pear': { tier1Value: 18050, tier2Multiplier: 2217.5 }, 'cantaloupe': { tier1Value: 30685, tier2Multiplier: 1124 }, 'parasolflower': { tier1Value: 180500, tier2Multiplier: 5555.555 }, 'rosydelight': { tier1Value: 62273, tier2Multiplier: 690 }, 'elephantears': { tier1Value: 69492, tier2Multiplier: 237.6 }, 'bellpepper': { tier1Value: 4964, tier2Multiplier: 85.6 }, 'aloevera': { tier1Value: 56858, tier2Multiplier: 2085.25 }, 'peacelily': { tier1Value: 16666, tier2Multiplier: 66666 }, 'travelersfruit': { tier1Value: 48085, tier2Multiplier: 369.77777 }, 'delphinium': { tier1Value: 21660, tier2Multiplier: 266666 }, 'lilyofthevalley': { tier1Value: 44331, tier2Multiplier: 1365 }, 'guanabana': { tier1Value: 63626, tier2Multiplier: 4406.23 }, 'pitcherplant': { tier1Value: 28800, tier2Multiplier: 222.222 }, 'rafflesia': { tier1Value: 3159, tier2Multiplier: 54.65 }, 'libertylily': { tier1Value: 27075, tier2Multiplier: 710 }, 'fireworkflower': { tier1Value: 136278, tier2Multiplier: 377.5 }, 'boneblossom': { tier1Value: 180500, tier2Multiplier: 22222.22222 }, 'horneddinoshroom': { tier1Value: 67218, tier2Multiplier: 2760 }, 'fireflyfern': { tier1Value: 64980, tier2Multiplier: 2880 }, 'stonebite': { tier1Value: 31545, tier2Multiplier: 35175 }, 'boneboo': { tier1Value: 131967, tier2Multiplier: 627.5 }, 'paradisepetal': { tier1Value: 22563, tier2Multiplier: 3305 }, 'burningbud': { tier1Value: 63175, tier2Multiplier: 486 }, 'fossilight': { tier1Value: 79420, tier2Multiplier: 5505 }, 'horsetail': { tier1Value: 27075, tier2Multiplier: 3333.33333 }, 'giantpinecone': { tier1Value: 64980, tier2Multiplier: 2875 }, 'lingonberry': { tier1Value: 31588, tier2Multiplier: 139000 }, 'grandvolcania': { tier1Value: 63676, tier2Multiplier: 1440 }, 'amberspine': { tier1Value: 49638, tier2Multiplier: 1527.5 }, 'monoblooma': { tier1Value: 19855, tier2Multiplier: 88250 }, 'serenity': { tier1Value: 31588, tier2Multiplier: 560000 }, 'softsunshine': { tier1Value: 40613, tier2Multiplier: 11250 }, 'taroflower': { tier1Value: 108300, tier2Multiplier: 2451 }, 'spikedmango': { tier1Value: 60919, tier2Multiplier: 300 }, 'zenrocks': { tier1Value: 135375, tier2Multiplier: 462.78 }, 'hinomai': { tier1Value: 72200, tier2Multiplier: 800 }, 'mapleapple': { tier1Value: 51521, tier2Multiplier: 6343 }, 'zenflare': { tier1Value: 22563, tier2Multiplier: 12771 }
+        };
+
+        // Step 1: Calculate the total multiplier using the same flawed logic
+        const friendMultipliers = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5];
+        const friendMultiplier = friendMultipliers[friendCount];
+
+        let growthMultiplier = 1;
+        if (variantMutation) {
+            growthMultiplier = growthMutations.find(m => m.value === variantMutation)?.multiplier ?? 1;
+        }
+
+        let otherModifiersSum = 0;
+        let otherModifiersCount = 0;
+        const activeMutations = [weatherMutation, ...Object.keys(regularMutations).filter(key => regularMutations[key])].filter(Boolean);
+        activeMutations.forEach(key => {
+            const data = environmentalMutationData[key];
+            if (data) {
+                otherModifiersSum += data.multiplier;
+                otherModifiersCount++;
+            }
+        });
+        const otherModifiersFlawedMultiplier = (otherModifiersCount > 0) ? (otherModifiersSum - otherModifiersCount + 1) : 1;
+
+        const plantAmount = 1; // Assuming 1 for reverse calculation
+
+        const totalMultiplier = friendMultiplier * growthMultiplier * otherModifiersFlawedMultiplier * plantAmount;
+
+        if (totalMultiplier === 0) {
+            toast({ title: "Calculation Error", description: "Total multiplier is zero, cannot estimate weight.", variant: "destructive" });
+            return;
+        }
+
+        // Step 2: Isolate the RequiredBaseValue
+        const requiredBaseValue = targetPriceNum / totalMultiplier;
+
+        // Step 3: Isolate the Weight from the RequiredBaseValue
+        const cropCalcData = plantCalculationData[cropName];
+        if (!cropCalcData) {
+            setReverseCalcResult('No calculation data for this crop.');
+            return;
+        }
+        const plantUniqueMultiplier = cropCalcData.tier2Multiplier;
+
+        if (plantUniqueMultiplier === 0) {
+            setReverseCalcResult('Cannot estimate for fixed-price crops.');
+            return;
+        }
+
+        const estimatedWeightSquared = requiredBaseValue / plantUniqueMultiplier;
+        if (estimatedWeightSquared < 0) {
+            setReverseCalcResult('Target value is too low for these modifiers.');
+            return;
+        }
+        const estimatedWeight = Math.sqrt(estimatedWeightSquared);
+
+        // Step 4: Handle the Two-Tier System
+        const weightThreshold = plantBaseValue[cropName];
+        if (typeof weightThreshold !== 'number') {
+            setReverseCalcResult('No weight threshold found for this crop.');
+            return;
+        }
+
+        if (estimatedWeight <= weightThreshold) {
+            // The price corresponds to the fixed Tier 1 value, so the weight is indeterminate.
+            setReverseCalcResult(`≤ ${weightThreshold.toFixed(3)} kg`);
+        } else {
+            // The price corresponds to the Tier 2 formula, our estimate is valid.
+            setReverseCalcResult(`≈ ${estimatedWeight.toFixed(3)} kg`);
+        }
+    }
+
     return (
         <div className="grid gap-6 lg:grid-cols-1 mx-auto w-full px-2 sm:px-4 md:px-8">
             <Card>
@@ -472,6 +566,42 @@ export const FruitCalculator = () => {
                         <div className="text-center text-muted-foreground py-8">
                             <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
                             <p>Select a crop and enter weight to calculate the price.</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Reverse Calculator */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>⚖️ Weight Estimator (Reverse Calculator)</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label>Target Price</Label>
+                        <Input
+                            type="text" // Use text to allow commas
+                            value={targetValue}
+                            onChange={(e) => setTargetValue(e.target.value)}
+                            placeholder="e.g., 1,000,000"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Enter a target price to estimate the required weight. Uses the same crop and modifiers selected above.
+                        </p>
+                    </div>
+                    <Button
+                        onClick={calculateWeightFromValue}
+                        className="w-full"
+                        disabled={!cropName || !targetValue}
+                    >
+                        Estimate Weight
+                    </Button>
+                    {reverseCalcResult && (
+                        <div className="text-center pt-4">
+                            <div className="text-lg font-bold text-primary">
+                                {reverseCalcResult}
+                            </div>
+                            <div className="text-muted-foreground">Estimated Required Weight</div>
                         </div>
                     )}
                 </CardContent>
