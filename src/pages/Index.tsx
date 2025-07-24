@@ -506,131 +506,137 @@ const Index = () => {
 
             {/* Main Content */}
             <main className="container mx-auto p-4">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    {/* Main Navigation - hamburger on mobile, tabs on desktop */}
-                    <div className="flex items-center justify-between gap-4 mb-8">
-                        <div className="flex-grow">
-                            {/* Hamburger for mobile, tabs for md+ */}
-                            <div className="md:hidden">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm" className="gap-2 w-full">
-                                            <Menu className="h-5 w-5 mr-2" />
-                                            Menu
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" side="bottom" className="bg-card border-border w-screen max-w-none left-0 rounded-none shadow-lg">
-                                        <DropdownMenuItem onClick={() => setActiveTab('market')} className="flex items-center gap-2">
-                                            <BarChart3 className="h-4 w-4" /> Market Board
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => setActiveTab('encyclopedia')} className="flex items-center gap-2">
-                                            <BookOpen className="h-4 w-4" /> Encyclopedia
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => setActiveTab('calculator')} className="flex items-center gap-2">
-                                            <Calculator className="h-4 w-4" /> Calculator
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => setActiveTab('system')} className="flex items-center gap-2">
-                                            <Settings className="h-4 w-4" /> System
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => setActiveTab('notifications')} className="flex items-center gap-2">
-                                            <Bell className="h-4 w-4" /> Notifications
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                            <div className="hidden md:block">
-                                <TabsList className="grid w-full grid-cols-5">
-                                    <TabsTrigger value="market" className="flex items-center gap-2">
-                                        <BarChart3 className="h-4 w-4" />
-                                        Market Board
-                                    </TabsTrigger>
-                                    <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
-                                        <BookOpen className="h-4 w-4" />
-                                        Encyclopedia
-                                    </TabsTrigger>
-                                    <TabsTrigger value="calculator" className="flex items-center gap-2">
-                                        <Calculator className="h-4 w-4" />
-                                        Calculator
-                                    </TabsTrigger>
-                                    <TabsTrigger value="system" className="flex items-center gap-2">
-                                        <Settings className="h-4 w-4" />
-                                        System
-                                    </TabsTrigger>
-                                    <TabsTrigger value="notifications" className="flex items-center gap-2">
-                                        <Bell className="h-4 w-4" />
-                                        Notifications
-                                    </TabsTrigger>
-                                </TabsList>
+                {loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <p>Loading...</p>
+                    </div>
+                ) : (
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        {/* Main Navigation - hamburger on mobile, tabs on desktop */}
+                        <div className="flex items-center justify-between gap-4 mb-8">
+                            <div className="flex-grow">
+                                {/* Hamburger for mobile, tabs for md+ */}
+                                <div className="md:hidden">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" size="sm" className="gap-2 w-full">
+                                                <Menu className="h-5 w-5 mr-2" />
+                                                Menu
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start" side="bottom" className="bg-card border-border w-screen max-w-none left-0 rounded-none shadow-lg">
+                                            <DropdownMenuItem onClick={() => setActiveTab('market')} className="flex items-center gap-2">
+                                                <BarChart3 className="h-4 w-4" /> Market Board
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setActiveTab('encyclopedia')} className="flex items-center gap-2">
+                                                <BookOpen className="h-4 w-4" /> Encyclopedia
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setActiveTab('calculator')} className="flex items-center gap-2">
+                                                <Calculator className="h-4 w-4" /> Calculator
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setActiveTab('system')} className="flex items-center gap-2">
+                                                <Settings className="h-4 w-4" /> System
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setActiveTab('notifications')} className="flex items-center gap-2">
+                                                <Bell className="h-4 w-4" /> Notifications
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                                <div className="hidden md:block">
+                                    <TabsList className="grid w-full grid-cols-5">
+                                        <TabsTrigger value="market" className="flex items-center gap-2">
+                                            <BarChart3 className="h-4 w-4" />
+                                            Market Board
+                                        </TabsTrigger>
+                                        <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
+                                            <BookOpen className="h-4 w-4" />
+                                            Encyclopedia
+                                        </TabsTrigger>
+                                        <TabsTrigger value="calculator" className="flex items-center gap-2">
+                                            <Calculator className="h-4 w-4" />
+                                            Calculator
+                                        </TabsTrigger>
+                                        <TabsTrigger value="system" className="flex items-center gap-2">
+                                            <Settings className="h-4 w-4" />
+                                            System
+                                        </TabsTrigger>
+                                        <TabsTrigger value="notifications" className="flex items-center gap-2">
+                                            <Bell className="h-4 w-4" />
+                                            Notifications
+                                        </TabsTrigger>
+                                    </TabsList>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {/* Tab Contents */}
-                    <TabsContent value="market" className="space-y-6">
-                        <div className="relative">
-                            {isInMaintenance('market') && (
-                                <MaintenanceOverlay componentName="Market Board" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isInMaintenance('market') ? 'pointer-events-none blur-sm' : ''}`}>
-                                <div className="lg:col-span-2">
-                                    <MarketBoard
-                                        marketData={marketData}
-                                        loading={stockLoading}
-                                        error={stockError}
-                                        onRefetch={refetch}
-                                    />
-                                </div>
-                                <div className="relative">
-                                    {isInMaintenance('weather') && (
-                                        <MaintenanceOverlay componentName="Weather Status" className="absolute inset-0 z-10" />
-                                    )}
-                                    <div className={isInMaintenance('weather') ? 'pointer-events-none blur-sm' : ''}>
-                                        <WeatherStatus weatherData={weatherData} />
+                        {/* Tab Contents */}
+                        <TabsContent value="market" className="space-y-6">
+                            <div className="relative">
+                                {isInMaintenance('market') && (
+                                    <MaintenanceOverlay componentName="Market Board" className="absolute inset-0 z-10" />
+                                )}
+                                <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isInMaintenance('market') ? 'pointer-events-none blur-sm' : ''}`}>
+                                    <div className="lg:col-span-2">
+                                        <MarketBoard
+                                            marketData={marketData}
+                                            loading={stockLoading}
+                                            error={stockError}
+                                            onRefetch={refetch}
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        {isInMaintenance('weather') && (
+                                            <MaintenanceOverlay componentName="Weather Status" className="absolute inset-0 z-10" />
+                                        )}
+                                        <div className={isInMaintenance('weather') ? 'pointer-events-none blur-sm' : ''}>
+                                            <WeatherStatus weatherData={weatherData} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="encyclopedia">
-                        <div className="relative">
-                            {isInMaintenance('encyclopedia') && (
-                                <MaintenanceOverlay componentName="Item Encyclopedia" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={isInMaintenance('encyclopedia') ? 'pointer-events-none blur-sm' : ''}>
-                                <ItemEncyclopedia />
+                        </TabsContent>
+                        <TabsContent value="encyclopedia">
+                            <div className="relative">
+                                {isInMaintenance('encyclopedia') && (
+                                    <MaintenanceOverlay componentName="Item Encyclopedia" className="absolute inset-0 z-10" />
+                                )}
+                                <div className={isInMaintenance('encyclopedia') ? 'pointer-events-none blur-sm' : ''}>
+                                    <ItemEncyclopedia />
+                                </div>
                             </div>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="calculator">
-                        <div className="relative">
-                            {isInMaintenance('calculator') && (
-                                <MaintenanceOverlay componentName="Fruit Calculator" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={isInMaintenance('calculator') ? 'pointer-events-none blur-sm' : ''}>
-                                <FruitCalculator />
+                        </TabsContent>
+                        <TabsContent value="calculator">
+                            <div className="relative">
+                                {isInMaintenance('calculator') && (
+                                    <MaintenanceOverlay componentName="Fruit Calculator" className="absolute inset-0 z-10" />
+                                )}
+                                <div className={isInMaintenance('calculator') ? 'pointer-events-none blur-sm' : ''}>
+                                    <FruitCalculator />
+                                </div>
                             </div>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="system">
-                        <div className="relative">
-                            {isInMaintenance('system') && (
-                                <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
-                                <SystemMonitor wsStatus={wsStatus} />
+                        </TabsContent>
+                        <TabsContent value="system">
+                            <div className="relative">
+                                {isInMaintenance('system') && (
+                                    <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
+                                )}
+                                <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
+                                    <SystemMonitor wsStatus={wsStatus} />
+                                </div>
                             </div>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="notifications">
-                        <div className="relative">
-                            {isInMaintenance('notifications') && (
-                                <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
-                            )}
-                            <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
-                                <NotificationFeed notifications={notifications} />
+                        </TabsContent>
+                        <TabsContent value="notifications">
+                            <div className="relative">
+                                {isInMaintenance('notifications') && (
+                                    <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
+                                )}
+                                <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
+                                    <NotificationFeed notifications={notifications} />
+                                </div>
                             </div>
-                        </div>
-                    </TabsContent>
-                </Tabs>
+                        </TabsContent>
+                    </Tabs>
+                )}
             </main>
         </div>
     );

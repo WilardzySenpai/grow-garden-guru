@@ -80,14 +80,27 @@ export const useMaintenanceMode = () => {
         }
 
         try {
+            // There's only one row for settings, so we can update it directly.
+            // A 'match' clause is safer than a general update.
+            const { data: settingsList, error: fetchError } = await supabase
+                .from('maintenance_settings')
+                .select('id')
+                .limit(1);
+
+            if (fetchError || !settingsList || settingsList.length === 0) {
+                throw new Error('Could not fetch maintenance settings to update.');
+            }
+
+            const settingsId = settingsList[0].id;
+
             const { error } = await supabase
                 .from('maintenance_settings')
-                .update({ 
-                    ...settings,
+                .update({
                     ...newSettings,
-                    updated_by: user.id
-                } as MaintenanceSettingsRow)
-                .not('id', 'is', null); // Update all records (there should only be one)
+                    updated_by: user.id,
+                    updated_at: new Date().toISOString(),
+                })
+                .match({ id: settingsId });
 
             if (error) {
                 throw error;
