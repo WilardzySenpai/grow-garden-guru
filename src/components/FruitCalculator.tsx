@@ -47,22 +47,153 @@ export const FruitCalculator = () => {
     ];
 
     const environmentalMutationData: { [key: string]: EnvironmentalMutationData } = {
-        wet: { label: 'Wet', multiplier: 2 }, chilled: { label: 'Chilled', multiplier: 2 },
-        drenched: { label: 'Drenched', multiplier: 5 }, frozen: { label: 'Frozen', multiplier: 10 },
-        windstruck: { label: 'Windstruck', multiplier: 2 }, twisted: { label: 'Twisted', multiplier: 5 },
-        bloodlit: { label: 'Bloodlit', multiplier: 4 }, moonlit: { label: 'Moonlit', multiplier: 2 },
-        choc: { label: 'Choc', multiplier: 2 }, aurora: { label: 'Aurora', multiplier: 90 },
-        shocked: { label: 'Shocked', multiplier: 100 }, celestial: { label: 'Celestial', multiplier: 120 },
-        pollinated: { label: 'Pollinated', multiplier: 3 }, burnt: { label: 'Burnt', multiplier: 4 },
-        verdant: { label: 'Verdant', multiplier: 4 }, cloudtouched: { label: 'Cloudtouched', multiplier: 5 },
-        honeyglazed: { label: 'HoneyGlazed', multiplier: 5 }, plasma: { label: 'Plasma', multiplier: 5 },
-        heavenly: { label: 'Heavenly', multiplier: 5 }, fried: { label: 'Fried', multiplier: 8 },
-        cooked: { label: 'Cooked', multiplier: 10 }, zombified: { label: 'Zombified', multiplier: 25 },
-        molten: { label: 'Molten', multiplier: 25 }, sundried: { label: 'Sundried', multiplier: 85 },
-        paradisal: { label: 'Paradisal', multiplier: 100 }, alienlike: { label: 'Alienlike', multiplier: 100 },
-        galactic: { label: 'Galactic', multiplier: 120 }, disco: { label: 'Disco', multiplier: 125 },
-        voidtouched: { label: 'Voidtouched', multiplier: 135 }, dawnbound: { label: 'Dawnbound', multiplier: 150 }
+        wet: { label: 'Wet', multiplier: 2 },
+        chilled: { label: 'Chilled', multiplier: 2 },
+        drenched: { label: 'Drenched', multiplier: 5 },
+        frozen: { label: 'Frozen', multiplier: 10 },
+        windstruck: { label: 'Windstruck', multiplier: 2 },
+        twisted: { label: 'Twisted', multiplier: 5 },
+        tempestous: { label: 'Tempestous', multiplier: 12 },
+        bloodlit: { label: 'Bloodlit', multiplier: 4 },
+        moonlit: { label: 'Moonlit', multiplier: 2 },
+        choc: { label: 'Choc', multiplier: 2 },
+        aurora: { label: 'Aurora', multiplier: 90 },
+        shocked: { label: 'Shocked', multiplier: 100 },
+        celestial: { label: 'Celestial', multiplier: 120 },
+        pollinated: { label: 'Pollinated', multiplier: 3 },
+        burnt: { label: 'Burnt', multiplier: 4 },
+        verdant: { label: 'Verdant', multiplier: 4 },
+        cloudtouched: { label: 'Cloudtouched', multiplier: 5 },
+        honeyglazed: { label: 'HoneyGlazed', multiplier: 5 },
+        plasma: { label: 'Plasma', multiplier: 5 },
+        heavenly: { label: 'Heavenly', multiplier: 5 },
+        fried: { label: 'Fried', multiplier: 8 },
+        cooked: { label: 'Cooked', multiplier: 10 },
+        zombified: { label: 'Zombified', multiplier: 25 },
+        molten: { label: 'Molten', multiplier: 25 },
+        sundried: { label: 'Sundried', multiplier: 85 },
+        paradisal: { label: 'Paradisal', multiplier: 100 },
+        alienlike: { label: 'Alienlike', multiplier: 100 },
+        galactic: { label: 'Galactic', multiplier: 120 },
+        disco: { label: 'Disco', multiplier: 125 },
+        voidtouched: { label: 'Voidtouched', multiplier: 135 },
+        dawnbound: { label: 'Dawnbound', multiplier: 150 },
+        sandy: { label: 'Sandy', multiplier: 3 },
+        clay: { label: 'Clay', multiplier: 5 },
+        ceramic: { label: 'Ceramic', multiplier: 30 },
+        amber: { label: 'Amber', multiplier: 10 },
+        oldamber: { label: 'OldAmber', multiplier: 20 },
+        ancientamber: { label: 'AncientAmber', multiplier: 50 },
+        friendbound: { label: 'Friendbound', multiplier: 70 },
+        infected: { label: 'Infected', multiplier: 75 },
+        tranquil: { label: 'Tranquil', multiplier: 20 },
+        chakra: { label: 'Chakra', multiplier: 8 },
+        toxic: { label: 'Toxic', multiplier: 12 },
+        radioactive: { label: 'Radioactive', multiplier: 80 },
+        foxfire: { label: 'Foxfire', multiplier: 90 },
     };
+
+    const conflictGroups: { [key: string]: string[] } = {
+        burnt: ["cooked"],
+        cooked: ["burnt"],
+        gold: ["rainbow"],
+        rainbow: ["gold"],
+        amber: ["ancientamber", "oldamber"],
+        ancientamber: ["amber", "oldamber"],
+        oldamber: ["amber", "ancientamber"],
+        clay: ["ceramic", "sandy", "wet"],
+        ceramic: ["clay"],
+        sandy: ["clay"],
+        wet: ["clay"],
+        frozen: ["wet", "drenched", "chilled"],
+        tempestuous: ["windstruck", "twisted"],
+        foxfire: ["chakra"],
+        chakra: ["foxfire"]
+    };
+
+    const handleMutationChange = (mutation: string) => {
+        const newMutations = { ...regularMutations };
+        const currentlyActive = newMutations[mutation];
+
+        // Toggle the mutation
+        newMutations[mutation] = !currentlyActive;
+
+        // Special logic for specific mutations
+        if (newMutations[mutation]) { // If mutation is being enabled
+            switch (mutation) {
+                case 'cooked':
+                    newMutations['burnt'] = false;
+                    break;
+                case 'ceramic':
+                    newMutations['clay'] = false;
+                    break;
+                case 'frozen':
+                    newMutations['wet'] = false;
+                    newMutations['drenched'] = false;
+                    newMutations['chilled'] = false;
+                    break;
+                case 'clay':
+                    newMutations['sandy'] = false;
+                    newMutations['wet'] = false;
+                    break;
+                case 'tempestuous':
+                    newMutations['windstruck'] = false;
+                    newMutations['twisted'] = false;
+                    break;
+            }
+
+            if ((mutation === 'verdant' && newMutations['sundried']) || (mutation === 'sundried' && newMutations['verdant'])) {
+                newMutations['paradisal'] = true;
+                newMutations['verdant'] = false;
+                newMutations['sundried'] = false;
+                toast({
+                    title: "Mutation Combination!",
+                    description: "Verdant and Sundried have combined to create the Paradisal mutation!",
+                });
+            }
+
+            if (mutation === 'paradisal' && !newMutations['paradisal']) {
+                // If paradisal is being deselected, do nothing to verdant/sundried
+            } else if (newMutations['paradisal']) {
+                if (mutation === 'verdant') {
+                    newMutations['sundried'] = false;
+                } else if (mutation === 'sundried') {
+                    newMutations['verdant'] = false;
+                }
+            }
+
+
+            const conflicts = conflictGroups[mutation];
+            if (conflicts) {
+                conflicts.forEach(conflict => {
+                    if (newMutations[conflict]) {
+                        // This case should ideally not be reached if UI is disabled correctly
+                        newMutations[mutation] = false;
+                    }
+                });
+            }
+        }
+
+        setRegularMutations(newMutations);
+    };
+
+    const isMutationDisabled = (mutation: string) => {
+        const conflicts = conflictGroups[mutation] || [];
+        if (conflicts.some(conflict => regularMutations[conflict])) {
+            return true;
+        }
+
+        if (regularMutations.paradisal) {
+            if (mutation === 'sundried' && regularMutations.verdant) {
+                return true;
+            }
+            if (mutation === 'verdant' && regularMutations.sundried) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     const handleCropSelect = (item_id: string) => {
         setCropName(item_id);
@@ -243,8 +374,16 @@ export const FruitCalculator = () => {
                     <div className="space-y-3">
                         <Label className="text-base font-semibold">Mutations (Multiple Allowed)</Label>
                         <div className="flex flex-wrap gap-2">
-                            {Object.entries(environmentalMutationData).filter(([_, data]) => !["wet", "chilled", "drenched", "frozen"].includes(_)).map(([key, data]) => (
-                                <Button key={key} variant={regularMutations[key] ? 'default' : 'outline'} size="sm" onClick={() => setRegularMutations(prev => ({ ...prev, [key]: !prev[key] }))}>{data.label} (x{data.multiplier})</Button>
+                            {Object.entries(environmentalMutationData).filter(([key, _]) => !["wet", "chilled", "drenched", "frozen"].includes(key)).map(([key, data]) => (
+                                <Button
+                                    key={key}
+                                    variant={regularMutations[key] ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => handleMutationChange(key)}
+                                    disabled={isMutationDisabled(key)}
+                                >
+                                    {data.label} (x{data.multiplier})
+                                </Button>
                             ))}
                         </div>
                     </div>
