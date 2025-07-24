@@ -7,6 +7,7 @@ interface GuestUser {
     display_name: string;
     avatar_url: string;
     isGuest: true;
+    user_metadata: {};
 }
 
 interface AuthContextType {
@@ -54,7 +55,8 @@ const getOrCreateGuestUser = (): GuestUser => {
         id: guestId,
         display_name: `Guest_${guestId.slice(-6)}`,
         avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${guestId}`,
-        isGuest: true
+        isGuest: true,
+        user_metadata: {}
     };
     
     console.log('💾 Saving guest user to localStorage:', guestUser);
