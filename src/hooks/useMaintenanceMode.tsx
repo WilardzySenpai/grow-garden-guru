@@ -114,7 +114,9 @@ export const useMaintenanceMode = () => {
     };
 
     const toggleMaintenance = async (component: keyof MaintenanceSettings) => {
-        await updateSettings({ [component]: !settings[component] });
+        const newSettings = { ...settings, [component]: !settings[component] };
+        setSettings(newSettings);
+        await updateSettings({ [component]: newSettings[component] });
     };
 
     const isInMaintenance = (component: keyof MaintenanceSettings) => {
