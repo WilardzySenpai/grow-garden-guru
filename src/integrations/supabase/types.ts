@@ -75,6 +75,50 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_settings: {
+        Row: {
+          id: string
+          market: boolean
+          weather: boolean
+          encyclopedia: boolean
+          calculator: boolean
+          system: boolean
+          notifications: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          market: boolean
+          weather: boolean
+          encyclopedia: boolean
+          calculator: boolean
+          system: boolean
+          notifications: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          market?: boolean
+          weather?: boolean
+          encyclopedia?: boolean
+          calculator?: boolean
+          system?: boolean
+          notifications?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
