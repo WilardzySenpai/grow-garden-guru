@@ -41,7 +41,7 @@ export const FruitCalculator = () => {
     }, [searchQuery]);
 
     const growthMutations = [
-        { value: 'Ripe', label: 'Ripe (x2)', multiplier: 2 },
+        { value: 'Ripe', label: 'Ripe (x1)', multiplier: 1 },
         { value: 'Gold', label: 'Gold (x20)', multiplier: 20 },
         { value: 'Rainbow', label: 'Rainbow (x50)', multiplier: 50 }
     ];
@@ -350,7 +350,15 @@ export const FruitCalculator = () => {
                         <div className="flex flex-wrap gap-2">
                             <Button variant={variantMutation === '' ? 'default' : 'outline'} size="sm" onClick={() => setVariantMutation('')}>None</Button>
                             {growthMutations.map((mutation) => (
-                                <Button key={mutation.value} variant={variantMutation === mutation.value ? 'default' : 'outline'} size="sm" onClick={() => setVariantMutation(mutation.value)}>{mutation.label}</Button>
+                                <Button
+                                    key={mutation.value}
+                                    variant={variantMutation === mutation.value ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setVariantMutation(mutation.value)}
+                                    disabled={mutation.value === 'Ripe' && cropName !== 'sugarapple'}
+                                >
+                                    {mutation.label}
+                                </Button>
                             ))}
                         </div>
                     </div>
