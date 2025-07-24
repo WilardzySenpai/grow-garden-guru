@@ -30,7 +30,7 @@ export const useMaintenanceMode = () => {
     const [loading, setLoading] = useState(true);
     const [showMaintenanceAsAdmin, setShowMaintenanceAsAdmin] = useState(false);
 
-    const isAdmin = user?.user_metadata?.provider_id === ADMIN_DISCORD_ID;
+    const isAdmin = user && 'isGuest' in user ? false : user?.user_metadata?.provider_id === ADMIN_DISCORD_ID;
 
     // Function to fetch maintenance settings from Supabase
     const fetchMaintenanceSettings = async () => {

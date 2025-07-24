@@ -1,22 +1,23 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { AppUser } from './types/user';
 
 interface GuestUser {
     id: string;
     display_name: string;
     avatar_url: string;
     isGuest: true;
-    user_metadata: {};
+    user_metadata: Record<string, unknown>;
 }
 
 interface AuthContextType {
-    user: User | GuestUser | null;
+    user: AppUser | GuestUser | null;
     session: Session | null;
     loading: boolean;
     signInWithDiscord: () => Promise<void>;
-    signInWithEmail: (email: string, password: string) => Promise<{ error?: any }>;
-    signUpWithEmail: (email: string, password: string) => Promise<{ error?: any }>;
+    signInWithEmail: (email: string, password: string) => Promise<{ error?: Error }>;
+    signUpWithEmail: (email: string, password: string) => Promise<{ error?: Error }>;
     signOut: () => Promise<void>;
 }
 
@@ -65,7 +66,7 @@ const getOrCreateGuestUser = (): GuestUser => {
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-    const [user, setUser] = useState<User | GuestUser | null>(null);
+    const [user, setUser] = useState<AppUser | GuestUser | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -75,7 +76,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         (event, session) => {
             setSession(session);
             if (session?.user) {
-            setUser(session.user);
+            setUser(session.user as AppUser);
             } else {
             // Create guest user if no authenticated user
             setUser(getOrCreateGuestUser());
@@ -88,7 +89,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         if (session?.user) {
-            setUser(session.user);
+            setUser(session.user as AppUser);
         } else {
             // Create guest user if no authenticated user
             setUser(getOrCreateGuestUser());
