@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,10 +9,12 @@ import { TrendingUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Slider } from './ui/slider';
 
-// The `display_name` and `item_id` should match your UI requirements.
-const staticCropData = [ 
+const staticCropData = [
     { item_id: "easteregg", display_name: "Easteregg" }, { item_id: "moonflower", display_name: "Moonflower" }, { item_id: "starfruit", display_name: "Starfruit" }, { item_id: "pepper", display_name: "Pepper" }, { item_id: "grape", display_name: "Grape" }, { item_id: "nightshade", display_name: "Nightshade" }, { item_id: "mint", display_name: "Mint" }, { item_id: "glowshroom", display_name: "Glowshroom" }, { item_id: "bloodbanana", display_name: "Bloodbanana" }, { item_id: "beanstalk", display_name: "Beanstalk" }, { item_id: "coconut", display_name: "Coconut" }, { item_id: "candyblossom", display_name: "Candyblossom" }, { item_id: "carrot", display_name: "Carrot" }, { item_id: "strawberry", display_name: "Strawberry" }, { item_id: "blueberry", display_name: "Blueberry" }, { item_id: "orangetulip", display_name: "Orangetulip" }, { item_id: "tomato", display_name: "Tomato" }, { item_id: "daffodil", display_name: "Daffodil" }, { item_id: "watermelon", display_name: "Watermelon" }, { item_id: "pumpkin", display_name: "Pumpkin" }, { item_id: "mushroom", display_name: "Mushroom" }, { item_id: "bamboo", display_name: "Bamboo" }, { item_id: "apple", display_name: "Apple" }, { item_id: "corn", display_name: "Corn" }, { item_id: "cactus", display_name: "Cactus" }, { item_id: "cranberry", display_name: "Cranberry" }, { item_id: "moonmelon", display_name: "Moonmelon" }, { item_id: "durian", display_name: "Durian" }, { item_id: "peach", display_name: "Peach" }, { item_id: "cacao", display_name: "Cacao" }, { item_id: "moonglow", display_name: "Moonglow" }, { item_id: "dragonfruit", display_name: "Dragonfruit" }, { item_id: "mango", display_name: "Mango" }, { item_id: "moonblossom", display_name: "Moonblossom" }, { item_id: "raspberry", display_name: "Raspberry" }, { item_id: "eggplant", display_name: "Eggplant" }, { item_id: "papaya", display_name: "Papaya" }, { item_id: "celestiberry", display_name: "Celestiberry" }, { item_id: "moonmango", display_name: "Moonmango" }, { item_id: "passionfruit", display_name: "Passionfruit" }, { item_id: "soulfruit", display_name: "Soulfruit" }, { item_id: "chocolatecarrot", display_name: "Chocolatecarrot" }, { item_id: "redlolipop", display_name: "Redlolipop" }, { item_id: "candysunflower", display_name: "Candysunflower" }, { item_id: "lotus", display_name: "Lotus" }, { item_id: "pineapple", display_name: "Pineapple" }, { item_id: "hive", display_name: "Hive" }, { item_id: "lilac", display_name: "Lilac" }, { item_id: "rose", display_name: "Rose" }, { item_id: "foxglove", display_name: "Foxglove" }, { item_id: "purpledahlia", display_name: "Purpledahlia" }, { item_id: "sunflower", display_name: "Sunflower" }, { item_id: "pinklily", display_name: "Pinklily" }, { item_id: "nectarine", display_name: "Nectarine" }, { item_id: "honeysuckle", display_name: "Honeysuckle" }, { item_id: "lavender", display_name: "Lavender" }, { item_id: "venusflytrap", display_name: "Venusflytrap" }, { item_id: "nectarshade", display_name: "Nectarshade" }, { item_id: "manuka", display_name: "Manuka" }, { item_id: "emberlily", display_name: "Emberlily" }, { item_id: "dandelion", display_name: "Dandelion" }, { item_id: "lumira", display_name: "Lumira" }, { item_id: "cocovine", display_name: "Cocovine" }, { item_id: "succulent", display_name: "Succulent" }, { item_id: "beebalm", display_name: "Beebalm" }, { item_id: "nectarthorn", display_name: "Nectarthorn" }, { item_id: "violetcorn", display_name: "Violetcorn" }, { item_id: "bendboo", display_name: "Bendboo" }, { item_id: "crocus", display_name: "Crocus" }, { item_id: "sugarapple", display_name: "Sugarapple" }, { item_id: "cursedfruit", display_name: "Cursedfruit" }, { item_id: "suncoil", display_name: "Suncoil" }, { item_id: "dragonpepper", display_name: "Dragonpepper" }, { item_id: "cauliflower", display_name: "Cauliflower" }, { item_id: "avocado", display_name: "Avocado" }, { item_id: "kiwi", display_name: "Kiwi" }, { item_id: "greenapple", display_name: "Greenapple" }, { item_id: "banana", display_name: "Banana" }, { item_id: "pricklypear", display_name: "Pricklypear" }, { item_id: "feijoa", display_name: "Feijoa" }, { item_id: "loquat", display_name: "Loquat" }, { item_id: "wildcarrot", display_name: "Wildcarrot" }, { item_id: "pear", display_name: "Pear" }, { item_id: "cantaloupe", display_name: "Cantaloupe" }, { item_id: "parasolflower", display_name: "Parasolflower" }, { item_id: "rosydelight", display_name: "Rosydelight" }, { item_id: "elephantears", display_name: "Elephantears" }, { item_id: "bellpepper", display_name: "Bellpepper" }, { item_id: "aloevera", display_name: "Aloevera" }, { item_id: "peacelily", display_name: "Peacelily" }, { item_id: "travelersfruit", display_name: "Travelersfruit" }, { item_id: "delphinium", display_name: "Delphinium" }, { item_id: "lilyofthevalley", display_name: "Lilyofthevalley" }, { item_id: "guanabana", display_name: "Guanabana" }, { item_id: "pitcherplant", display_name: "Pitcherplant" }, { item_id: "rafflesia", display_name: "Rafflesia" }, { item_id: "fireworkflower", display_name: "Fireworkflower" }, { item_id: "libertylily", display_name: "Libertylily" }, { item_id: "boneblossom", display_name: "Boneblossom" }, { item_id: "horneddinoshroom", display_name: "Horneddinoshroom" }, { item_id: "fireflyfern", display_name: "Fireflyfern" }, { item_id: "stonebite", display_name: "Stonebite" }, { item_id: "boneboo", display_name: "Boneboo" }, { item_id: "paradisepetal", display_name: "Paradisepetal" }, { item_id: "burningbud", display_name: "Burningbud" }, { item_id: "fossilight", display_name: "Fossilight" }, { item_id: "amberspine", display_name: "Amberspine" }, { item_id: "grandvolcania", display_name: "Grandvolcania" }, { item_id: "lingonberry", display_name: "Lingonberry" }, { item_id: "giantpinecone", display_name: "Giantpinecone" }, { item_id: "horsetail", display_name: "Horsetail" }, { item_id: "monoblooma", display_name: "Monoblooma" }, { item_id: "spikedmango", display_name: "Spikedmango" }, { item_id: "taroflower", display_name: "Taroflower" }, { item_id: "serenity", display_name: "Serenity" }, { item_id: "zenflare", display_name: "Zenflare" }, { item_id: "zenrocks", display_name: "Zenrocks" }, { item_id: "hinomai", display_name: "Hinomai" }, { item_id: "mapleapple", display_name: "Mapleapple" }, { item_id: "softsunshine", display_name: "Softsunshine" }
-];
+].map(crop => ({
+    ...crop,
+    image: `/Crops/${crop.item_id.replace(/ /g, '_')}.png`
+}));
 
 interface EnvironmentalMutationData {
     label: string;
@@ -30,8 +32,14 @@ export const FruitCalculator = () => {
         breakdown: { basePrice: number; mass: number; variant: string; mutations: string[]; };
     } | null>(null);
     const [friendCount, setFriendCount] = useState(0);
+    const [searchQuery, setSearchQuery] = useState("");
 
-    // This data is now static and part of the component
+    const filteredCrops = useMemo(() => {
+        return staticCropData.filter(crop =>
+            crop.display_name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [searchQuery]);
+
     const growthMutations = [
         { value: 'Ripe', label: 'Ripe (x2)', multiplier: 2 },
         { value: 'Gold', label: 'Gold (x20)', multiplier: 20 },
@@ -77,8 +85,6 @@ export const FruitCalculator = () => {
             toast({ title: "Invalid Weight", description: "Weight must be a positive number.", variant: "destructive" });
             return;
         }
-
-        // --- START: SELF-CONTAINED CALCULATION LOGIC ---
 
         const plantBaseValue: { [key: string]: number } = {
             'easteregg': 2.85, 'moonflower': 1.9, 'starfruit': 2.85, 'pepper': 4.75, 'grape': 2.85, 'nightshade': 0.48, 'mint': 0.95, 'glowshroom': 0.7, 'bloodbanana': 1.42, 'beanstalk': 9.5, 'coconut': 13.31, 'candyblossom': 2.85, 'carrot': 0.24, 'strawberry': 0.29, 'blueberry': 0.17, 'orangetulip': 0.0499, 'tomato': 0.44, 'daffodil': 0.16, 'watermelon': 7.3, 'pumpkin': 6.9, 'mushroom': 25.9, 'bamboo': 3.8, 'apple': 2.85, 'corn': 1.9, 'cactus': 6.65, 'cranberry': 0.95, 'moonmelon': 7.6, 'durian': 7.6, 'peach': 1.9, 'cacao': 7.6, 'moonglow': 6.65, 'dragonfruit': 11.38, 'mango': 14.28, 'moonblossom': 2.85, 'raspberry': 0.71, 'eggplant': 4.75, 'papaya': 2.86, 'celestiberry': 1.9, 'moonmango': 14.25, 'passionfruit': 2.867, 'soulfruit': 23.75, 'chocolatecarrot': 0.2616, 'redlolipop': 3.7988, 'candysunflower': 1.428, 'lotus': 18.99, 'pineapple': 2.85, 'hive': 7.59, 'lilac': 2.846, 'rose': 0.95, 'foxglove': 1.9, 'purpledahlia': 11.4, 'sunflower': 15.65, 'pinklily': 5.699, 'nectarine': 2.807, 'honeysuckle': 11.4, 'lavender': 0.25, 'venusflytrap': 9.5, 'nectarshade': 0.75, 'manuka': 0.289, 'emberlily': 11.4, 'dandelion': 3.79, 'lumira': 5.69, 'cocovine': 13.3, 'succulent': 4.75, 'beebalm': 0.94, 'nectarthorn': 5.76, 'violetcorn': 2.85, 'bendboo': 17.09, 'crocus': 0.285, 'sugarapple': 8.55, 'cursedfruit': 22.9, 'suncoil': 9.5, 'dragonpepper': 5.69, 'cauliflower': 4.74, 'avocado': 3.32, 'kiwi': 4.75, 'greenapple': 2.85, 'banana': 1.42, 'pricklypear': 6.65, 'feijoa': 9.5, 'loquat': 6.17, 'wildcarrot': 0.286, 'pear': 2.85, 'cantaloupe': 5.22, 'parasolflower': 5.7, 'rosydelight': 9.5, 'elephantears': 17.1, 'bellpepper': 7.61, 'aloevera': 5.22, 'peacelily': 0.5, 'travelersfruit': 11.4, 'delphinium': 0.285, 'lilyofthevalley': 5.69, 'guanabana': 3.8, 'pitcherplant': 11.4, 'rafflesia': 7.6, 'fireworkflower': 19, 'libertylily': 6.176, 'boneblossom': 2.85, 'horneddinoshroom': 4.94, 'fireflyfern': 4.77, 'stonebite': 0.94, 'boneboo': 14.5, 'paradisepetal': 2.85, 'burningbud': 11.4, 'fossilight': 3.79, 'amberspine': 5.7, 'grandvolcania': 6.65, 'lingonberry': 0.485, 'giantpinecone': 5.14, 'horsetail': 2.85, 'monoblooma': 0.477, 'spikedmango': 14.25, 'taroflower': 6.64, 'serenity': 0.24, 'zenflare': 1.34, 'zenrocks': 17.1, 'hinomai': 9.5, 'mapleapple': 2.85, 'softsunshine': 1.9
@@ -129,10 +135,9 @@ export const FruitCalculator = () => {
             ? (otherModifiersSum - otherModifiersCount + 1)
             : 1;
 
-        // The slider value (0-5) corresponds to the index in this array.
         const friendMultipliers = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5];
         const friendMultiplier = friendMultipliers[friendCount];
-        const plantAmount = 1; // Placeholder: Add UI for this if needed
+        const plantAmount = 1;
 
         const totalPrice = Math.ceil(
             baseValue *
@@ -156,28 +161,26 @@ export const FruitCalculator = () => {
             title: "Calculation Complete",
             description: `Total price: ${totalPrice.toLocaleString()} Sheckles`,
         });
-
-        // --- END: SELF-CONTAINED CALCULATION LOGIC ---
     };
-
-    // JSX remains largely the same, but we can remove API loading states
-    // ... rest of your component's JSX ...
-    // Remember to update the results breakdown to use `calculationResult.breakdown.basePrice`
-    // And to add a UI element for the "Friend Multiplier"
 
     return (
         <div className="grid gap-6 lg:grid-cols-1 mx-auto w-full px-2 sm:px-4 md:px-8">
-            {/* Fruit Price Calculator */}
             <Card>
                 <CardHeader>
                     <CardTitle>🍉 Fruit Price Calculator</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {/* Crop Selection */}
                     <div className="space-y-3">
                         <Label>Crop Type</Label>
+                        <Input
+                            type="text"
+                            placeholder="Search for a crop..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="mb-2"
+                        />
                         <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto border rounded-lg p-2">
-                            {staticCropData.map((crop) => (
+                            {filteredCrops.map((crop) => (
                                 <Button
                                     key={crop.item_id}
                                     variant={cropName === crop.item_id ? "default" : "outline"}
@@ -185,6 +188,7 @@ export const FruitCalculator = () => {
                                     onClick={() => handleCropSelect(crop.item_id)}
                                     className="justify-start h-auto p-2 flex items-center gap-2"
                                 >
+                                    <img src={crop.image} alt={crop.display_name} className="w-5 h-5 object-cover" onError={(e) => e.currentTarget.src = '/Crops/place_holder_crop.png'} />
                                     <span className="text-xs">{crop.display_name}</span>
                                 </Button>
                             ))}
@@ -195,7 +199,6 @@ export const FruitCalculator = () => {
                             </Badge>
                         )}
                     </div>
-                    {/* Mass Input */}
                     <div className="space-y-2">
                         <Label>Weight (kg)</Label>
                         <Input
