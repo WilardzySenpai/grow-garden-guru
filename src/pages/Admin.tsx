@@ -36,7 +36,13 @@ const ADMIN_DISCORD_ID = "939867069070065714";
 const Admin = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { settings: maintenanceSettings, toggleMaintenance } = useMaintenanceMode();
+  const {
+    settings: maintenanceSettings,
+    toggleMaintenance,
+    showMaintenanceAsAdmin,
+    setShowMaintenanceAsAdmin,
+    isAdmin
+  } = useMaintenanceMode();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
@@ -1356,6 +1362,23 @@ const Admin = () => {
                 <CardTitle>App Components</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {isAdmin && (
+                  <div className="flex items-center justify-between p-4 rounded-lg border bg-accent/50">
+                    <div className="flex items-center gap-3">
+                      <Shield className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="font-medium">Admin Bypass</p>
+                        <p className="text-sm text-muted-foreground">
+                          Toggle to view the site as a regular user
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={!showMaintenanceAsAdmin}
+                      onCheckedChange={(checked) => setShowMaintenanceAsAdmin(!checked)}
+                    />
+                  </div>
+                )}
                 {Object.entries(maintenanceSettings).map(([component, isInMaintenance]) => {
                   const componentLabels = {
                     market: { label: 'Market Board', icon: BarChart3, description: 'Stock market data and trading information' },
