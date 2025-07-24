@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
 type MaintenanceSettingsRow = Database['public']['Tables']['maintenance_settings']['Row'];
+const ADMIN_DISCORD_ID = "939867069070065714";
 
 export interface MaintenanceSettings {
     market: boolean;
@@ -27,6 +28,9 @@ export const useMaintenanceMode = () => {
     const { user } = useAuth();
     const [settings, setSettings] = useState<MaintenanceSettings>(defaultSettings);
     const [loading, setLoading] = useState(true);
+    const [showMaintenanceAsAdmin, setShowMaintenanceAsAdmin] = useState(false);
+
+    const isAdmin = user?.user_metadata?.provider_id === ADMIN_DISCORD_ID;
 
     // Function to fetch maintenance settings from Supabase
     const fetchMaintenanceSettings = async () => {
@@ -120,6 +124,9 @@ export const useMaintenanceMode = () => {
     };
 
     const isInMaintenance = (component: keyof MaintenanceSettings) => {
+        if (isAdmin && !showMaintenanceAsAdmin) {
+            return false;
+        }
         return settings[component];
     };
 
@@ -129,5 +136,8 @@ export const useMaintenanceMode = () => {
         toggleMaintenance,
         isInMaintenance,
         loading,
+        showMaintenanceAsAdmin,
+        setShowMaintenanceAsAdmin,
+        isAdmin,
     };
 };

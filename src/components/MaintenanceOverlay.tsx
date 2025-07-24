@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 
 interface MaintenanceOverlayProps {
   componentName: string;
@@ -7,6 +8,12 @@ interface MaintenanceOverlayProps {
 }
 
 export const MaintenanceOverlay = ({ componentName, className = '' }: MaintenanceOverlayProps) => {
+  const { isAdmin, showMaintenanceAsAdmin } = useMaintenanceMode();
+
+  if (isAdmin && !showMaintenanceAsAdmin) {
+    return null;
+  }
+
   return (
     <div className={`relative ${className}`}>
       <div className="absolute inset-0 z-10 backdrop-blur-md bg-background/80 flex items-center justify-center rounded-lg">
