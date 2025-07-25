@@ -14,7 +14,8 @@ import {
   Server,
   AlertTriangle,
   Power,
-  PowerOff
+  PowerOff,
+  Bug
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
@@ -51,6 +52,7 @@ const Admin = () => {
   const [showApiManagement, setShowApiManagement] = useState(false);
   const [showMarketAnalytics, setShowMarketAnalytics] = useState(false);
   const [showMaintenanceMode, setShowMaintenanceMode] = useState(false);
+  const [showBugReports, setShowBugReports] = useState(false);
   const [dbStats, setDbStats] = useState<any>({});
   const [analyticsData, setAnalyticsData] = useState<any>({});
   const [apiData, setApiData] = useState<any>({});

@@ -187,6 +187,13 @@ const Home = () => {
                             >
                                 FAQ
                             </a>
+                            <a
+                                href="/bug-report"
+                                className="text-sm text-primary font-semibold hover:underline transition-colors px-3 py-1 rounded bg-accent/40 border border-accent/30 shadow-sm"
+                                aria-label="Report a Bug"
+                            >
+                                Report Bug
+                            </a>
                             <span className="text-sm text-muted-foreground">
                                 Made with everything we love about Grow A Garden
                             </span>
