@@ -448,7 +448,7 @@ const Admin = () => {
                 return (
                     <MaintenanceMode
                         onBack={() => setActiveComponent('dashboard')}
-                        settings={maintenanceSettings as Record<string, boolean>}
+                        settings={maintenanceSettings}
                         showMaintenanceAsAdmin={showMaintenanceAsAdmin}
                         setShowMaintenanceAsAdmin={setShowMaintenanceAsAdmin}
                         isAdmin={isAdmin}
@@ -468,7 +468,7 @@ const Admin = () => {
                             if (section === 'api') fetchApiAnalytics();
                             if (section === 'market') fetchMarketAnalytics();
                         }}
-                        maintenanceSettings={maintenanceSettings as Record<string, boolean>}
+                        maintenanceSettings={maintenanceSettings}
                     />
                 );
         }
