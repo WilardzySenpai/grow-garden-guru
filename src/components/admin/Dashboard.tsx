@@ -12,10 +12,11 @@ import {
     Shield,
     Users
 } from "lucide-react";
+import { MaintenanceSettings } from "@/hooks/useMaintenanceMode";
 
 interface DashboardProps {
     onSectionClick: (section: string) => void;
-    maintenanceSettings: Record<string, boolean>;
+    maintenanceSettings: MaintenanceSettings;
 }
 
 export const Dashboard = ({ onSectionClick, maintenanceSettings }: DashboardProps) => {
