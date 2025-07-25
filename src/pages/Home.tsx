@@ -98,8 +98,11 @@ const Home = () => {
                             </Button>
                         </Link>
                         <Link to="/auth">
-                            <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                            <Button variant="outline" size="lg" className="text-lg px-8 py-6 relative">
                                 Sign In
+                                <div className="absolute -top-2 -right-2 bg-primary/10 px-2 py-0.5 rounded-md transform rotate-12 border border-primary/20">
+                                    <span className="text-xs font-medium text-primary">Optional</span>
+                                </div>
                             </Button>
                         </Link>
                     </div>
@@ -146,7 +149,7 @@ const Home = () => {
                         <p className="text-muted-foreground text-lg">
                             Join thousands of players who use Grow A Garden Guru to maximize their farming potential.
                         </p>
-                        <div className="flex gap-4 justify-center">
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                             <Link to="/app">
                                 <Button size="lg" className="text-lg px-8 py-6">
                                     Launch Dashboard
@@ -154,8 +157,11 @@ const Home = () => {
                                 </Button>
                             </Link>
                             <Link to="/auth">
-                                <Button variant="secondary" size="lg" className="text-lg px-8 py-6">
+                                <Button variant="secondary" size="lg" className="text-lg px-8 py-6 relative">
                                     Sign In
+                                    <div className="absolute -top-2 -right-2 bg-primary/10 px-2 py-0.5 rounded-md transform rotate-12 border border-primary/20">
+                                        <span className="text-xs font-medium text-primary">Optional</span>
+                                    </div>
                                 </Button>
                             </Link>
                         </div>
@@ -170,7 +176,7 @@ const Home = () => {
                         <div className="flex items-center gap-2">
                             <Leaf className="h-5 w-5 text-primary" />
                             <span className="text-sm text-muted-foreground">
-                                © 2024 Grow A Garden Guru. Built with ❤️ for the community.
+                                © 2025 Grow A Garden Guru. I had fun making this!
                             </span>
                         </div>
                         <div className="flex items-center gap-4">

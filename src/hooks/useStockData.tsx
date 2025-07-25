@@ -1,167 +1,215 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import type { StockData, MarketItem } from '@/types/api';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import type { StockData } from '@/types/api';
+import { useSmartFetch, UPDATE_INTERVALS } from './useSmartFetch';
+import isEqual from 'lodash/isEqual';
 
 interface StockDataHook {
     marketData: StockData | null;
     loading: boolean;
+    refreshing: boolean;  // Separate state for background refreshes
     error: string | null;
     refetch: () => void;
 }
 
-// Stock refresh intervals in milliseconds
-const MIN_REFRESH_INTERVAL = 30 * 1000; // Minimum 30 seconds between refreshes
-const MAX_REFRESH_INTERVAL = 24 * 60 * 60 * 1000; // Maximum 24 hours between refreshes
-
-const REFRESH_INTERVALS = {
-    seed: 5 * 60 * 1000,    // 5 minutes
-    gear: 5 * 60 * 1000,    // 5 minutes
-    eventshop: 30 * 60 * 1000,  // 30 minutes
-    seedshop: 30 * 60 * 1000,   // 30 minutes (assuming this is separate from seed)
-    cosmetic: 4 * 60 * 60 * 1000,  // 4 hours
-    travelingmerchant: 4 * 60 * 60 * 1000,  // 4 hours
-};
-
 export const useStockData = (userId: string | null): StockDataHook => {
     const [marketData, setMarketData] = useState<StockData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const timeoutsRef = useRef<Record<string, NodeJS.Timeout | undefined>>({});
-    const lastFetchRef = useRef<Record<string, number>>({});
+    const isInitialFetchRef = useRef(true);
 
-    const calculateNextFetch = useCallback((items: MarketItem[], stockType: string): number => {
-        if (!items || items.length === 0) {
-        // If no items, use the default interval
-        return Date.now() + REFRESH_INTERVALS[stockType as keyof typeof REFRESH_INTERVALS];
-        }
+    // Keep track of last update times for each data type
+    const lastUpdateRef = useRef<Record<keyof typeof UPDATE_INTERVALS, number>>({
+        SEED_GEAR: 0,
+        EGG: 0,
+        EVENT: 0,
+        COSMETIC_MERCHANT: 0
+    });
 
-        // Find the earliest end_date_unix among all items
-        const earliestEndTime = Math.min(...items.map(item => item.end_date_unix * 1000));
-        const now = Date.now();
+    const debug = process.env.NODE_ENV === 'development';
     
-        // If all items have already expired, fetch immediately
-        if (earliestEndTime <= now) {
-        return now;
-        }
-    
-        // Otherwise, schedule fetch for when the first item expires
-        return earliestEndTime;
-    }, []);
-
     const fetchStockData = useCallback(async () => {
-        const now = Date.now();
-        // Rate limiting: Don't fetch if last fetch was less than MIN_REFRESH_INTERVAL ago
-        if (!userId || (lastFetchRef.current.main && now - lastFetchRef.current.main < MIN_REFRESH_INTERVAL)) {
-        return;
-        }
-        
-        lastFetchRef.current.main = now;
-
-        try {
-        setError(null);
-        setLoading(true);
-
-        const response = await fetch('https://api.joshlei.com/v2/growagarden/stock', {
-            headers: {
-            'Jstudio-key': 'jstudio',
-            'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch stock data: ${response.statusText}`);
+        if (!userId) {
+            if (debug) console.log('[Stock Data] No userId, skipping fetch');
+            return;
         }
 
-        const data = await response.json();
-        
-        // Transform the data to match expected structure
-        const transformedData: StockData = {
-            seed_stock: Array.isArray(data.seed_stock) ? data.seed_stock : [],
-            gear_stock: Array.isArray(data.gear_stock) ? data.gear_stock : [],
-            egg_stock: Array.isArray(data.egg_stock) ? data.egg_stock : [],
-            cosmetic_stock: Array.isArray(data.cosmetic_stock) ? data.cosmetic_stock : [],
-            eventshop_stock: Array.isArray(data.eventshop_stock) ? data.eventshop_stock : [],
-            travelingmerchant_stock: (data.travelingmerchant_stock && Array.isArray(data.travelingmerchant_stock.stock)) ? data.travelingmerchant_stock.stock : [],
-            notifications: Array.isArray(data.notifications) ? data.notifications : [],
-            discord_invite: typeof data.discord_invite === 'string' ? data.discord_invite : ''
-        };
+        // Determine loading state based on whether this is initial load
+        const isInitialFetch = isInitialFetchRef.current;
+        if (debug) console.log(`[Stock Data] Starting fetch (${isInitialFetch ? 'initial' : 'update'})`);
 
-        setMarketData(transformedData);
-        
-        // Schedule next fetch based on the earliest expiring item across all categories
-        const allItems = [
-            ...(transformedData.seed_stock || []),
-            ...(transformedData.gear_stock || []),
-            ...(transformedData.egg_stock || []),
-            ...(transformedData.cosmetic_stock || []),
-            ...(transformedData.eventshop_stock || []),
-            ...(transformedData.travelingmerchant_stock || [])
-        ];
-
-        if (allItems.length > 0) {
-            // Find the earliest end time, ensuring we don't multiply by 1000 twice
-            const earliestEndTime = Math.min(...allItems.map(item => item.end_date_unix * 1000));
-            const currentTime = Date.now();
-            
-            // Calculate delay with bounds
-            let delay = Math.max(MIN_REFRESH_INTERVAL, earliestEndTime - currentTime);
-            delay = Math.min(delay, MAX_REFRESH_INTERVAL);
-            
-            // Clear existing timeout
-            if (timeoutsRef.current.main) {
-            clearTimeout(timeoutsRef.current.main);
-            }
-            
-            // Only schedule next fetch if delay is reasonable
-            if (delay >= MIN_REFRESH_INTERVAL && delay <= MAX_REFRESH_INTERVAL) {
-            timeoutsRef.current.main = setTimeout(() => {
-                console.log('Scheduled stock refresh triggered');
-                fetchStockData();
-            }, delay);
-            
-            console.log(`Next stock refresh scheduled in ${Math.round(delay / 1000)}s`);
-            }
+        if (isInitialFetch) {
+            setLoading(true);
         } else {
-            // If no items, schedule refresh using default interval
-            const delay = REFRESH_INTERVALS.seed; // Use shortest default interval
-            timeoutsRef.current.main = setTimeout(fetchStockData, delay);
-            console.log(`No items found. Next refresh in ${Math.round(delay / 1000)}s`);
+            setRefreshing(true);
         }
         
-        setLoading(false);
-        
+        try {
+            setError(null);
+
+            if (debug) console.log('[Stock Data] Fetching from API...');
+            const response = await fetch('https://api.joshlei.com/v2/growagarden/stock', {
+                headers: {
+                    'Jstudio-key': 'jstudio',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch stock data: ${response.statusText}`);
+            }
+
+            const responseClone = response.clone();
+            const data = await response.json();
+            
+            if (debug) {
+                console.log('[Stock Data] Raw API Response:', await responseClone.json());
+            }
+            
+            // Transform the data to match expected structure
+            const transformedData: StockData = {
+                seed_stock: Array.isArray(data.seed_stock) ? data.seed_stock : [],
+                gear_stock: Array.isArray(data.gear_stock) ? data.gear_stock : [],
+                egg_stock: Array.isArray(data.egg_stock) ? data.egg_stock : [],
+                cosmetic_stock: Array.isArray(data.cosmetic_stock) ? data.cosmetic_stock : [],
+                eventshop_stock: Array.isArray(data.eventshop_stock) ? data.eventshop_stock : [],
+                travelingmerchant_stock: (data.travelingmerchant_stock && Array.isArray(data.travelingmerchant_stock.stock)) ? data.travelingmerchant_stock.stock : [],
+                notifications: Array.isArray(data.notifications) ? data.notifications : [],
+                discord_invite: typeof data.discord_invite === 'string' ? data.discord_invite : ''
+            };
+
+            if (debug) {
+                console.log('[Stock Data] Transformed data:', transformedData);
+            }
+
+            // Only update data that's due for an update based on its interval
+            const now = Date.now();
+            let shouldUpdate = false;
+
+            // Check each data type's update interval
+            const intervals = ['SEED_GEAR', 'EGG', 'EVENT', 'COSMETIC_MERCHANT'] as const;
+            
+            for (const type of intervals) {
+                const lastUpdate = lastUpdateRef.current[type];
+                const interval = UPDATE_INTERVALS[type].interval;
+                const timeSinceUpdate = now - (lastUpdate || 0);
+
+                if (debug) {
+                    console.log(`[Stock Data] [${type}] Last update: ${lastUpdate || 'never'}, Time since: ${Math.round(timeSinceUpdate / 1000)}s, Interval: ${Math.round(interval / 1000)}s`);
+                }
+
+                if (!lastUpdate || timeSinceUpdate >= interval) {
+                    if (debug) console.log(`[Stock Data] [${type}] Due for update`);
+                    shouldUpdate = true;
+                    lastUpdateRef.current[type] = now;
+                }
+            }
+
+            // Check if the data has actually changed using deep comparison
+            const hasDataChanged = !isEqual(marketData, transformedData);
+            
+            // Update if it's initial fetch, data should update based on interval, or data has changed
+            if (isInitialFetch || shouldUpdate || hasDataChanged) {
+                if (debug) {
+                    console.log('[Stock Data] State update triggered:', {
+                        reason: isInitialFetch ? 'initial fetch' :
+                               shouldUpdate ? 'interval update needed' :
+                               'data changed',
+                        hasDataChanged,
+                        marketDataExists: !!marketData,
+                        transformedDataExists: !!transformedData,
+                        stockCounts: {
+                            current: marketData ? {
+                                seeds: marketData.seed_stock.length,
+                                gear: marketData.gear_stock.length,
+                                eggs: marketData.egg_stock.length,
+                                cosmetic: marketData.cosmetic_stock.length,
+                                event: marketData.eventshop_stock.length,
+                                merchant: marketData.travelingmerchant_stock.length
+                            } : 'no current data',
+                            new: {
+                                seeds: transformedData.seed_stock.length,
+                                gear: transformedData.gear_stock.length,
+                                eggs: transformedData.egg_stock.length,
+                                cosmetic: transformedData.cosmetic_stock.length,
+                                event: transformedData.eventshop_stock.length,
+                                merchant: transformedData.travelingmerchant_stock.length
+                            }
+                        }
+                    });
+                }
+
+                // Force a new object reference to ensure React detects the change
+                setMarketData(prevData => {
+                    if (isEqual(prevData, transformedData)) {
+                        return hasDataChanged ? { ...transformedData } : prevData;
+                    }
+                    return transformedData;
+                });
+
+                if (isInitialFetchRef.current) {
+                    isInitialFetchRef.current = false;
+                }
+            } else if (debug) {
+                console.log('[Stock Data] Skipping state update - no changes needed', {
+                    hasDataChanged,
+                    shouldUpdate,
+                    isInitialFetch
+                });
+            }
         } catch (err) {
-        console.error('Error fetching stock data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch stock data');
-        setLoading(false);
+            setError(err instanceof Error ? err.message : 'Failed to fetch stock data');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
         }
     }, [userId]);
 
-    const refetch = useCallback(() => {
-        fetchStockData();
-    }, [fetchStockData]);
-
-    // Initial fetch and setup
+    // Effect to trigger fetch when userId becomes available
     useEffect(() => {
-        if (userId) {
-        fetchStockData();
-        } else {
-        setLoading(false);
-        setMarketData(null);
+        if (!userId) return;
+
+        if (debug) {
+            console.log("[Stock Data] userId now available:", userId);
+            console.log("[Stock Data] Triggering initial fetch");
         }
 
-        // Cleanup timeouts on unmount or user change
-        return () => {
-        Object.values(timeoutsRef.current).forEach(timeout => {
-            if (timeout) clearTimeout(timeout);
-        });
-        timeoutsRef.current = {};
-        };
+        // Reset the initial fetch flag to ensure data is loaded
+        isInitialFetchRef.current = true;
+        fetchStockData();
     }, [userId, fetchStockData]);
+
+    // Set up a single smart fetch with the shortest interval
+    useSmartFetch(fetchStockData, UPDATE_INTERVALS.SEED_GEAR, {
+        initialFetch: false, // Don't fetch immediately, let the useEffect handle it
+        debug: process.env.NODE_ENV === 'development',
+        delayMs: 3000
+    });
+
+    // Debug effect to track state changes
+    useEffect(() => {
+        if (debug && marketData) {
+            console.log('🔄 [Stock Data] State updated in hook:', {
+                dataPresent: !!marketData,
+                counts: {
+                    seeds: marketData.seed_stock.length,
+                    gear: marketData.gear_stock.length,
+                    eggs: marketData.egg_stock.length,
+                    cosmetic: marketData.cosmetic_stock.length,
+                    event: marketData.eventshop_stock.length,
+                    merchant: marketData.travelingmerchant_stock.length
+                },
+                loading,
+                refreshing
+            });
+        }
+    }, [marketData, loading, refreshing, debug]);
 
     return {
         marketData,
         loading,
+        refreshing,
         error,
-        refetch,
+        refetch: fetchStockData
     };
 };

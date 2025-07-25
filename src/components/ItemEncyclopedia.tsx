@@ -8,11 +8,16 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Search, X } from 'lucide-react';
+import { Menu, Search, X } from 'lucide-react';
 import { ItemCard } from '@/components/ItemCard';
 
 import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 import {
     Select,
@@ -39,6 +44,10 @@ export const ItemEncyclopedia = () => {
     // For zoom modal
     const [zoomedPetImg, setZoomedPetImg] = useState<string | null>(null);
     const [zoomedPetName, setZoomedPetName] = useState<string | null>(null);
+    // Admin refresh state
+    const [refreshing, setRefreshing] = useState(false);
+    // TODO: Replace with your actual admin check logic
+    const isAdmin = Boolean(localStorage.getItem('isAdmin'));
 
     // Handler to clear search
     const handleClearSearch = () => setSearchTerm('');
@@ -52,49 +61,72 @@ export const ItemEncyclopedia = () => {
             setLoading(true);
             setError(null);
 
-            console.log('ItemEncyclopedia: Fetching data from API');
+            // Try API first
+            let itemsData = [];
+            let petsData = [];
+            let weatherData = { weather: [] };
+            let apiSuccess = true;
+            try {
+                const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
+                    headers: {
+                        'Jstudio-key': 'jstudio',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!itemsResponse.ok) throw new Error('Items API error');
+                itemsData = await itemsResponse.json();
 
-            // Fetch all items
-            const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
-                headers: {
-                    'Jstudio-key': 'jstudio',
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!itemsResponse.ok) {
-                throw new Error(`Items API error! status: ${itemsResponse.status}`);
+                const petsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info?type=pet', {
+                    headers: {
+                        'Jstudio-key': 'jstudio',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!petsResponse.ok) throw new Error('Pets API error');
+                petsData = await petsResponse.json();
+
+                const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/weather', {
+                    headers: {
+                        'Jstudio-key': 'jstudio',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!weatherResponse.ok) throw new Error('Weather API error');
+                weatherData = await weatherResponse.json();
+            } catch (apiErr) {
+                apiSuccess = false;
+                console.warn('API fetch failed, falling back to Supabase cache:', apiErr);
             }
-            const itemsData = await itemsResponse.json();
-            setItems(Array.isArray(itemsData) ? itemsData : []);
 
-            // Fetch pets
-            const petsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info?type=pet', {
-                headers: {
-                    'Jstudio-key': 'jstudio',
-                    'Content-Type': 'application/json'
+            if (apiSuccess) {
+                setItems(Array.isArray(itemsData) ? itemsData : []);
+                setPets(Array.isArray(petsData) ? petsData : []);
+                setWeatherItems(weatherData.weather || []);
+                console.log('ItemEncyclopedia: Data loaded from API');
+            } else {
+                // Fallback: fetch from Supabase
+                try {
+                    // Use Vite environment variables for Supabase credentials
+                    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+                    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+                    if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('Supabase credentials missing');
+                    const supabaseFallback = createClient(SUPABASE_URL, SUPABASE_KEY);
+                    const { data: itemsCache } = await supabaseFallback.from('items').select('*');
+                    setItems(Array.isArray(itemsCache) ? itemsCache : []);
+                    const { data: petsCache } = await supabaseFallback.from('pets').select('*');
+                    setPets(Array.isArray(petsCache) ? petsCache : []);
+                    const { data: weatherCache } = await supabaseFallback.from('weather').select('*');
+                    setWeatherItems(Array.isArray(weatherCache) ? weatherCache : []);
+                    console.log('ItemEncyclopedia: Data loaded from Supabase cache');
+                } catch (cacheErr) {
+                    setError('Failed to fetch encyclopedia data from API and cache');
+                    toast({
+                        title: "Encyclopedia Error",
+                        description: "Failed to load encyclopedia data",
+                        variant: "destructive"
+                    });
                 }
-            });
-            if (!petsResponse.ok) {
-                throw new Error(`Pets API error! status: ${petsResponse.status}`);
             }
-            const petsData = await petsResponse.json();
-            setPets(Array.isArray(petsData) ? petsData : []);
-
-            // Fetch weather data for weather items
-            const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/weather', {
-                headers: {
-                    'Jstudio-key': 'jstudio',
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!weatherResponse.ok) {
-                throw new Error(`Weather API error! status: ${weatherResponse.status}`);
-            }
-            const weatherData = await weatherResponse.json();
-            setWeatherItems(weatherData.weather || []);
-
-            console.log('ItemEncyclopedia: Data loaded successfully');
-
         } catch (error) {
             console.error('ItemEncyclopedia: Failed to fetch data:', error);
             setError('Failed to fetch encyclopedia data');
@@ -432,10 +464,9 @@ export const ItemEncyclopedia = () => {
     const growthMutations = filteredMutations.filter(m => m.category === 'growth');
     const environmentalMutations = filteredMutations.filter(m => m.category === 'environmental');
 
-    // Pet category filters
-    // The API does not provide 'obtainable', so treat all as obtainable or filter by logic if needed
-    const obtainablePets = filteredPets; // or add logic if you have a way to determine this
-    const unobtainablePets: typeof filteredPets = []; // no unobtainable pets in new API
+    // Pet category filters (now all from API)
+    const obtainablePets = filteredPets;
+    const unobtainablePets = [];
     const commonPets = filteredPets.filter(pet => pet.rarity === 'Common');
     const uncommonPets = filteredPets.filter(pet => pet.rarity === 'Uncommon');
     const rarePets = filteredPets.filter(pet => pet.rarity === 'Rare');
@@ -606,117 +637,7 @@ export const ItemEncyclopedia = () => {
         </div>
     );
 
-    // Helper to get pet image path
-    const getPetImage = (pet: { name: string; rarity: string; obtainable: boolean }) => {
-        // Normalize name for file lookup
-        const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-        const rarityFolder = pet.rarity;
-        const base = `/Pets/${pet.obtainable ? 'Obtainable' : 'Unobtainable'}`;
-        let folder = '';
-        switch (rarityFolder) {
-            case 'Common': folder = 'Common'; break;
-            case 'Uncommon': folder = 'Uncommon'; break;
-            case 'Rare': folder = 'Rare'; break;
-            case 'Legendary': folder = 'Legendary'; break;
-            case 'Mythical': folder = 'Mythical'; break;
-            case 'Divine': folder = 'Divine'; break;
-            case 'Unknown': folder = 'Unknown'; break;
-            default: folder = '';
-        }
-        // Map pet name to file name exceptions
-        const nameMap: Record<string, string> = {
-            'Golden Lab': 'GoldenLabPet',
-            'Starfish': 'StarfishIcon',
-            'Crab': 'CrabIcon',
-            'Seagull': 'SeagullIcon',
-            'Black Bunny': 'Black_bunny',
-            'Orange Tabby': 'Orange_tabby',
-            'Sea Turtle': 'SeaTurtle',
-            'Honey Bee': 'HoneyBee',
-            'Spotted Deer': 'Spotteddeer',
-            'Tarantula Hawk': 'Tarantula_Hawk',
-            'Petal Bee': 'Petal_Bee',
-            'Scarlet Macaw': 'scarlet_macow',
-            'Hyacinth Macaw': 'hyacinth_macaw',
-            'Bear Bee': 'bear_bee',
-            'Red Giant Ant': 'red_giant_ant',
-            'Pack Bee': 'pack_bee',
-            'Praying Mantis': 'praying_mantis',
-            'Blood Kiwi': 'blood_kiwi',
-            'Disco Bee': 'disco_bee',
-            'Queen Bee': 'queen_bee',
-            'Night Owl': 'night_owl',
-            'Fennec Fox': 'fennec_fox',
-            'Moth': 'Moth',
-            'Moon Cat': 'Moon_Cat',
-            'Mode': 'mode',
-            'Capybara': 'capybara',
-            'Turtle': 'Turtle',
-            'Peacock': 'peacock',
-            'Ostrich': 'ostrich',
-            'Meerkat': 'meerkat',
-            'Frog': 'frog',
-            'Dog': 'DogPet',
-            'Bunny': 'BunnyPet',
-            'Cat': 'Cat',
-            'Bee': 'Beee',
-            'Chicken': 'Chicken',
-            'Deer': 'Deer',
-            'Monkey': 'Monkey',
-            'Pig': 'Pig',
-            'Rooster': 'Rooster',
-            'Seal': 'Seal',
-            'Flamingo': 'FlamingoIcon',
-            'Wasp': 'Wasp',
-            'Kiwi': 'Kiwi',
-            'Orangutan': 'Orangutan',
-            'Hedgehog': 'Hedgehog',
-            'Squirrel': 'squirrel',
-            'Snail': 'snail',
-            'Hamster': 'hamster',
-            'Grey Mouse': 'grey_mouse',
-            'Brown Mouse': 'brown_mouse',
-            'Caterpillar': 'carterpillar',
-            'Giant Ant': 'giant_ant',
-            'Echo Frog': 'echo_frog',
-            'Butterfly': 'butterfly',
-            'Red Fox': 'red_fox',
-            'Mimic Octopus': 'mimic_octopus',
-            // Unobtainable
-            'Cow': 'cow',
-            'Polar Bear': 'polar_bear',
-            'Sea Otter': 'sea_otter',
-            'Silver Monkey': 'silver_monkey',
-            'Panda': 'panda',
-            'Blood Hedgehog': 'blood_hedgehog',
-            'Chicken Zombie': 'chicken_zombie',
-            'Firefly': 'firefly',
-            'Owl': 'owl',
-            'Golden Bee': 'golden_bee',
-            'Cooked Owl': 'cooked_owl',
-            'Blood Owl': 'blood_owl',
-            'Red Dragon': 'red_dragon',
-        };
-        const extMap: Record<string, string> = {
-            'disco_bee': 'gif',
-            'FlamingoIcon': 'png',
-            'StarfishIcon': 'png',
-            'CrabIcon': 'png',
-            'GoldenLabPet': 'png',
-            'BunnyPet': 'png',
-            'DogPet': 'png',
-            'SeagullIcon': 'png',
-        };
-        let file = nameMap[pet.name] || normalize(pet.name);
-        let ext = extMap[file] || 'png';
-        // Some files are .gif
-        if (file === 'disco_bee') ext = 'gif';
-        // Some folders are missing, fallback to base if needed
-        let path = `/Pets/${pet.obtainable ? 'Obtainable' : 'Unobtainable'}`;
-        if (folder) path += `/${folder}`;
-        path += `/${file}.${ext}`;
-        return path;
-    };
+    // Pet images now come from API, so getPetImage is not needed
 
     const renderPetTable = (petList: typeof pets) => (
         <div className="rounded-md border">
@@ -828,75 +749,53 @@ export const ItemEncyclopedia = () => {
         <Card>
             <CardHeader className="pb-2">
                 <div className="space-y-4">
-                    {/* Header Row */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="text-xl">📚</span>
-                            <CardTitle className="text-2xl">Encyclopedia</CardTitle>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">📚</span>
+                                <CardTitle className="text-2xl">Encyclopedia</CardTitle>
+                                {isAdmin && (
+                                    <Button
+                                        variant="outline"
+                                        className="ml-4"
+                                        disabled={refreshing}
+                                        onClick={async () => {
+                                            setRefreshing(true);
+                                            try {
+                                                // Call backend endpoint to trigger sync
+                                                const resp = await fetch('/api/admin/sync-cache', { method: 'POST' });
+                                                if (!resp.ok) throw new Error('Sync failed');
+                                                toast({ title: 'Cache Updated', description: 'Encyclopedia cache refreshed.' });
+                                                await fetchEncyclopediaData();
+                                            } catch (err) {
+                                                toast({ title: 'Sync Error', description: 'Failed to refresh cache.', variant: 'destructive' });
+                                            } finally {
+                                                setRefreshing(false);
+                                            }
+                                        }}
+                                    >
+                                        {refreshing ? 'Refreshing...' : 'Refresh Cache'}
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                        <Badge variant="secondary" className="h-6 font-medium">
-                            {totalResults.toLocaleString()} results
+                        <Badge variant="secondary" className="h-6">
+                            {filteredItems.length + filteredMutations.length + filteredWeather.length + filteredPets.length} results
                         </Badge>
                     </div>
-
-                    {/* Enhanced Search Bar */}
-                    <div className="relative group">
-                        {/* Search Icon */}
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-gray-400 group-focus-within:text-gray-600" />
-                        </div>
-
+                    <div className="relative">
                         <Input
                             placeholder="Search items, mutations, weather..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-24 bg-gray-50/80 border-gray-200 focus:bg-white focus:border-blue-300 transition-all duration-200"
+                            className="w-full bg-secondary/50 border-0"
                         />
-
-                        {/* Right Side Content */}
-                        <div className="absolute inset-y-0 right-0 flex items-center">
-                            {searchTerm && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleClearSearch}
-                                    className="h-6 w-6 p-0 mr-2 hover:bg-gray-200 rounded-full"
-                                >
-                                    <X className="h-3 w-3" />
-                                </Button>
-                            )}
-
-                            <div className="pr-3 flex items-center pointer-events-none">
-                                <span className="text-muted-foreground text-sm">
-                                    {searchTerm ? (
-                                        <span className="text-blue-600 font-medium">
-                                            {totalResults.toLocaleString()} found
-                                        </span>
-                                    ) : (
-                                        'Type to search...'
-                                    )}
-                                </span>
-                            </div>
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span className="text-muted-foreground text-sm">
+                                {searchTerm ? '755 results' : 'Type to search...'}
+                            </span>
                         </div>
                     </div>
-                    {/* Search Stats (when not searching) */}
-                    {!searchTerm && (
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>Items: {items.length}</span>
-                            <span>Mutations: {mutations.length}</span>
-                            <span>Weather: {weatherItems.length}</span>
-                            <span>Pets: {pets.length}</span>
-                        </div>
-                    )}
-                    {/* Search Stats (when searching) */}
-                    {searchTerm && (
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>Items: {filteredItems.length}</span>
-                            <span>Mutations: {filteredMutations.length}</span>
-                            <span>Weather: {filteredWeather.length}</span>
-                            <span>Pets: {filteredPets.length}</span>
-                        </div>
-                    )}
                 </div>
             </CardHeader>
             <CardContent>
