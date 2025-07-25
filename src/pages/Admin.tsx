@@ -35,43 +35,24 @@ import { BugReportManagement } from '@/components/admin/BugReportManagement';
 
 const ADMIN_DISCORD_ID = "939867069070065714";
 
+import { UserManagement } from "@/components/admin/UserManagement";
+import { SystemAnalytics } from "@/components/admin/SystemAnalytics";
+import { BugReports } from "@/components/admin/BugReports";
+import { ApiManagement } from "@/components/admin/ApiManagement";
+
+type AdminComponent = 'dashboard' | 'users' | 'database' | 'system' | 'api' | 'market' | 'maintenance' | 'bugs';
+
 const Admin = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const {
         settings: maintenanceSettings,
-        toggleMaintenance,
         showMaintenanceAsAdmin,
         setShowMaintenanceAsAdmin,
         isAdmin
     } = useMaintenanceMode();
-    const [users, setUsers] = useState<any[]>([]);
+    const [activeComponent, setActiveComponent] = useState<AdminComponent>('dashboard');
     const [loading, setLoading] = useState(false);
-    const [showUserManagement, setShowUserManagement] = useState(false);
-    const [showDatabaseOverview, setShowDatabaseOverview] = useState(false);
-    const [showSystemAnalytics, setShowSystemAnalytics] = useState(false);
-    const [showApiManagement, setShowApiManagement] = useState(false);
-    const [showMarketAnalytics, setShowMarketAnalytics] = useState(false);
-    const [showMaintenanceMode, setShowMaintenanceMode] = useState(false);
-    const [showBugReports, setShowBugReports] = useState(false);
-    const [dbStats, setDbStats] = useState<any>({});
-    const [analyticsData, setAnalyticsData] = useState<any>({});
-    const [apiData, setApiData] = useState<any>({});
-    const [marketData, setMarketData] = useState<any>(null);
-    const [marketAnalytics, setMarketAnalytics] = useState({
-        totalItems: 0,
-        activeItems: 0,
-        expiredItems: 0,
-        categoryBreakdown: {},
-        averageItemLife: '0h',
-        topCategories: [],
-        timeToExpiration: [],
-        stockLevels: {
-            low: 0,
-            medium: 0,
-            high: 0
-        }
-    });
 
     // Check if user has admin access
     useEffect(() => {
@@ -442,8 +423,45 @@ const Admin = () => {
         return null;
     }
 
-    if (showUserManagement) {
-        return (
+    // Render appropriate component based on active state
+    const renderContent = () => {
+        switch (activeComponent) {
+            case 'users':
+                return <UserManagement onBack={() => setActiveComponent('dashboard')} />;
+            case 'database':
+                return <DatabaseOverview onBack={() => setActiveComponent('dashboard')} />;
+            case 'system':
+                return <SystemAnalytics onBack={() => setActiveComponent('dashboard')} />;
+            case 'api':
+                return <ApiManagement onBack={() => setActiveComponent('dashboard')} />;
+            case 'market':
+                return <MarketAnalytics onBack={() => setActiveComponent('dashboard')} />;
+            case 'maintenance':
+                return (
+                    <MaintenanceMode 
+                        onBack={() => setActiveComponent('dashboard')}
+                        settings={maintenanceSettings}
+                        showMaintenanceAsAdmin={showMaintenanceAsAdmin}
+                        setShowMaintenanceAsAdmin={setShowMaintenanceAsAdmin}
+                        isAdmin={isAdmin}
+                    />
+                );
+            case 'bugs':
+                return <BugReports onBack={() => setActiveComponent('dashboard')} />;
+            case 'dashboard':
+            default:
+                return (
+                    <div className="container mx-auto px-4 py-8">
+                        <Dashboard 
+                            onSectionClick={(section) => setActiveComponent(section as AdminComponent)}
+                            maintenanceSettings={maintenanceSettings}
+                        />
+                    </div>
+                );
+        }
+    };
+
+    return (
             <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
                 {/* Header */}
                 <header className="border-b border-border bg-card/50 backdrop-blur-sm">
@@ -1530,88 +1548,8 @@ const Admin = () => {
             description: "Advanced market data insights",
             color: "text-indigo-500",
             count: "Live"
-        },
-        {
-            icon: AlertTriangle,
-            title: "Maintenance Mode",
-            description: "Enable/disable app components for maintenance",
-            color: "text-amber-500",
-            count: Object.values(maintenanceSettings).filter(Boolean).length.toString()
-        },
-        {
-            icon: Settings,
-            title: "System Configuration",
-            description: "Manage system settings and configurations",
-            color: "text-red-500",
-            count: "Config"
-        }
-    ];
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
-            {/* Header */}
-            <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Link to="/app" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                                <ArrowLeft className="h-4 w-4" />
-                                Back to App
-                            </Link>
-                        </div>
-                        <Badge variant="secondary" className="flex items-center gap-2">
-                            <Shield className="h-3 w-3" />
-                            Admin Panel
-                        </Badge>
-                    </div>
-                </div>
-            </header>
-
             {/* Main Content */}
-            <div className="container mx-auto px-4 py-8">
-                <div className="max-w-6xl mx-auto space-y-8">
-                    {/* Welcome Section */}
-                    <div className="text-center space-y-4">
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                            <Shield className="h-10 w-10 text-primary" />
-                            <h1 className="text-4xl font-bold text-foreground">Admin Dashboard</h1>
-                        </div>
-                        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                            Comprehensive administration panel for managing the Grow A Garden Guru platform
-                        </p>
-                    </div>
-
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Total Users</p>
-                                        <p className="text-2xl font-bold">1,247</p>
-                                    </div>
-                                    <Users className="h-8 w-8 text-blue-500" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">System Uptime</p>
-                                        <p className="text-2xl font-bold">99.9%</p>
-                                    </div>
-                                    <Activity className="h-8 w-8 text-green-500" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">API Requests</p>
-                                        <p className="text-2xl font-bold">24.7K</p>
-                                    </div>
+            {renderContent()}
                                     <Server className="h-8 w-8 text-purple-500" />
                                 </div>
                             </CardContent>
