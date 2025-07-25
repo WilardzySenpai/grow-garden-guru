@@ -1,31 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users } from "lucide-react";
-import { supabase } from '@/lib/supabaseClient';
 
-export const UserManagement = ({ onBack }: { onBack: () => void }) => {
-    const [users, setUsers] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
+interface UserManagementProps {
+    onBack: () => void;
+    users: any[];
+    loading: boolean;
+    fetchUsers: () => void;
+}
 
-    // Fetch users from database
-    const fetchUsers = async () => {
-        setLoading(true);
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setUsers(data || []);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+export const UserManagement = ({ onBack, users, loading, fetchUsers }: UserManagementProps) => {
     useEffect(() => {
         fetchUsers();
     }, []);

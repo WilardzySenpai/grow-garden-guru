@@ -4,7 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 
-export const MarketAnalytics = ({ onBack }: { onBack: () => void }) => {
+interface MarketAnalyticsProps {
+    onBack: () => void;
+    marketAnalytics: any;
+    loading: boolean;
+    fetchMarketAnalytics: () => void;
+}
+
+export const MarketAnalytics = ({ onBack, marketAnalytics, loading, fetchMarketAnalytics }: MarketAnalyticsProps) => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
             <header className="border-b border-border bg-card/50 backdrop-blur-sm">

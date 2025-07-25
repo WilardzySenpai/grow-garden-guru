@@ -446,13 +446,12 @@ const Admin = () => {
                 return <MarketAnalytics onBack={() => setActiveComponent('dashboard')} marketAnalytics={marketAnalytics} loading={loading} fetchMarketAnalytics={fetchMarketAnalytics} />;
             case 'maintenance':
                 return (
-                    <MaintenanceMode 
+                    <MaintenanceMode
                         onBack={() => setActiveComponent('dashboard')}
-                        settings={maintenanceSettings}
+                        settings={maintenanceSettings as Record<string, boolean>}
                         showMaintenanceAsAdmin={showMaintenanceAsAdmin}
                         setShowMaintenanceAsAdmin={setShowMaintenanceAsAdmin}
                         isAdmin={isAdmin}
-                        toggleMaintenance={toggleMaintenance}
                     />
                 );
             case 'bugs':
@@ -469,10 +468,7 @@ const Admin = () => {
                             if (section === 'api') fetchApiAnalytics();
                             if (section === 'market') fetchMarketAnalytics();
                         }}
-                        maintenanceSettings={maintenanceSettings}
-                        users={users}
-                        dbStats={dbStats}
-                        analyticsData={analyticsData}
+                        maintenanceSettings={maintenanceSettings as Record<string, boolean>}
                     />
                 );
         }

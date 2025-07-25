@@ -4,7 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 
-export const ApiManagement = ({ onBack }: { onBack: () => void }) => {
+interface ApiManagementProps {
+    onBack: () => void;
+    apiData: any;
+    loading: boolean;
+    fetchApiAnalytics: () => void;
+}
+
+export const ApiManagement = ({ onBack, apiData, loading, fetchApiAnalytics }: ApiManagementProps) => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
             <header className="border-b border-border bg-card/50 backdrop-blur-sm">

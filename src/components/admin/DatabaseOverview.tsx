@@ -3,7 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 
-export const DatabaseOverview = ({ onBack }: { onBack: () => void }) => {
+interface DatabaseOverviewProps {
+    onBack: () => void;
+    dbStats: any;
+    loading: boolean;
+    fetchDatabaseStats: () => void;
+}
+
+export const DatabaseOverview = ({ onBack, dbStats, loading, fetchDatabaseStats }: DatabaseOverviewProps) => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
             <header className="border-b border-border bg-card/50 backdrop-blur-sm">
