@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { MaintenanceSettings } from "@/hooks/useMaintenanceMode";
 
 interface MaintenanceModeProps {
     onBack: () => void;
-    settings: Record<string, boolean>;
+    settings: MaintenanceSettings;
     showMaintenanceAsAdmin: boolean;
     setShowMaintenanceAsAdmin: (value: boolean) => void;
     isAdmin: boolean;
