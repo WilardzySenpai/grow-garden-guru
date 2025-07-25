@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,9 +19,13 @@ export default function BugReport() {
         external_image_url: '',
     });
 
-    // Redirect if not logged in or is guest
+    useEffect(() => {
+        if (!user || ('isGuest' in user && user.isGuest)) {
+            navigate('/auth');
+        }
+    }, [user, navigate]);
+
     if (!user || ('isGuest' in user && user.isGuest)) {
-        navigate('/auth');
         return null;
     }
 
