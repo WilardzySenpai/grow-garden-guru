@@ -19,33 +19,37 @@ export default function BugReport() {
         external_image_url: '',
     });
 
-    useEffect(() => {
-        if (!user || ('isGuest' in user && user.isGuest)) {
-            navigate('/auth');
-        }
-    }, [user, navigate]);
-
-    if (!user || ('isGuest' in user && user.isGuest)) {
-        return null;
-    }
 
     const handleImageUpload = async (file: File) => {
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+        try {
+            const fileExt = file.name.split('.').pop();
+            const timestamp = Date.now();
+            const randomString = Math.random().toString(36).substring(2, 15);
+            // Use user ID if authenticated, otherwise use 'guest'
+            const userId = user ? user.id : 'guest';
+            const filePath = `${userId}/${timestamp}_${randomString}.${fileExt}`;
 
-        const { error: uploadError, data } = await supabase.storage
-            .from('bug-reports')
-            .upload(filePath, file);
+            const { error: uploadError, data } = await supabase.storage
+                .from('bug-reports')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
 
-        if (uploadError) {
-            throw uploadError;
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                throw new Error('Failed to upload image');
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('bug-reports')
+                .getPublicUrl(filePath);
+
+            return publicUrl;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            throw new Error('Failed to upload image');
         }
-
-        const { data: { publicUrl } } = supabase.storage
-            .from('bug-reports')
-            .getPublicUrl(filePath);
-
-        return publicUrl;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -59,22 +63,30 @@ export default function BugReport() {
                 image_url = await handleImageUpload(formData.image);
             }
 
+            // Use user ID if authenticated, otherwise generate a guest ID
+            const userId = user ? user.id : `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
             const { error } = await supabase
                 .from('bug_reports')
                 .insert({
-                    user_id: user.id,
+                    user_id: userId,
                     message: formData.message,
                     image_url,
                     external_image_url: formData.external_image_url || null,
+                    status: 'pending',
+                    is_guest: !user // Add flag to identify guest submissions
                 });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase error:', error);
+                throw error;
+            }
 
-            toast.success('Bug report submitted successfully');
+            toast.success('Bug report submitted successfully! Thank you for your feedback.');
             setFormData({ message: '', external_image_url: '' });
         } catch (error) {
             console.error('Error submitting bug report:', error);
-            toast.error('Failed to submit bug report');
+            toast.error(error instanceof Error ? error.message : 'Failed to submit bug report');
         } finally {
             setIsSubmitting(false);
         }
