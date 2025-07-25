@@ -21,7 +21,9 @@ import { Badge } from '@/components/ui/badge';
 import { Check, AlertCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function BugReportManagement() {
+import { ArrowLeft } from 'lucide-react';
+
+export function BugReportManagement({ onBack }: { onBack: () => void }) {
     const [reports, setReports] = useState<BugReport[]>([]);
     const [filter, setFilter] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('newest');
