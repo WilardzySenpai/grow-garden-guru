@@ -7,6 +7,7 @@ type MaintenanceSettingsRow = Database['public']['Tables']['maintenance_settings
 const ADMIN_DISCORD_ID = "939867069070065714";
 
 export interface MaintenanceSettings {
+    [key: string]: boolean;
     market: boolean;
     weather: boolean;
     encyclopedia: boolean;

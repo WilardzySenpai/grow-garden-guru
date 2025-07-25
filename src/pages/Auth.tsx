@@ -17,13 +17,6 @@ const Auth = () => {
   const { signInWithDiscord, signInWithEmail, signUpWithEmail, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in (but not if guest)
-  useEffect(() => {
-    if (user && !('isGuest' in user)) {
-      navigate('/app');
-    }
-  }, [user, navigate]);
-
   const handleEmailAuth = async (isSignUp: boolean) => {
     if (!email || !password) {
       toast({
