@@ -606,6 +606,43 @@ export const FruitCalculator = () => {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Calculation Explanation */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>How is this calculated?</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
+                        <h3 className="font-semibold">Fruit Value Calculation</h3>
+                        <p className="text-sm text-muted-foreground">
+                            The total price of a fruit is determined by a formula that takes into account its base value, any variant mutations, other applied mutations, and a friend bonus.
+                        </p>
+                        <div className="bg-muted rounded p-2 mt-2">
+                            <span className="font-mono text-xs">CEILING [ Base Value * Variant * (1 + Sum of Mods - Count of Mods) * Friends * Amount ]</span>
+                        </div>
+                        <ul className="list-disc list-inside text-sm mt-2 space-y-1">
+                            <li><strong>Base Value:</strong> Each fruit has a base value that is calculated based on its weight. This value is not linear and has two tiers.</li>
+                            <li><strong>Variant:</strong> Special variants like 'Gold' or 'Rainbow' apply a significant multiplier to the base value.</li>
+                            <li><strong>Mutations:</strong> Each mutation has its own multiplier. The formula uses a unique calculation where the sum of all mutation multipliers has the number of mutations subtracted from it before being applied.</li>
+                            <li><strong>Friend Bonus:</strong> You get a bonus for each friend who is nearby, up to a maximum.</li>
+                            <li><strong>Amount:</strong> The number of fruits being sold.</li>
+                        </ul>
+                    </div>
+                    <Separator />
+                    <div>
+                        <h3 className="font-semibold">Weight Estimator (Reverse Calculator)</h3>
+                        <p className="text-sm text-muted-foreground">
+                            The weight estimator works by reversing the calculation. It takes your desired final price and works backward to determine the necessary weight to achieve it.
+                        </p>
+                        <ul className="list-disc list-inside text-sm mt-2 space-y-1">
+                            <li>It first calculates the total multiplier from all selected variants, mutations, and bonuses.</li>
+                            <li>Then, it determines the required 'Base Value' by dividing the target price by this total multiplier.</li>
+                            <li>Finally, it reverses the base value calculation to find the corresponding weight. Since the base value has two tiers, the result might be an exact weight or a value less than or equal to the threshold of the first tier.</li>
+                        </ul>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };
