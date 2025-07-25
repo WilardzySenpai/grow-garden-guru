@@ -336,16 +336,16 @@ const Index = () => {
                                                             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
                                                                 <Avatar className="h-10 w-10">
                                                                     <AvatarImage
-                                                                        src={user.user_metadata?.avatar_url}
+                                                                        src={user.user_metadata?.avatar_url as string}
                                                                         alt="Profile"
                                                                     />
                                                                     <AvatarFallback className="text-sm font-medium">
-                                                                        {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                                        {(user.user_metadata?.full_name as string || user.email)?.charAt(0).toUpperCase()}
                                                                     </AvatarFallback>
                                                                 </Avatar>
                                                                 <div className="flex-1 min-w-0">
                                                                     <p className="text-sm font-medium text-foreground truncate">
-                                                                        {user.user_metadata?.full_name || 'User'}
+                                                                        {user.user_metadata?.full_name as string || 'User'}
                                                                     </p>
                                                                     <p className="text-xs text-muted-foreground truncate">
                                                                         {user.email}
@@ -387,7 +387,7 @@ const Index = () => {
                                                         <div className="space-y-3">
                                                             <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
                                                                 <Avatar className="h-10 w-10">
-                                                                    <AvatarImage src={user.avatar_url} alt="Guest" />
+                                                                    <AvatarImage src={user.avatar_url as string} alt="Guest" />
                                                                     <AvatarFallback className="text-sm font-medium">G</AvatarFallback>
                                                                 </Avatar>
                                                                 <div className="flex-1 min-w-0">
@@ -436,14 +436,14 @@ const Index = () => {
                                                     <div className="flex items-center gap-2">
                                                         <Avatar className="h-6 w-6">
                                                             <AvatarImage
-                                                                src={user.user_metadata?.avatar_url}
+                                                                src={user.user_metadata?.avatar_url as string}
                                                                 alt="Profile"
                                                             />
                                                             <AvatarFallback className="text-xs">
-                                                                {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
+                                                                {(user.user_metadata?.full_name as string || user.email)?.charAt(0).toUpperCase()}
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        {user.user_metadata?.full_name || user.email}
+                                                        {user.user_metadata?.full_name as string || user.email}
                                                     </div>
                                                 </Button>
                                             </DropdownMenuTrigger>
@@ -478,7 +478,7 @@ const Index = () => {
                                     ) : user && 'isGuest' in user ? (
                                         <div className="flex items-center gap-2 text-sm">
                                             <Avatar className="h-6 w-6">
-                                                <AvatarImage src={user.avatar_url} alt="Guest" />
+                                                <AvatarImage src={user.avatar_url as string} alt="Guest" />
                                                 <AvatarFallback className="text-xs">G</AvatarFallback>
                                             </Avatar>
                                             <span className="text-muted-foreground">
