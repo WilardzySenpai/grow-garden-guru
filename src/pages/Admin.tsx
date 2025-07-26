@@ -1,4 +1,4 @@
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Shield } from "lucide-react";
@@ -410,16 +410,21 @@ const Admin = () => {
             return;
         }
 
+        // Return to app if user is a guest
+        if ('isGuest' in user) {
+            navigate('/app');
+            return;
+        }
+
         // Check if user is the specific admin user by Discord ID
-        const discordId = 'isGuest' in user ? null : user.user_metadata?.provider_id;
-        if (discordId !== ADMIN_DISCORD_ID) {
+        if (user.user_metadata?.provider_id !== ADMIN_DISCORD_ID) {
             navigate('/app');
             return;
         }
     }, [user, navigate]);
 
     // Return early if user doesn't have access
-    if (!user || ('isGuest' in user) || user.user_metadata?.provider_id !== ADMIN_DISCORD_ID) {
+    if (!user || 'isGuest' in user || !('user_metadata' in user) || user.user_metadata?.provider_id !== ADMIN_DISCORD_ID) {
         return null;
     }
 
