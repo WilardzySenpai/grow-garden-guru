@@ -55,7 +55,7 @@ const Index = () => {
     const [activeTab, setActiveTab] = useState('market');
     const [notifications, setNotifications] = useState<any[]>([]);
     const { user, signOut, loading } = useAuth();
-    const { isInMaintenance } = useMaintenanceMode();
+    const { isInMaintenance, settings, showMaintenanceAsAdmin } = useMaintenanceMode();
 
     // Get user ID for API calls
     const getUserId = () => {

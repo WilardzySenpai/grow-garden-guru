@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { toast } from '@/components/ui/sonner';
 
 type MaintenanceSettingsRow = Database['public']['Tables']['maintenance_settings']['Row'];
 const ADMIN_DISCORD_ID = "939867069070065714";
@@ -104,6 +105,12 @@ export const useMaintenanceMode = () => {
         }
     };
 
+    const isInMaintenance = (service: string) => {
+        if (showMaintenanceAsAdmin) return true;
+        if (!settings.enabled) return false;
+        return settings.affectedServices.includes(service);
+    };
+
     return {
         settings,
         loading,
@@ -111,5 +118,6 @@ export const useMaintenanceMode = () => {
         showMaintenanceAsAdmin,
         setShowMaintenanceAsAdmin,
         isAdmin,
+        isInMaintenance,
     };
 };
