@@ -7,21 +7,21 @@ type MaintenanceSettingsRow = Database['public']['Tables']['maintenance_settings
 const ADMIN_DISCORD_ID = "939867069070065714";
 
 export interface MaintenanceSettings {
-    market: boolean;
-    weather: boolean;
-    encyclopedia: boolean;
-    calculator: boolean;
-    system: boolean;
-    notifications: boolean;
+    enabled: boolean;
+    plannedEndTime: string | null;
+    message: string;
+    lastUpdated: string;
+    affectedServices: string[];
+    allowAdminAccess: boolean;
 }
 
 const defaultSettings: MaintenanceSettings = {
-    market: false,
-    weather: false,
-    encyclopedia: false,
-    calculator: false,
-    system: false,
-    notifications: false,
+    enabled: false,
+    plannedEndTime: null,
+    message: "The system is currently down for maintenance. We'll be back shortly.",
+    lastUpdated: new Date().toISOString(),
+    affectedServices: ['api', 'database', 'auth', 'notifications'],
+    allowAdminAccess: true,
 };
 
 export const useMaintenanceMode = () => {
@@ -37,16 +37,22 @@ export const useMaintenanceMode = () => {
         try {
             const { data, error } = await supabase
                 .from('maintenance_settings')
-                .select('market, weather, encyclopedia, calculator, system, notifications')
+                .select('enabled, planned_end_time, message, last_updated, affected_services, allow_admin_access')
                 .single();
 
-            if (error) {
-                throw error;
-            }
+            if (error) throw error;
 
-            setSettings(data as MaintenanceSettings);
+            setSettings({
+                enabled: data.enabled,
+                plannedEndTime: data.planned_end_time,
+                message: data.message,
+                lastUpdated: data.last_updated,
+                affectedServices: data.affected_services,
+                allowAdminAccess: data.allow_admin_access,
+            });
         } catch (error) {
             console.error('Error fetching maintenance settings:', error);
+            // It's safer to return default settings on error
             setSettings(defaultSettings);
         } finally {
             setLoading(false);
@@ -79,63 +85,29 @@ export const useMaintenanceMode = () => {
     }, []);
 
     const updateSettings = async (newSettings: Partial<MaintenanceSettings>) => {
-        if (!user?.id) {
-            throw new Error('User must be logged in to update maintenance settings');
+        if (!isAdmin) {
+            toast.error("You don't have permission to perform this action.");
+            return;
         }
 
         try {
-            // There's only one row for settings, so we can update it directly.
-            // A 'match' clause is safer than a general update.
-            const { data: settingsList, error: fetchError } = await supabase
-                .from('maintenance_settings')
-                .select('id')
-                .limit(1);
-
-            if (fetchError || !settingsList || settingsList.length === 0) {
-                throw new Error('Could not fetch maintenance settings to update.');
-            }
-
-            const settingsId = settingsList[0].id;
-
             const { error } = await supabase
                 .from('maintenance_settings')
-                .update({
-                    ...newSettings,
-                    updated_by: user.id,
-                    updated_at: new Date().toISOString(),
-                })
-                .match({ id: settingsId });
+                .update(newSettings)
+                .eq('id', 1); // Assuming there's a single row with ID 1
 
-            if (error) {
-                throw error;
-            }
-
-            // The subscription will handle updating the local state
+            if (error) throw error;
+            toast.success('Maintenance settings updated!');
         } catch (error) {
             console.error('Error updating maintenance settings:', error);
-            throw error;
+            toast.error('Failed to update settings.');
         }
-    };
-
-    const toggleMaintenance = async (component: keyof MaintenanceSettings) => {
-        const newSettings = { ...settings, [component]: !settings[component] };
-        setSettings(newSettings);
-        await updateSettings({ [component]: newSettings[component] });
-    };
-
-    const isInMaintenance = (component: keyof MaintenanceSettings) => {
-        if (isAdmin && !showMaintenanceAsAdmin) {
-            return false;
-        }
-        return settings[component];
     };
 
     return {
         settings,
-        updateSettings,
-        toggleMaintenance,
-        isInMaintenance,
         loading,
+        updateSettings,
         showMaintenanceAsAdmin,
         setShowMaintenanceAsAdmin,
         isAdmin,

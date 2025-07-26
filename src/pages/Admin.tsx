@@ -307,7 +307,7 @@ const Admin = () => {
     };
 
     // Fetch market analytics data from WebSocket
-    const fetchMarketAnalytics = () => {
+    const fetchMarketAnalytics = async () => {
         setLoading(true);
         try {
             // Connect to WebSocket for real-time market data

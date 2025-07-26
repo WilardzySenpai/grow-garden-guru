@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 
 import { ArrowLeft } from 'lucide-react';
 
-export function BugReportManagement({ onBack }: { onBack: () => void }) {
+export function BugReportManagement() {
     const [reports, setReports] = useState<BugReport[]>([]);
     const [filter, setFilter] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('newest');
@@ -98,14 +98,6 @@ export function BugReportManagement({ onBack }: { onBack: () => void }) {
 
     return (
         <div className="space-y-4">
-            <Button
-                variant="ghost"
-                className="mb-4"
-                onClick={onBack}
-            >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-            </Button>
             <div className="flex gap-4">
                 <Select value={filter} onValueChange={setFilter}>
                     <SelectTrigger className="w-[180px]">
