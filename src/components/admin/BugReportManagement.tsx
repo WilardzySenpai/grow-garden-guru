@@ -98,6 +98,14 @@ export function BugReportManagement({ onBack }: { onBack: () => void }) {
 
     return (
         <div className="space-y-4">
+            <Button
+                variant="ghost"
+                className="mb-4"
+                onClick={onBack}
+            >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+            </Button>
             <div className="flex gap-4">
                 <Select value={filter} onValueChange={setFilter}>
                     <SelectTrigger className="w-[180px]">

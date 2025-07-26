@@ -1,43 +1,18 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-    Shield,
-    Users,
-    Database,
-    Settings,
-    Activity,
-    ArrowLeft,
-    BarChart3,
-    Server,
-    AlertTriangle,
-    Power,
-    PowerOff,
-    Bug,
-} from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useNavigate, Link } from 'react-router-dom';
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Shield } from "lucide-react";
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
-import { BugReportManagement } from '@/components/admin/BugReportManagement';
-import { UserManagement } from "@/components/admin/UserManagement";
-import { SystemAnalytics } from "@/components/admin/SystemAnalytics";
-import { ApiManagement } from "@/components/admin/ApiManagement";
-import { DatabaseOverview } from "@/components/admin/DatabaseOverview";
-import { MarketAnalytics } from "@/components/admin/MarketAnalytics";
-import { MaintenanceMode } from "@/components/admin/MaintenanceMode";
-import { Dashboard } from "@/components/admin/Dashboard";
+import { useEffect, useState } from 'react';
+import { UserManagement } from '@/components/admin/UserManagement';
+import { SystemAnalytics } from '@/components/admin/SystemAnalytics';
+import { DatabaseOverview } from '@/components/admin/DatabaseOverview';
+import { ApiManagement } from '@/components/admin/ApiManagement';
+import { MarketAnalytics } from '@/components/admin/MarketAnalytics';
+import { MaintenanceMode } from '@/components/admin/MaintenanceMode';
+import { BugReports } from '@/components/admin/BugReports';
+import { Dashboard } from '@/components/admin/Dashboard';
+import { supabase } from '@/lib/supabaseClient';
 
 const ADMIN_DISCORD_ID = "939867069070065714";
 
@@ -50,32 +25,34 @@ const Admin = () => {
         settings: maintenanceSettings,
         showMaintenanceAsAdmin,
         setShowMaintenanceAsAdmin,
-        isAdmin,
-        toggleMaintenance,
+        isAdmin
     } = useMaintenanceMode();
+
     const [activeComponent, setActiveComponent] = useState<AdminComponent>('dashboard');
     const [loading, setLoading] = useState(false);
-    const [users, setUsers] = useState<any[]>([]);
-    const [dbStats, setDbStats] = useState<any>({});
+    const [users, setUsers] = useState<Array<{
+        id: string;
+        display_name: string;
+        discord_id: string;
+        avatar_url: string;
+        created_at: string;
+        updated_at: string;
+    }>>([]);
+
+    // Users state and data fetching
+    const [dbStats, setDbStats] = useState({
+        totalProfiles: 0,
+        recentProfiles: 0,
+        latestProfiles: [],
+        tablesCount: 0,
+        healthStatus: 'Unknown'
+    });
+
+    // Analytics data state
     const [analyticsData, setAnalyticsData] = useState<any>({});
     const [apiData, setApiData] = useState<any>({});
     const [marketData, setMarketData] = useState<any>({});
     const [marketAnalytics, setMarketAnalytics] = useState<any>({});
-
-    // Check if user has admin access
-    useEffect(() => {
-        if (!user) {
-            navigate('/auth');
-            return;
-        }
-
-        // Check if user is the specific admin user by Discord ID
-        const discordId = 'isGuest' in user ? null : user.user_metadata?.provider_id;
-        if (discordId !== ADMIN_DISCORD_ID) {
-            navigate('/app');
-            return;
-        }
-    }, [user, navigate]);
 
     // Fetch users from database
     const fetchUsers = async () => {
@@ -426,6 +403,21 @@ const Admin = () => {
         }
     };
 
+    // Check if user has admin access
+    useEffect(() => {
+        if (!user) {
+            navigate('/auth');
+            return;
+        }
+
+        // Check if user is the specific admin user by Discord ID
+        const discordId = 'isGuest' in user ? null : user.user_metadata?.provider_id;
+        if (discordId !== ADMIN_DISCORD_ID) {
+            navigate('/app');
+            return;
+        }
+    }, [user, navigate]);
+
     // Return early if user doesn't have access
     if (!user || ('isGuest' in user) || user.user_metadata?.provider_id !== ADMIN_DISCORD_ID) {
         return null;
@@ -435,18 +427,53 @@ const Admin = () => {
     const renderContent = () => {
         switch (activeComponent) {
             case 'users':
-                return <UserManagement onBack={() => setActiveComponent('dashboard')} users={users} loading={loading} fetchUsers={fetchUsers} />;
+                return (
+                    <UserManagement
+                        onBack={() => setActiveComponent('dashboard')}
+                        users={users}
+                        loading={loading}
+                        fetchUsers={fetchUsers}
+                    />
+                );
             case 'database':
-                return <DatabaseOverview onBack={() => setActiveComponent('dashboard')} dbStats={dbStats} loading={loading} fetchDatabaseStats={fetchDatabaseStats} />;
+                return (
+                    <DatabaseOverview
+                        onBack={() => setActiveComponent('dashboard')}
+                        dbStats={dbStats}
+                        loading={loading}
+                        fetchDatabaseStats={fetchDatabaseStats}
+                    />
+                );
             case 'system':
-                return <SystemAnalytics onBack={() => setActiveComponent('dashboard')} analyticsData={analyticsData} loading={loading} fetchSystemAnalytics={fetchSystemAnalytics} />;
+                return (
+                    <SystemAnalytics
+                        onBack={() => setActiveComponent('dashboard')}
+                        analyticsData={analyticsData}
+                        loading={loading}
+                        fetchSystemAnalytics={fetchSystemAnalytics}
+                    />
+                );
             case 'api':
-                return <ApiManagement onBack={() => setActiveComponent('dashboard')} apiData={apiData} loading={loading} fetchApiAnalytics={fetchApiAnalytics} />;
+                return (
+                    <ApiManagement
+                        onBack={() => setActiveComponent('dashboard')}
+                        apiData={apiData}
+                        loading={loading}
+                        fetchApiAnalytics={fetchApiAnalytics}
+                    />
+                );
             case 'market':
-                return <MarketAnalytics onBack={() => setActiveComponent('dashboard')} marketAnalytics={marketAnalytics} loading={loading} fetchMarketAnalytics={fetchMarketAnalytics} />;
+                return (
+                    <MarketAnalytics
+                        onBack={() => setActiveComponent('dashboard')}
+                        marketAnalytics={marketAnalytics}
+                        loading={loading}
+                        fetchMarketAnalytics={fetchMarketAnalytics}
+                    />
+                );
             case 'maintenance':
                 return (
-                    <MaintenanceMode
+                    <MaintenanceMode 
                         onBack={() => setActiveComponent('dashboard')}
                         settings={maintenanceSettings}
                         showMaintenanceAsAdmin={showMaintenanceAsAdmin}
@@ -455,30 +482,42 @@ const Admin = () => {
                     />
                 );
             case 'bugs':
-                return <BugReportManagement onBack={() => setActiveComponent('dashboard')} />;
+                return <BugReports onBack={() => setActiveComponent('dashboard')} />;
             case 'dashboard':
             default:
                 return (
-                    <Dashboard
-                        onSectionClick={(section) => {
-                            setActiveComponent(section as AdminComponent);
-                            if (section === 'users') fetchUsers();
-                            if (section === 'database') fetchDatabaseStats();
-                            if (section === 'system') fetchSystemAnalytics();
-                            if (section === 'api') fetchApiAnalytics();
-                            if (section === 'market') fetchMarketAnalytics();
-                        }}
-                        maintenanceSettings={maintenanceSettings}
-                    />
+                    <div className="container mx-auto px-4 py-8">
+                        <Dashboard 
+                            onSectionClick={(section) => setActiveComponent(section as AdminComponent)}
+                            maintenanceSettings={maintenanceSettings}
+                        />
+                    </div>
                 );
         }
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
-            <div className="container mx-auto px-4 py-8">
-                {renderContent()}
-            </div>
+            {/* Header */}
+            <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+                <div className="container mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Link to="/app" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                                <ArrowLeft className="h-4 w-4" />
+                                Back to App
+                            </Link>
+                        </div>
+                        <Badge variant="secondary" className="flex items-center gap-2">
+                            <Shield className="h-3 w-3" />
+                            Admin Panel
+                        </Badge>
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            {renderContent()}
         </div>
     );
 };
