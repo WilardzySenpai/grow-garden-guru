@@ -27,12 +27,17 @@ ON bug_reports FOR SELECT
 TO authenticated
 USING (auth.uid()::text = user_id);
 
--- Admin can view all bug reports
+-- Admin can view all bug reports (using Discord ID check)
 CREATE POLICY "Admins can view all bug reports"
 ON bug_reports FOR SELECT
 TO authenticated
 USING (
-    current_setting('request.jwt.claims.role', true) = 'admin'
+    EXISTS (
+        SELECT 1
+        FROM auth.users
+        WHERE auth.users.id = auth.uid()
+        AND auth.users.raw_user_meta_data->>'provider_id' = '939867069070065714'
+    )
 );
 
 -- Admin can update bug reports
