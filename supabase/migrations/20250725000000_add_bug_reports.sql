@@ -32,11 +32,7 @@ CREATE POLICY "Admins can view all bug reports"
 ON bug_reports FOR SELECT
 TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM auth.users
-        WHERE auth.users.id = auth.uid()
-        AND auth.users.role = 'admin'
-    )
+    current_setting('request.jwt.claims.role', true) = 'admin'
 );
 
 -- Admin can update bug reports
@@ -44,11 +40,7 @@ CREATE POLICY "Admins can update bug reports"
 ON bug_reports FOR UPDATE
 TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM auth.users
-        WHERE auth.users.id = auth.uid()
-        AND auth.users.role = 'admin'
-    )
+    current_setting('request.jwt.claims.role', true) = 'admin'
 );
 
 -- Storage Policies
