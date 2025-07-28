@@ -63,4 +63,11 @@ CREATE POLICY "Anyone can view bug-reports files"
 ON storage.objects FOR SELECT
 TO anon, authenticated
 USING (bucket_id = 'bug-reports');
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+
+-- Allow guests to view their own bug reports
+CREATE POLICY "Guests can view their own bug reports"
+ON bug_reports FOR SELECT
+TO anon
+USING (
+    is_guest = true AND user_id = current_setting('request.headers.x-client-id', true)
+);
