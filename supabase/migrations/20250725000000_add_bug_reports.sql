@@ -27,28 +27,19 @@ ON bug_reports FOR SELECT
 TO authenticated
 USING (auth.uid()::text = user_id);
 
--- Admin can view all bug reports
+-- Admin policies using Discord ID from user metadata
 CREATE POLICY "Admins can view all bug reports"
 ON bug_reports FOR SELECT
 TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM auth.users
-        WHERE auth.users.id = auth.uid()
-        AND auth.users.role = 'admin'
-    )
+    (auth.jwt() -> 'user_metadata' ->> 'provider_id') = '939867069070065714'
 );
 
--- Admin can update bug reports
 CREATE POLICY "Admins can update bug reports"
 ON bug_reports FOR UPDATE
 TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM auth.users
-        WHERE auth.users.id = auth.uid()
-        AND auth.users.role = 'admin'
-    )
+    (auth.jwt() -> 'user_metadata' ->> 'provider_id') = '939867069070065714'
 );
 
 -- Storage Policies
@@ -62,4 +53,4 @@ WITH CHECK (bucket_id = 'bug-reports');
 CREATE POLICY "Anyone can view bug-reports files"
 ON storage.objects FOR SELECT
 TO anon, authenticated
-USING (bucket_id = 'bug-reports');                                                                             
+USING (bucket_id = 'bug-reports');
