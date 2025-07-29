@@ -14,6 +14,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
 import BugReport from "./pages/BugReport";
+import Hub from "./pages/Hub";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
                         <Routes>
                             <Route path="/" element={<Home />} />
                             <Route path="/app" element={<Index />} />
+                            <Route path="/hub" element={<Hub />} />
                             <Route path="/auth" element={<Auth />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/admin" element={<Admin />} />
