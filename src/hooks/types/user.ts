@@ -7,9 +7,4 @@ export interface UserMetadata {
 
 export interface AppUser extends User {
     user_metadata: UserMetadata;
-    app_metadata: {
-        role?: 'admin';
-        [key: string]: unknown;
-    };
-    is_admin?: boolean;
 }
