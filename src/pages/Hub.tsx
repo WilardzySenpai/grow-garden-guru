@@ -144,6 +144,15 @@ const Hub = () => {
                         </CardContent>
                     </Card>
                 </div>
+
+                <div className="mt-8 text-center">
+                    <h3 className="text-lg mb-4">Need Help?</h3>
+                    <div className="flex justify-center gap-4">
+                        <Link to="/faq" className="text-primary hover:underline">FAQ</Link>
+                        <span>•</span>
+                        <Link to="/bug-report" className="text-primary hover:underline">Report Bug</Link>
+                    </div>
+                </div>
             </main>
         </div>
     );
