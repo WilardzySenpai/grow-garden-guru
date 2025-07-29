@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +9,20 @@ import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, ArrowRight, Star
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Home = () => {
+    const { user, loading } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!loading && user && !('isGuest' in user)) {
+            navigate('/hub');
+        }
+    }, [user, loading, navigate]);
+
+    if (loading || (user && !('isGuest' in user))) {
+        // Render a loading indicator or null while checking auth state or redirecting
+        return <div>Loading...</div>;
+    }
+
     const features = [
         {
             icon: BarChart3,
