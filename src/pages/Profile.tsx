@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Leaf, ArrowLeft, User, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { maskEmail } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 
@@ -192,7 +193,7 @@ const Profile = () => {
               <Input
                 id="email"
                 type="email"
-                value={user.email || ''}
+                value={maskEmail(user.email || '')}
                 disabled
                 className="bg-muted"
               />
