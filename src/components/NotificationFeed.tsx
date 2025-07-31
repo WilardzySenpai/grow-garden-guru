@@ -20,63 +20,37 @@ interface NotificationFeedProps {
 }
 
 export const NotificationFeed = ({ notifications: wsNotifications }: NotificationFeedProps) => {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>(wsNotifications.map((wsNotif, index) => ({
+        id: `ws-${Date.now()}-${index}`,
+        type: 'info' as const,
+        title: wsNotif.title || 'Game Update',
+        message: wsNotif.message || JSON.stringify(wsNotif),
+        timestamp: new Date(wsNotif.timestamp * 1000 || Date.now()),
+        read: false
+    })));
 
-    // Process WebSocket notifications when they come in
     useEffect(() => {
-        if (wsNotifications && wsNotifications.length > 0) {
-            const newNotifications = wsNotifications.map((wsNotif, index) => ({
-                id: `ws-${Date.now()}-${index}`,
-                type: 'info' as const,
-                title: wsNotif.title || 'Game Update',
-                message: wsNotif.message || JSON.stringify(wsNotif),
-                timestamp: new Date(),
-                read: false
-            }));
+        const newNotifications = wsNotifications.map((wsNotif, index) => ({
+            id: `ws-${Date.now()}-${index}`,
+            type: 'info' as const,
+            title: wsNotif.title || 'Game Update',
+            message: wsNotif.message || JSON.stringify(wsNotif),
+            timestamp: new Date(wsNotif.timestamp * 1000 || Date.now()),
+            read: false
+        }));
 
-            setNotifications(prev => [...newNotifications, ...prev]);
+        setNotifications(newNotifications);
 
-            // Show toast for the first new notification
-            if (newNotifications.length > 0) {
+        if (newNotifications.length > 0) {
+            const lastNotification = newNotifications[0];
+            if (lastNotification.title !== 'System Connected') {
                 toast({
-                    title: newNotifications[0].title,
-                    description: newNotifications[0].message,
+                    title: lastNotification.title,
+                    description: lastNotification.message,
                 });
             }
         }
     }, [wsNotifications]);
-
-    // Add some initial notifications for demonstration
-    useEffect(() => {
-        const initialNotifications: Notification[] = [
-            {
-                id: '1',
-                type: 'success',
-                title: 'System Connected',
-                message: 'Successfully connected to Grow A Garden Guru system.',
-                timestamp: new Date(Date.now() - 1 * 60 * 1000),
-                read: false
-            },
-            {
-                id: '2',
-                type: 'info',
-                title: 'Market Data Loaded',
-                message: 'Market board has been populated with current stock information.',
-                timestamp: new Date(Date.now() - 2 * 60 * 1000),
-                read: false
-            },
-            {
-                id: '3',
-                type: 'info',
-                title: 'Weather Data Synchronized',
-                message: 'Weather information has been updated from the API.',
-                timestamp: new Date(Date.now() - 5 * 60 * 1000),
-                read: true
-            }
-        ];
-
-        setNotifications(prev => prev.length === 0 ? initialNotifications : prev);
-    }, []);
 
     const markAsRead = (id: string) => {
         setNotifications(prev =>
