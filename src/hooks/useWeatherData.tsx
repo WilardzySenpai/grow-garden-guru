@@ -10,6 +10,7 @@ export const useWeatherData = (userId: string | null): WeatherDataHook => {
 	const [weatherData, setWeatherData] = useState<any>(null);
 	const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
 	const wsRef = useRef<WebSocket | null>(null);
+	const JSTUDIO_KEY = import.meta.env.VITE_JSTUDIO_KEY;
 
 	useEffect(() => {
 		if (!userId) {
@@ -21,7 +22,7 @@ export const useWeatherData = (userId: string | null): WeatherDataHook => {
 		const connectWebSocket = () => {
 		try {
 			setWsStatus('connecting');
-			const ws = new WebSocket(`wss://websocket.joshlei.com/growagarden?user_id=${encodeURIComponent(userId)}`);
+			const ws = new WebSocket(`wss://websocket.joshlei.com/growagarden?jstudio-key=${JSTUDIO_KEY}`);
 			wsRef.current = ws;
 
 			ws.onopen = () => {
