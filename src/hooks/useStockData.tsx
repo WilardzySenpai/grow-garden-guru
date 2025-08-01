@@ -50,7 +50,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
             if (debug) console.log('[Stock Data] Fetching from API...');
             const response = await fetch('https://api.joshlei.com/v2/growagarden/stock', {
                 headers: {
-                    'Jstudio-key': 'jstudio',
+                    'Jstudio-key': import.meta.env.VITE_JSTUDIO_KEY,
                     'Content-Type': 'application/json'
                 }
             });

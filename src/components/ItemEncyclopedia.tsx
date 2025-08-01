@@ -69,7 +69,7 @@ export const ItemEncyclopedia = () => {
             try {
                 const itemsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
                     headers: {
-                        'Jstudio-key': 'jstudio',
+                        'Jstudio-key': import.meta.env.VITE_JSTUDIO_KEY,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -78,7 +78,7 @@ export const ItemEncyclopedia = () => {
 
                 const petsResponse = await fetch('https://api.joshlei.com/v2/growagarden/info?type=pet', {
                     headers: {
-                        'Jstudio-key': 'jstudio',
+                        'Jstudio-key': import.meta.env.VITE_JSTUDIO_KEY,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -87,7 +87,7 @@ export const ItemEncyclopedia = () => {
 
                 const weatherResponse = await fetch('https://api.joshlei.com/v2/growagarden/weather', {
                     headers: {
-                        'Jstudio-key': 'jstudio',
+                        'Jstudio-key': import.meta.env.VITE_JSTUDIO_KEY,
                         'Content-Type': 'application/json'
                     }
                 });

@@ -26,7 +26,7 @@ const endpoints = [
 async function syncTable(endpoint) {
   const response = await fetch(endpoint.url, {
     headers: {
-      'Jstudio-key': 'jstudio',
+      'Jstudio-key': import.meta.env.VITE_JSTUDIO_KEY,
       'Content-Type': 'application/json',
     },
   });

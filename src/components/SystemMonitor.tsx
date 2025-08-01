@@ -17,7 +17,7 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
                 setApiStatus('checking');
                 const response = await fetch('https://api.joshlei.com/v2/growagarden/info/', {
                     headers: {
-                        'Jstudio-key': 'jstudio',
+                        'Jstudio-key': import.meta.env.VITE_JSTUDIO_KEY,
                         'Content-Type': 'application/json'
                     }
                 });
