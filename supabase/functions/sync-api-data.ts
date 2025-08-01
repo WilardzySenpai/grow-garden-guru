@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://emufdclxlqzwhlcsvtjt.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = "sb_publishable_QbVhwGOpDuT1Kws0DH1yBg_6zpkiODs"; // Replace with your actual service role key
+const VITE_JSTUDIO_KEY = "js_0873889589a79e3b125c67f4e85e747717e61e9c9daf7f7770acb39cc148e0b1"
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const endpoints = [
@@ -26,7 +27,7 @@ const endpoints = [
 async function syncTable(endpoint: typeof endpoints[0]) {
   const response = await fetch(endpoint.url, {
     headers: {
-      'Jstudio-key': import.meta.env.VITE_JSTUDIO_KEY,
+      'Jstudio-key': VITE_JSTUDIO_KEY,
       'Content-Type': 'application/json',
     },
   });
