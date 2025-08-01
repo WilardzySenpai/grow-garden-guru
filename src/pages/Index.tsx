@@ -35,6 +35,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 import { useStockData } from '@/hooks/useStockData';
 import { useWebSocketData } from '@/hooks/useWebSocketData';
+import { useWeatherData } from '@/hooks/useWeatherData';
 
 import { MarketBoard } from '@/components/MarketBoard';
 import { WeatherStatus } from '@/components/WeatherStatus';
@@ -74,7 +75,8 @@ const Index = () => {
 
     // Use separate hooks for stock data and weather data
     const { marketData, loading: stockLoading, error: stockError, refetch } = useStockData(userId);
-    const { weatherData, notifications: wsNotifications, travelingMerchantStock, wsStatus } = useWebSocketData(userId);
+    const { weatherData, error: weatherError } = useWeatherData();
+    const { notifications: wsNotifications, travelingMerchantStock, wsStatus } = useWebSocketData(userId);
 
     // Update notifications from API calls or other sources
     useEffect(() => {

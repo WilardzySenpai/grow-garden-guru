@@ -114,6 +114,35 @@ export interface Database {
           created_at?: string;
         };
       };
+      weather: {
+        Row: {
+          weather_id: string;
+          weather_name: string;
+          icon: string;
+          duration: number;
+          active: boolean;
+          start_duration_unix: number;
+          end_duration_unix: number;
+        };
+        Insert: {
+          weather_id: string;
+          weather_name: string;
+          icon: string;
+          duration: number;
+          active: boolean;
+          start_duration_unix: number;
+          end_duration_unix: number;
+        };
+        Update: {
+          weather_id?: string;
+          weather_name?: string;
+          icon?: string;
+          duration?: number;
+          active?: boolean;
+          start_duration_unix?: number;
+          end_duration_unix?: number;
+        };
+      };
     };
   };
 }
