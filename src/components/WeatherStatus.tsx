@@ -2,10 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Database } from '@/types/database.types';
 
-type Weather = Database['public']['Tables']['weather']['Row'];
+type WeatherStatus = Database['public']['Tables']['weather_status']['Row'];
 
 interface WeatherStatusProps {
-    weatherData: Weather[];
+    weatherData: WeatherStatus[];
     loading: boolean;
     error: string | null;
 }
@@ -14,14 +14,15 @@ export const WeatherStatus = ({ weatherData, loading, error }: WeatherStatusProp
     const activeWeathers = weatherData.filter(w => w.active);
     const forecastWeathers = weatherData.filter(w => !w.active).slice(0, 6);
 
-    const formatDuration = (seconds: number) => {
+    const formatDuration = (seconds: number | null) => {
+        if (seconds === null) return 'N/A';
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
     };
 
-    const formatTimeRemaining = (endUnix: number) => {
-        if (endUnix === 0) return 'No end time';
+    const formatTimeRemaining = (endUnix: number | null) => {
+        if (endUnix === null || endUnix === 0) return 'No end time';
 
         const now = Math.floor(Date.now() / 1000);
         const remaining = endUnix - now;
@@ -69,13 +70,13 @@ export const WeatherStatus = ({ weatherData, loading, error }: WeatherStatusProp
                     {activeWeathers.length > 0 ? (
                         <div className="space-y-6">
                             {activeWeathers.map((weather) => (
-                                <div key={weather.weather_id} className="text-center space-y-4">
+                                <div key={weather.id} className="text-center space-y-4">
                                     <div className="flex justify-center">
                                         <div className="text-6xl">
                                             {typeof weather.icon === 'string' && weather.icon.startsWith('http') ? (
                                                 <img
                                                     src={weather.icon}
-                                                    alt={weather.weather_name}
+                                                    alt={weather.weather_name ?? 'Weather icon'}
                                                     className="w-16 h-16 object-contain mx-auto"
                                                     onError={(e) => {
                                                         e.currentTarget.style.display = 'none';
@@ -87,10 +88,10 @@ export const WeatherStatus = ({ weatherData, loading, error }: WeatherStatusProp
                                         </div>
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-semibold">{weather.weather_name}</h3>
+                                        <h3 className="text-xl font-semibold">{weather.weather_name ?? 'Unknown Weather'}</h3>
                                         <Badge variant="default" className="mt-2">Active</Badge>
                                     </div>
-                                    {weather.end_duration_unix > 0 && (
+                                    {weather.end_duration_unix !== null && weather.end_duration_unix > 0 && (
                                         <div className="text-sm text-muted-foreground">
                                             {formatTimeRemaining(weather.end_duration_unix)}
                                         </div>
@@ -121,12 +122,12 @@ export const WeatherStatus = ({ weatherData, loading, error }: WeatherStatusProp
                 <CardContent>
                     <div className="space-y-3">
                         {forecastWeathers.map((weather) => (
-                            <div key={weather.weather_id} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
+                            <div key={weather.id} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
                                 <div className="flex items-center gap-3">
                                     {typeof weather.icon === 'string' && weather.icon.startsWith('http') ? (
                                         <img
                                             src={weather.icon}
-                                            alt={weather.weather_name}
+                                            alt={weather.weather_name ?? 'Weather icon'}
                                             className="w-6 h-6 object-contain"
                                             onError={(e) => {
                                                 e.currentTarget.style.display = 'none';
@@ -135,7 +136,7 @@ export const WeatherStatus = ({ weatherData, loading, error }: WeatherStatusProp
                                     ) : (
                                         <span className="text-xl">🌤️</span>
                                     )}
-                                    <span className="font-medium">{weather.weather_name}</span>
+                                    <span className="font-medium">{weather.weather_name ?? 'Unknown Weather'}</span>
                                 </div>
                                 <div className="text-sm text-muted-foreground">
                                     {formatDuration(weather.duration)}
