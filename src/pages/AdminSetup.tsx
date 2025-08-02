@@ -10,72 +10,72 @@ import { toast } from "sonner";
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 
 export default function AdminSetup() {
-  const [userId, setUserId] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { user } = useAuth();
+    const [userId, setUserId] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const { user } = useAuth();
 
-  // Check if user is admin using your maintenance mode hook
-  const { isAdmin } = useMaintenanceMode();
+    // Check if user is admin using your maintenance mode hook
+    const { isAdmin } = useMaintenanceMode();
 
-  // Redirect if not an admin
-  if (!isAdmin) {
-    navigate('/');
-    return null;
-  }
-
-  const handleSetAdmin = async () => {
-    if (!userId) {
-      toast.error('Please enter a user ID');
-      return;
+    // Redirect if not an admin
+    if (!isAdmin) {
+        navigate('/');
+        return null;
     }
 
-    setLoading(true);
-    try {
-      const { error } = await setUserAsAdmin(userId);
-      if (error) throw error;
-      toast.success('Successfully set user as admin!');
-    } catch (error) {
-      console.error('Error setting user as admin:', error);
-      toast.error('Failed to set user as admin');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleSetAdmin = async () => {
+        if (!userId) {
+            toast.error('Please enter a user ID');
+            return;
+        }
 
-  return (
-    <div className="container mx-auto py-8">
-      <Button
-        variant="ghost"
-        onClick={() => navigate('/admin')}
-        className="mb-4"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Admin
-      </Button>
+        setLoading(true);
+        try {
+            const { error } = await setUserAsAdmin(userId);
+            if (error) throw error;
+            toast.success('Successfully set user as admin!');
+        } catch (error) {
+            console.error('Error setting user as admin:', error);
+            toast.error('Failed to set user as admin');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Set Admin User</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder="Enter User ID"
-            />
+    return (
+        <div className="container mx-auto py-8">
             <Button
-              onClick={handleSetAdmin}
-              disabled={loading}
-              className="w-full"
+                variant="ghost"
+                onClick={() => navigate('/admin')}
+                className="mb-4"
             >
-              {loading ? 'Setting admin...' : 'Set as Admin'}
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Admin
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Set Admin User</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <Input
+                            type="text"
+                            value={userId}
+                            onChange={(e) => setUserId(e.target.value)}
+                            placeholder="Enter User ID"
+                        />
+                        <Button
+                            onClick={handleSetAdmin}
+                            disabled={loading}
+                            className="w-full"
+                        >
+                            {loading ? 'Setting admin...' : 'Set as Admin'}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
 }
