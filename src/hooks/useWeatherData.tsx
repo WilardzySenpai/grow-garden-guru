@@ -12,7 +12,7 @@ export const useWeatherData = () => {
   useEffect(() => {
     const fetchWeatherData = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from('weather').select('*');
+      const { data, error } = await supabase.from('weather_status').select('*');
       if (error) {
         setError(error.message);
       } else {
