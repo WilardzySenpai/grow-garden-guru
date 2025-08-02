@@ -17,8 +17,8 @@ export const useWeatherData = () => {
             const { data, error } = await supabase
                 .from('weather_status')
                 .select('*')
-                .eq('active', true)
-                .order('start_duration_unix', { ascending: false });
+                .order('active', { ascending: false }) // Active weather first
+                .order('start_duration_unix', { ascending: true });
 
             if (error) {
                 setError(error.message);
