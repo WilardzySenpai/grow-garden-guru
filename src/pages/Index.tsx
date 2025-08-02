@@ -530,9 +530,6 @@ const Index = () => {
                                             <DropdownMenuItem onClick={() => setActiveTab('calculator')} className="flex items-center gap-2">
                                                 <Calculator className="h-4 w-4" /> Calculator
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setActiveTab('system')} className="flex items-center gap-2">
-                                                <Settings className="h-4 w-4" /> System
-                                            </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => setActiveTab('notifications')} className="flex items-center gap-2">
                                                 <Bell className="h-4 w-4" /> Notifications
                                             </DropdownMenuItem>
@@ -540,7 +537,7 @@ const Index = () => {
                                     </DropdownMenu>
                                 </div>
                                 <div className="hidden md:block">
-                                    <TabsList className="grid w-full grid-cols-5">
+                                    <TabsList className="grid w-full grid-cols-4">
                                         <TabsTrigger value="market" className="flex items-center gap-2">
                                             <BarChart3 className="h-4 w-4" />
                                             Market Board
@@ -552,10 +549,6 @@ const Index = () => {
                                         <TabsTrigger value="calculator" className="flex items-center gap-2">
                                             <Calculator className="h-4 w-4" />
                                             Calculator
-                                        </TabsTrigger>
-                                        <TabsTrigger value="system" className="flex items-center gap-2">
-                                            <Settings className="h-4 w-4" />
-                                            System
                                         </TabsTrigger>
                                         <TabsTrigger value="notifications" className="flex items-center gap-2">
                                             <Bell className="h-4 w-4" />
@@ -615,16 +608,6 @@ const Index = () => {
                                 </div>
                             </div>
                         </TabsContent>
-                        <TabsContent value="system">
-                            <div className="relative">
-                                {isInMaintenance('system') && (
-                                    <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
-                                )}
-                                <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
-                                    <SystemMonitor wsStatus={wsStatus} />
-                                </div>
-                            </div>
-                        </TabsContent>
                         <TabsContent value="notifications">
                             <div className="relative">
                                 {isInMaintenance('notifications') && (
@@ -642,6 +625,16 @@ const Index = () => {
                     </Tabs>
                 )}
             </main>
+            <footer className="container mx-auto p-4">
+                <div className="relative">
+                    {isInMaintenance('system') && (
+                        <MaintenanceOverlay componentName="System Monitor" className="absolute inset-0 z-10" />
+                    )}
+                    <div className={isInMaintenance('system') ? 'pointer-events-none blur-sm' : ''}>
+                        <SystemMonitor wsStatus={wsStatus} />
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };
