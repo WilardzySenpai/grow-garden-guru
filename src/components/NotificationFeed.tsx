@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bell, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import type { Database } from '@/types/database.types';
+
+type NotificationFromSupabase = Database['public']['Tables']['notifications']['Row'];
 
 interface Notification {
     id: string;
@@ -16,41 +19,36 @@ interface Notification {
 }
 
 interface NotificationFeedProps {
-    notifications: any[];
+    initialNotifications: NotificationFromSupabase[];
+    loading: boolean;
+    error: string | null;
 }
 
-export const NotificationFeed = ({ notifications: wsNotifications }: NotificationFeedProps) => {
-    const [notifications, setNotifications] = useState<Notification[]>(wsNotifications.map((wsNotif, index) => ({
-        id: `ws-${Date.now()}-${index}`,
-        type: 'info' as const,
-        title: wsNotif.title || 'Game Update',
-        message: wsNotif.message || JSON.stringify(wsNotif),
-        timestamp: new Date(wsNotif.timestamp * 1000 || Date.now()),
-        read: false
-    })));
+export const NotificationFeed = ({ initialNotifications, loading, error }: NotificationFeedProps) => {
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
     useEffect(() => {
-        const newNotifications = wsNotifications.map((wsNotif, index) => ({
-            id: `ws-${Date.now()}-${index}`,
+        const transformedNotifications = initialNotifications.map(n => ({
+            id: n.id,
             type: 'info' as const,
-            title: wsNotif.title || 'Game Update',
-            message: wsNotif.message || JSON.stringify(wsNotif),
-            timestamp: new Date(wsNotif.timestamp * 1000 || Date.now()),
+            title: 'Game Update',
+            message: n.message,
+            timestamp: new Date(n.timestamp),
             read: false
         }));
+        setNotifications(transformedNotifications);
 
-        setNotifications(newNotifications);
-
-        if (newNotifications.length > 0) {
-            const lastNotification = newNotifications[0];
-            if (lastNotification.title !== 'System Connected') {
+        if (transformedNotifications.length > 0) {
+            const lastNotification = transformedNotifications[0];
+            if (notifications.findIndex(n => n.id === lastNotification.id) === -1) {
                 toast({
                     title: lastNotification.title,
                     description: lastNotification.message,
                 });
             }
         }
-    }, [wsNotifications]);
+    }, [initialNotifications]);
+
 
     const markAsRead = (id: string) => {
         setNotifications(prev =>

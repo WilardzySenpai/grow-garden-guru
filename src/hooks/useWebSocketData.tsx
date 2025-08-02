@@ -2,15 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 interface WebSocketDataHook {
-    weatherData: any;
-    notifications: any[];
     travelingMerchantStock: any;
     wsStatus: 'connecting' | 'connected' | 'disconnected';
 }
 
 export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
-    const [weatherData, setWeatherData] = useState<any>(null);
-    const [notifications, setNotifications] = useState<any[]>([]);
     const [travelingMerchantStock, setTravelingMerchantStock] = useState<any>(null);
     const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
     const wsRef = useRef<WebSocket | null>(null);
@@ -21,8 +17,6 @@ export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
     useEffect(() => {
         if (!userId) {
             setWsStatus('disconnected');
-            setWeatherData(null);
-            setNotifications([]);
             setTravelingMerchantStock(null);
             return;
         }
@@ -45,16 +39,6 @@ export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-
-                        if (data.weather) {
-                            console.log('Weather data received:', data.weather);
-                            setWeatherData(data.weather);
-                        }
-
-                        if (data.notification) {
-                            console.log('Notification data received:', data.notification);
-                            setNotifications(prev => [...data.notification, ...prev]);
-                        }
 
                         if (data.travelingmerchant_stock) {
                             console.log('Traveling merchant data received:', data.travelingmerchant_stock);
@@ -109,8 +93,6 @@ export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
     }, [userId]);
 
     return {
-        weatherData,
-        notifications,
         travelingMerchantStock,
         wsStatus,
     };

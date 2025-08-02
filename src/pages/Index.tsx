@@ -36,6 +36,7 @@ import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 import { useStockData } from '@/hooks/useStockData';
 import { useWebSocketData } from '@/hooks/useWebSocketData';
 import { useWeatherData } from '@/hooks/useWeatherData';
+import { useNotificationData } from '@/hooks/useNotificationData';
 
 import { MarketBoard } from '@/components/MarketBoard';
 import { WeatherStatus } from '@/components/WeatherStatus';
@@ -54,7 +55,6 @@ const Index = () => {
     const MUSIC_SRC = '/Music/Morning_Mood.mp3';
     const isMobile = useIsMobile();
     const [activeTab, setActiveTab] = useState('market');
-    const [allNotifications, setAllNotifications] = useState<any[]>([]);
     const { user, signOut, loading } = useAuth();
     const { isInMaintenance, settings, showMaintenanceAsAdmin } = useMaintenanceMode();
 
@@ -76,26 +76,8 @@ const Index = () => {
     // Use separate hooks for stock data and weather data
     const { marketData, loading: stockLoading, error: stockError, refetch } = useStockData(userId);
     const { weatherData, loading: weatherLoading, error: weatherError } = useWeatherData();
-    const { notifications: wsNotifications, travelingMerchantStock, wsStatus } = useWebSocketData(userId);
-
-    // Update notifications from API calls or other sources
-    useEffect(() => {
-        let combinedNotifications = [...wsNotifications];
-
-        if (travelingMerchantStock) {
-            const merchantNotification = {
-                id: `merchant-${travelingMerchantStock.merchantName}-${travelingMerchantStock.stock[0]?.start_date_unix}`,
-                type: 'info',
-                title: `${travelingMerchantStock.merchantName} has arrived!`,
-                message: `Items available: ${travelingMerchantStock.stock.map(item => item.display_name).join(', ')}`,
-                timestamp: new Date(),
-                read: false,
-            };
-            combinedNotifications = [merchantNotification, ...combinedNotifications];
-        }
-
-        setAllNotifications(combinedNotifications);
-    }, [wsNotifications, travelingMerchantStock]);
+    const { notifications, loading: notificationsLoading, error: notificationsError } = useNotificationData();
+    const { travelingMerchantStock, wsStatus } = useWebSocketData(userId);
     const [autoPlayMusic, setAutoPlayMusic] = useState(false);
     const [showPlayer, setShowPlayer] = useState(false);
     const [audioSettings, setAudioSettings] = useState({ volume: 0.7, playbackRate: 1 });
@@ -649,7 +631,11 @@ const Index = () => {
                                     <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
                                 )}
                                 <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
-                                    <NotificationFeed notifications={allNotifications} />
+                                    <NotificationFeed
+                                        initialNotifications={notifications}
+                                        loading={notificationsLoading}
+                                        error={notificationsError}
+                                    />
                                 </div>
                             </div>
                         </TabsContent>
