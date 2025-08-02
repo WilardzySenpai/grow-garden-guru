@@ -198,6 +198,26 @@ export interface Database {
                     received?: string;
                 };
             };
+            websocket_status: {
+                Row: {
+                    id: string;
+                    is_connected: boolean;
+                    last_checked: string;
+                    reason: string | null;
+                };
+                Insert: {
+                    id?: string;
+                    is_connected: boolean;
+                    last_checked?: string;
+                    reason?: string | null;
+                };
+                Update: {
+                    id?: string;
+                    is_connected?: boolean;
+                    last_checked?: string;
+                    reason?: string | null;
+                };
+            };
         };
     };
 }

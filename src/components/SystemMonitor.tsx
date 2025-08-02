@@ -82,8 +82,10 @@ export const SystemMonitor = ({ wsStatus }: SystemMonitorProps) => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <span>WebSocket (Disabled)</span>
-                        <Badge variant="secondary">Offline</Badge>
+                        <span>WebSocket</span>
+                        <Badge variant={getStatusColor(wsStatus)}>
+                            {wsStatus.charAt(0).toUpperCase() + wsStatus.slice(1)}
+                        </Badge>
                     </div>
                 </CardContent>
             </Card>
