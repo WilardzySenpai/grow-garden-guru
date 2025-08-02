@@ -1,35 +1,18 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { WeatherData } from '@/types/api';
+import type { Database } from '@/types/database.types';
+
+type Weather = Database['public']['Tables']['weather']['Row'];
 
 interface WeatherStatusProps {
-    weatherData?: any;
+    weatherData: Weather[];
+    loading: boolean;
+    error: string | null;
 }
 
-export const WeatherStatus = ({ weatherData }: WeatherStatusProps) => {
-    const [activeWeathers, setActiveWeathers] = useState<WeatherData[]>([]);
-    const [allWeatherData, setAllWeatherData] = useState<WeatherData[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    // Update weather when props change
-    useEffect(() => {
-        if (weatherData) {
-            console.log('WeatherStatus: Received weather data from websocket:', weatherData);
-
-            const weatherArray: WeatherData[] = weatherData || [];
-            setAllWeatherData(weatherArray);
-
-            // Find active weather or use the first one
-            const actives = weatherArray.filter(w => w.active);
-            setActiveWeathers(actives);
-            setLoading(false);
-            setError(null);
-        } else {
-            setLoading(true);
-        }
-    }, [weatherData]);
+export const WeatherStatus = ({ weatherData, loading, error }: WeatherStatusProps) => {
+    const activeWeathers = weatherData.filter(w => w.active);
+    const forecastWeathers = weatherData.filter(w => !w.active).slice(0, 6);
 
     const formatDuration = (seconds: number) => {
         const hours = Math.floor(seconds / 3600);
@@ -123,7 +106,7 @@ export const WeatherStatus = ({ weatherData }: WeatherStatusProps) => {
                             <div className="text-6xl">☀️</div>
                             <div>
                                 <h3 className="text-xl font-semibold">Clear Skies</h3>
-                                <Badge variant="secondary" className="mt-2">No Weather Data</Badge>
+                                <Badge variant="secondary" className="mt-2">No active weather</Badge>
                             </div>
                         </div>
                     )}
@@ -137,7 +120,7 @@ export const WeatherStatus = ({ weatherData }: WeatherStatusProps) => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-3">
-                        {allWeatherData.filter(w => !w.active).slice(0, 6).map((weather) => (
+                        {forecastWeathers.map((weather) => (
                             <div key={weather.weather_id} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg border">
                                 <div className="flex items-center gap-3">
                                     {typeof weather.icon === 'string' && weather.icon.startsWith('http') ? (
@@ -159,9 +142,9 @@ export const WeatherStatus = ({ weatherData }: WeatherStatusProps) => {
                                 </div>
                             </div>
                         ))}
-                        {allWeatherData.filter(w => !w.active).length === 0 && (
+                        {forecastWeathers.length === 0 && (
                             <p className="text-center text-muted-foreground py-4">
-                                {allWeatherData.length === 0 ? 'No weather data available' : 'No inactive weather to show'}
+                                No upcoming weather.
                             </p>
                         )}
                     </div>

@@ -6,16 +6,19 @@ type Weather = Database['public']['Tables']['weather']['Row'];
 
 export const useWeatherData = () => {
   const [weatherData, setWeatherData] = useState<Weather[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchWeatherData = async () => {
+      setLoading(true);
       const { data, error } = await supabase.from('weather').select('*');
       if (error) {
         setError(error.message);
       } else {
         setWeatherData(data as Weather[]);
       }
+      setLoading(false);
     };
 
     fetchWeatherData();
@@ -26,6 +29,7 @@ export const useWeatherData = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'weather' },
         (payload) => {
+          // No need to set loading to true here, to avoid UI flicker
           fetchWeatherData(); // Refetch all data on change
         }
       )
@@ -36,5 +40,5 @@ export const useWeatherData = () => {
     };
   }, []);
 
-  return { weatherData, error };
+  return { weatherData, loading, error };
 };

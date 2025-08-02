@@ -75,7 +75,7 @@ const Index = () => {
 
     // Use separate hooks for stock data and weather data
     const { marketData, loading: stockLoading, error: stockError, refetch } = useStockData(userId);
-    const { weatherData, error: weatherError } = useWeatherData();
+    const { weatherData, loading: weatherLoading, error: weatherError } = useWeatherData();
     const { notifications: wsNotifications, travelingMerchantStock, wsStatus } = useWebSocketData(userId);
 
     // Update notifications from API calls or other sources
@@ -603,7 +603,11 @@ const Index = () => {
                                             <MaintenanceOverlay componentName="Weather Status" className="absolute inset-0 z-10" />
                                         )}
                                         <div className={isInMaintenance('weather') ? 'pointer-events-none blur-sm' : ''}>
-                                            <WeatherStatus weatherData={weatherData} />
+                                            <WeatherStatus
+                                                weatherData={weatherData}
+                                                loading={weatherLoading}
+                                                error={weatherError}
+                                            />
                                         </div>
                                     </div>
                                 </div>
