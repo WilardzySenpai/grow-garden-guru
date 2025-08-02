@@ -48,14 +48,14 @@ const Hub = () => {
                                         <div className="flex items-center gap-2">
                                             <Avatar className="h-6 w-6">
                                                 <AvatarImage
-                                                    src={user.user_metadata?.avatar_url as string}
+                                                    src={user.user_metadata?.avatar_url}
                                                     alt="Profile"
                                                 />
                                                 <AvatarFallback className="text-xs">
-                                                    {(user.user_metadata?.full_name as string || user.email)?.charAt(0).toUpperCase()}
+                                                    {(user.user_metadata?.full_name || user.email)?.charAt(0).toUpperCase()}
                                                 </AvatarFallback>
                                             </Avatar>
-                                            {user.user_metadata?.full_name as string || user.email}
+                                            {user.user_metadata?.full_name || user.email}
                                         </div>
                                     </Button>
                                 </DropdownMenuTrigger>
