@@ -13,6 +13,7 @@ export interface MaintenanceSettings {
     calculator: boolean;
     system: boolean;
     notifications: boolean;
+    recipes: boolean;
 }
 
 const defaultSettings: MaintenanceSettings = {
@@ -22,6 +23,7 @@ const defaultSettings: MaintenanceSettings = {
     calculator: false,
     system: false,
     notifications: false,
+    recipes: false,
 };
 
 export const useMaintenanceMode = () => {
@@ -37,7 +39,7 @@ export const useMaintenanceMode = () => {
         try {
             const { data, error } = await supabase
                 .from('maintenance_settings')
-                .select('market, weather, encyclopedia, calculator, system, notifications')
+                .select('market, weather, encyclopedia, calculator, system, notifications, recipes')
                 .single();
 
             if (error) {
