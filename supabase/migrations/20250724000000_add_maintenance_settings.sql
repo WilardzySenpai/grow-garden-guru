@@ -34,7 +34,7 @@ USING (
 
 -- Insert initial settings
 INSERT INTO public.maintenance_settings (
-  market, weather, encyclopedia, calculator, system, notifications
+  market, weather, encyclopedia, calculator, system, notifications, recipes
 ) VALUES (
   false, false, false, false, false, false
 );
