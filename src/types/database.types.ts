@@ -143,6 +143,41 @@ export interface Database {
           end_duration_unix?: number;
         };
       };
+      weather_status: {
+        Row: {
+          id: string;
+          weather_id: string | null;
+          weather_name: string | null;
+          icon: string | null;
+          duration: number | null;
+          start_duration_unix: number | null;
+          end_duration_unix: number | null;
+          active: boolean | null;
+          last_updated: string | null;
+        };
+        Insert: {
+          id: string;
+          weather_id?: string | null;
+          weather_name?: string | null;
+          icon?: string | null;
+          duration?: number | null;
+          start_duration_unix?: number | null;
+          end_duration_unix?: number | null;
+          active?: boolean | null;
+          last_updated?: string | null;
+        };
+        Update: {
+          id?: string;
+          weather_id?: string | null;
+          weather_name?: string | null;
+          icon?: string | null;
+          duration?: number | null;
+          start_duration_unix?: number | null;
+          end_duration_unix?: number | null;
+          active?: boolean | null;
+          last_updated?: string | null;
+        };
+      };
     };
   };
 }
