@@ -41,6 +41,7 @@ import { useNotificationData } from '@/hooks/useNotificationData';
 import { MarketBoard } from '@/components/MarketBoard';
 import { WeatherStatus } from '@/components/WeatherStatus';
 import { ItemEncyclopedia } from '@/components/ItemEncyclopedia';
+import { RecipePedia } from '@/components/RecipePedia';
 import { FruitCalculator } from '@/components/FruitCalculator';
 import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
@@ -48,7 +49,7 @@ import { MobileNav } from '@/components/MobileNav';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { MaintenanceOverlay } from '@/components/MaintenanceOverlay';
 
-import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, User, LogOut, Shield, Menu, Activity } from 'lucide-react';
+import { Leaf, BarChart3, BookOpen, Calculator, Settings, Bell, User, LogOut, Shield, Menu, Activity, Utensils } from 'lucide-react';
 
 const Index = () => {
     // Path to the music file in public
@@ -527,6 +528,9 @@ const Index = () => {
                                             <DropdownMenuItem onClick={() => setActiveTab('encyclopedia')} className="flex items-center gap-2">
                                                 <BookOpen className="h-4 w-4" /> Encyclopedia
                                             </DropdownMenuItem>
+                                             <DropdownMenuItem onClick={() => setActiveTab('recipes')} className="flex items-center gap-2">
+                                                 <Utensils className="h-4 w-4" /> Recipes
+                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => setActiveTab('calculator')} className="flex items-center gap-2">
                                                 <Calculator className="h-4 w-4" /> Calculator
                                             </DropdownMenuItem>
@@ -537,7 +541,7 @@ const Index = () => {
                                     </DropdownMenu>
                                 </div>
                                 <div className="hidden md:block">
-                                    <TabsList className="grid w-full grid-cols-4">
+                                    <TabsList className="grid w-full grid-cols-5">
                                         <TabsTrigger value="market" className="flex items-center gap-2">
                                             <BarChart3 className="h-4 w-4" />
                                             Market Board
@@ -545,6 +549,10 @@ const Index = () => {
                                         <TabsTrigger value="encyclopedia" className="flex items-center gap-2">
                                             <BookOpen className="h-4 w-4" />
                                             Encyclopedia
+                                        </TabsTrigger>
+                                        <TabsTrigger value="recipes" className="flex items-center gap-2">
+                                            <Utensils className="h-4 w-4" />
+                                            Recipes
                                         </TabsTrigger>
                                         <TabsTrigger value="calculator" className="flex items-center gap-2">
                                             <Calculator className="h-4 w-4" />
@@ -595,6 +603,16 @@ const Index = () => {
                                 )}
                                 <div className={isInMaintenance('encyclopedia') ? 'pointer-events-none blur-sm' : ''}>
                                     <ItemEncyclopedia />
+                                </div>
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="recipes">
+                            <div className="relative">
+                                {isInMaintenance('recipes') && (
+                                    <MaintenanceOverlay componentName="Recipes" className="absolute inset-0 z-10" />
+                                )}
+                                <div className={isInMaintenance('recipes') ? 'pointer-events-none blur-sm' : ''}>
+                                    <RecipePedia />
                                 </div>
                             </div>
                         </TabsContent>
