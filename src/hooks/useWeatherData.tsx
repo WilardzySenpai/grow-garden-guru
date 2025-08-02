@@ -11,13 +11,20 @@ export const useWeatherData = () => {
 
     useEffect(() => {
         const fetchWeatherData = async () => {
-            setLoading(true);
-            const { data, error } = await supabase.from('weather_status').select('*');
+            // No need to set loading to true on refetch, to avoid UI flicker
+            // setLoading(true);
+
+            const { data, error } = await supabase
+                .from('weather_status')
+                .select('*')
+                .eq('active', true)
+                .order('start_duration_unix', { ascending: false });
 
             if (error) {
                 setError(error.message);
+                setWeatherData([]); // Clear data on error
             } else {
-                setWeatherData(data);
+                setWeatherData(data || []);
             }
             setLoading(false);
         };
