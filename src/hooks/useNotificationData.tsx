@@ -5,40 +5,40 @@ import type { Database } from '@/types/database.types';
 type Notification = Database['public']['Tables']['notifications']['Row'];
 
 export const useNotificationData = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from('notifications').select('*').order('timestamp', { ascending: false });
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            setLoading(true);
+            const { data, error } = await supabase.from('notifications').select('*').order('timestamp', { ascending: false });
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setNotifications(data);
-      }
-      setLoading(false);
-    };
+            if (error) {
+                setError(error.message);
+            } else {
+                setNotifications(data);
+            }
+            setLoading(false);
+        };
 
-    fetchNotifications();
+        fetchNotifications();
 
-    const channel = supabase
-      .channel('notifications-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'notifications' },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
+        const channel = supabase
+            .channel('notifications-changes')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'notifications' },
+                () => {
+                    fetchNotifications();
+                }
+            )
+            .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
 
-  return { notifications, loading, error };
+    return { notifications, loading, error };
 };
