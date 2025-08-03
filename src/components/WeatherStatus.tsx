@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Database } from '@/types/database.types';
@@ -11,6 +12,16 @@ interface WeatherStatusProps {
 }
 
 export const WeatherStatus = ({ weatherData, loading, error }: WeatherStatusProps) => {
+    const [, setNow] = useState(Date.now());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setNow(Date.now());
+        }, 1000); // Update every second
+
+        return () => clearInterval(interval);
+    }, []);
+
     const activeWeathers = weatherData.filter(w => w.active);
     const forecastWeathers = weatherData.filter(w => !w.active).slice(0, 6);
 
