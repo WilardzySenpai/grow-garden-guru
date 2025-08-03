@@ -5,101 +5,44 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { recipes, Recipe, RecipeTier, RecipeOption } from '@/lib/recipes';
+import { CheckCircle2 } from 'lucide-react';
 
-const recipes = [
-    {
-        name: 'Soup',
-        emoji: '🍲',
-        ingredients: 'Anything (if not a recipe for other food)',
-        time: '5 minutes',
-        color: 'Any',
-    },
-    {
-        name: 'Sandwich',
-        emoji: '🥪',
-        ingredients: '2x Tomato, 1x Corn',
-        time: '7 minutes and 6 seconds',
-        color: 'Orange',
-    },
-    {
-        name: 'Pie',
-        emoji: '🥧',
-        ingredients: '1x Pumpkin, 1x Apple or 1x Corn, 1x Coconut',
-        time: '7 minutes 52 seconds',
-        color: 'Green',
-    },
-    {
-        name: 'Burger',
-        emoji: '🍔',
-        ingredients: '1x Pepper, 1x Corn, 1x Tomato',
-        time: '6 minutes and 7 seconds',
-        color: 'Orange',
-    },
-    {
-        name: 'Hotdog',
-        emoji: '🌭',
-        ingredients: '1x Pepper, 1x Corn/Banana',
-        time: '6 minutes and 46 seconds',
-        color: 'Tan',
-    },
-    {
-        name: 'Waffle',
-        emoji: '🧇',
-        ingredients: '1x Pumpkin, 1x Watermelon or 1x Pumpkin, 1x Sugar Apple',
-        time: '6 minutes and 15 seconds',
-        color: 'TBA',
-    },
-    {
-        name: 'Salad',
-        emoji: '🥗',
-        ingredients: '2x Tomato',
-        time: '5 minutes and 18 seconds',
-        color: 'Red',
-    },
-    {
-        name: 'Sushi',
-        emoji: '🍣',
-        ingredients: '4x Bamboo, 1x Corn',
-        time: 'TBA',
-        color: 'TBA',
-    },
-    {
-        name: 'Ice Cream',
-        emoji: '🍦',
-        ingredients: '1x Blueberry/Pineapple, 1x Corn',
-        time: '5 minutes and 48 seconds',
-        color: 'TBA',
-    },
-    {
-        name: 'Donut',
-        emoji: '🍩',
-        ingredients: '1x Corn, 1x Blueberry, 1x Strawberry or 1x Strawberry, 1x Tomato, 1x Apple',
-        time: '9 minutes and 37 seconds',
-        color: 'TBA',
-    },
-    {
-        name: 'Pizza',
-        emoji: '🍕',
-        ingredients: '1x Corn, 1x Tomato, 1x Pepper',
-        time: 'TBA',
-        color: 'TBA',
-    },
-    {
-        name: 'Cake',
-        emoji: '🍰',
-        ingredients: '1x Watermelon, 2x Corn',
-        time: 'TBA',
-        color: 'TBA',
-    },
-];
+const TierCard = ({ tier }: { tier: RecipeTier }) => (
+    <Card className="mb-4">
+        <CardHeader>
+            <CardTitle>{tier.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            {tier.options.length > 0 ? (
+                tier.options.map((option, index) => (
+                    <div key={index} className="flex items-center mb-2">
+                        {option.verified && <CheckCircle2 className="text-green-500 mr-2" />}
+                        <p>
+                            {option.ingredients.map(ing => `${ing.quantity}x ${ing.name}`).join(', ')}
+                        </p>
+                    </div>
+                ))
+            ) : (
+                <p>To be added</p>
+            )}
+        </CardContent>
+    </Card>
+);
+
+const RecipeCard = ({ recipe }: { recipe: Recipe }) => (
+    <div>
+        {recipe.tiers.map((tier) => (
+            <TierCard key={tier.name} tier={tier} />
+        ))}
+    </div>
+);
 
 export const RecipePedia = () => {
     return (
@@ -108,31 +51,21 @@ export const RecipePedia = () => {
                 <CardTitle>Cooking Recipes</CardTitle>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Food</TableHead>
-                            <TableHead>Ingredients</TableHead>
-                            <TableHead>Time</TableHead>
-                            <TableHead>Color</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                <Tabs defaultValue={recipes[0].name} className="w-full">
+                    <TabsList>
                         {recipes.map((recipe) => (
-                            <TableRow key={recipe.name}>
-                                <TableCell>
-                                    <span className="mr-2">{recipe.emoji}</span>
-                                    {recipe.name}
-                                </TableCell>
-                                <TableCell>{recipe.ingredients}</TableCell>
-                                <TableCell>{recipe.time}</TableCell>
-                                <TableCell>
-                                    <Badge variant="outline">{recipe.color}</Badge>
-                                </TableCell>
-                            </TableRow>
+                            <TabsTrigger key={recipe.name} value={recipe.name}>
+                                <span className="mr-2">{recipe.icon}</span>
+                                {recipe.name}
+                            </TabsTrigger>
                         ))}
-                    </TableBody>
-                </Table>
+                    </TabsList>
+                    {recipes.map((recipe) => (
+                        <TabsContent key={recipe.name} value={recipe.name}>
+                            <RecipeCard recipe={recipe} />
+                        </TabsContent>
+                    ))}
+                </Tabs>
             </CardContent>
         </Card>
     );
