@@ -52,7 +52,7 @@ export const RecipePedia = () => {
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue={recipes[0].name} className="w-full">
-                    <TabsList>
+                    <TabsList className="overflow-x-auto max-w-full">
                         {recipes.map((recipe) => (
                             <TabsTrigger key={recipe.name} value={recipe.name}>
                                 <span className="mr-2">{recipe.icon}</span>
