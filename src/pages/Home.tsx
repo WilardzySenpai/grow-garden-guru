@@ -210,6 +210,13 @@ const Home = () => {
                             >
                                 Report Bug
                             </a>
+                            <a
+                                href="/privacy-policy"
+                                className="text-sm text-primary font-semibold hover:underline transition-colors px-3 py-1 rounded bg-accent/40 border border-accent/30 shadow-sm"
+                                aria-label="Privacy Policy"
+                            >
+                                Privacy Policy
+                            </a>
                             <span className="text-sm text-muted-foreground">
                                 Made with everything we love about Grow A Garden
                             </span>

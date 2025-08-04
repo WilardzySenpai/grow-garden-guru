@@ -14,6 +14,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
 import BugReport from "./pages/BugReport";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Hub from "./pages/Hub";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
                             <Route path="/admin" element={<Admin />} />
                             <Route path="/faq" element={<FAQ />} />
                             <Route path="/bug-report" element={<BugReport />} />
+                            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                             <Route path="*" element={<NotFound />} />
                         </Routes>
