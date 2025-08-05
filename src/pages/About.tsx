@@ -28,7 +28,6 @@ const About = () => {
                 </div>
             </section>
 
-            // add button to return to Home
             <div className="flex justify-center mb-8">
                 <Button asChild size="lg" className="shadow-md">
                     <Link to="/">
