@@ -217,6 +217,13 @@ const Home = () => {
                             >
                                 Privacy Policy
                             </a>
+                            <a
+                                href="/about"
+                                className="text-sm text-primary font-semibold hover:underline transition-colors px-3 py-1 rounded bg-accent/40 border border-accent/30 shadow-sm"
+                                aria-label="About"
+                            >
+                                About
+                            </a>
                             <span className="text-sm text-muted-foreground">
                                 Made with everything we love about Grow A Garden
                             </span>

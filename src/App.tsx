@@ -16,6 +16,7 @@ import FAQ from "./pages/FAQ";
 import BugReport from "./pages/BugReport";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Hub from "./pages/Hub";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
                             <Route path="/faq" element={<FAQ />} />
                             <Route path="/bug-report" element={<BugReport />} />
                             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                            <Route path="/about" element={<About />} />
                             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                             <Route path="*" element={<NotFound />} />
                         </Routes>
