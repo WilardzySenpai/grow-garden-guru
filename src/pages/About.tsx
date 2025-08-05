@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Leaf } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Button } from 'react-day-picker';
+import { Button } from '@/components/ui/button';
 
 const About = () => {
     return (
