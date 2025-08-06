@@ -58,11 +58,11 @@ const Profile = () => {
                     setAvatarUrl(profile.avatar_url || '');
                 }
 
-                // Load all items for notifications
+                // Load items for notifications (only Crate, Seed, and gear types)
                 const { data: items, error: itemsError } = await supabase
                     .from('items')
                     .select('item_id, display_name, type')
-                    .in('type', ['crate', 'gear', 'seed']);
+                    .in('type', ['crate', 'seed', 'gear']);
 
                 if (itemsError) {
                     toast({
@@ -72,7 +72,20 @@ const Profile = () => {
                     });
                 }
 
-                setAllItems(items || []);
+                const eggs: AlertItem[] = [
+                    { item_id: 'common_egg', display_name: 'Common Egg', type: 'Egg' },
+                    { item_id: 'mythical_egg', display_name: 'Mythical Egg', type: 'Egg' },
+                    { item_id: 'bug_egg', display_name: 'Bug Egg', type: 'Egg' },
+                    { item_id: 'common_summer_egg', display_name: 'Common Summer Egg', type: 'Egg' },
+                    { item_id: 'rare_summer_egg', display_name: 'Rare Summer Egg', type: 'Egg' },
+                    { item_id: 'paradise_egg', display_name: 'Paradise Egg', type: 'Egg' },
+                    { item_id: 'anti_bee_egg', display_name: 'Anti Bee Egg', type: 'Egg' },
+                    { item_id: 'bee_egg', display_name: 'Bee Egg', type: 'Egg' },
+                ];
+
+                const combinedItems = [...(items || []), ...eggs];
+                const uniqueItems = Array.from(new Map(combinedItems.map(item => [item.item_id, item])).values());
+                setAllItems(uniqueItems);
 
 
                 // Load stock alerts
@@ -294,7 +307,7 @@ const Profile = () => {
                                                 <AccordionTrigger className="px-4 py-2 text-sm font-medium capitalize">
                                                     {type.replace(/_/g, ' ')}
                                                 </AccordionTrigger>
-.                                                <AccordionContent>
+                                                <AccordionContent>
                                                     <div className="space-y-4 p-4 border-t">
                                                         {items
                                                             .sort((a, b) => a.display_name.localeCompare(b.display_name))
