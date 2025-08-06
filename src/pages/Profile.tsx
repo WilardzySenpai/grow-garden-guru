@@ -27,7 +27,7 @@ const Profile = () => {
     const [avatarUrl, setAvatarUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
-    const { user, signOut } = useAuth();
+    const { user, signOut, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     const [allItems, setAllItems] = useState<AlertItem[]>([]);
     const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
@@ -35,10 +35,10 @@ const Profile = () => {
 
     // Redirect if not logged in or if guest
     useEffect(() => {
-        if (!user || ('isGuest' in user)) {
+        if (!authLoading && (!user || ('isGuest' in user))) {
             navigate('/auth');
         }
-    }, [user, navigate]);
+    }, [user, authLoading, navigate]);
 
     // Load user profile, all items, and stock alert preferences
     useEffect(() => {
@@ -123,10 +123,10 @@ const Profile = () => {
                 title: "Profile Updated",
                 description: "Your profile has been successfully updated.",
             });
-        } catch (error: any) {
+        } catch (error) {
             toast({
                 title: "Error",
-                description: error.message,
+                description: (error as Error).message,
                 variant: "destructive",
             });
         } finally {
@@ -178,10 +178,10 @@ const Profile = () => {
                 description: "Your stock alert preferences have been updated.",
             });
 
-        } catch (error: any) {
+        } catch (error) {
             toast({
                 title: "Error",
-                description: `Failed to save preferences: ${error.message}`,
+                description: `Failed to save preferences: ${(error as Error).message}`,
                 variant: "destructive",
             });
         } finally {
@@ -203,16 +203,24 @@ const Profile = () => {
             });
             await signOut();
             navigate('/');
-        } catch (error: any) {
+        } catch (error) {
             toast({
                 title: "Error",
-                description: `Failed to delete account: ${error.message}`,
+                description: `Failed to delete account: ${(error as Error).message}`,
                 variant: "destructive",
             });
         } finally {
             setDeleteLoading(false);
         }
     };
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10 flex items-center justify-center p-4">
+                <p>Loading profile...</p>
+            </div>
+        );
+    }
 
     if (!user || ('isGuest' in user)) {
         return null;
