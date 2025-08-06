@@ -2,18 +2,38 @@ import { useState, useEffect, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+interface StockAlert {
+    item_id: string;
+    display_name: string;
+    message: string;
+}
+
 interface WebSocketDataHook {
     travelingMerchantStock: any;
+    stockAlert: StockAlert | null;
     wsStatus: 'connecting' | 'connected' | 'disconnected';
 }
 
 export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
     const [travelingMerchantStock, setTravelingMerchantStock] = useState<any>(null);
+    const [stockAlert, setStockAlert] = useState<StockAlert | null>(null);
     const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectingRef = useRef<boolean>(false);
     const intentionalCloseRef = useRef<boolean>(false);
     const JSTUDIO_KEY = import.meta.env.VITE_JSTUDIO_KEY;
+
+    // Effect to show toast when a stock alert is received
+    useEffect(() => {
+        if (stockAlert) {
+            toast({
+                title: 'Item in Stock!',
+                description: stockAlert.message,
+            });
+            // Reset alert after showing to prevent re-triggering
+            setStockAlert(null);
+        }
+    }, [stockAlert]);
 
     useEffect(() => {
         const fetchStatus = async () => {
@@ -63,12 +83,11 @@ export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
 
         const connectWebSocket = () => {
             try {
-                const ws = new WebSocket(`wss://websocket.joshlei.com/growagarden?jstudio-key=${encodeURIComponent(JSTUDIO_KEY)}`);
+                const ws = new WebSocket(`wss://websocket.joshlei.com/growagarden?jstudio-key=${encodeURIComponent(JSTUDIO_KEY)}&userId=${userId}`);
                 wsRef.current = ws;
 
                 ws.onopen = () => {
                     console.log('WebSocket connection established');
-                    // Status is now handled by Supabase
                 };
 
                 ws.onmessage = (event) => {
@@ -79,6 +98,11 @@ export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
                             console.log('Traveling merchant data received:', data.travelingmerchant_stock);
                             setTravelingMerchantStock(data.travelingmerchant_stock);
                         }
+
+                        if (data.stock_alert) {
+                            console.log('Stock alert received:', data.stock_alert);
+                            setStockAlert(data.stock_alert);
+                        }
                     } catch (error) {
                         console.error('Error parsing WebSocket message:', error);
                     }
@@ -86,12 +110,10 @@ export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
 
                 ws.onerror = (error) => {
                     console.error('WebSocket error:', error);
-                    // Status is now handled by Supabase
                 };
 
                 ws.onclose = (event) => {
                     console.log('WebSocket connection closed', event.code, event.reason);
-                    // Status is now handled by Supabase
 
                     if (event.code !== 1000 && event.code !== 4001 && !intentionalCloseRef.current && !reconnectingRef.current) {
                         reconnectingRef.current = true;
@@ -120,10 +142,11 @@ export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
                 wsRef.current = null;
             }
         };
-    }, [userId]);
+    }, [userId, JSTUDIO_KEY]);
 
     return {
         travelingMerchantStock,
+        stockAlert,
         wsStatus,
     };
 };
