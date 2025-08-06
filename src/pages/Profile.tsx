@@ -8,14 +8,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Leaf, ArrowLeft, User, Trash2, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useStockData } from '@/hooks/useStockData';
 import { toast } from '@/hooks/use-toast';
 import { maskEmail } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
-import type { MarketItem } from '@/types/api';
+
+interface AlertItem {
+    item_id: string;
+    display_name: string;
+    type: string | null;
+}
 
 const Profile = () => {
     const [displayName, setDisplayName] = useState('');
@@ -24,8 +29,7 @@ const Profile = () => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const { user, signOut } = useAuth();
     const navigate = useNavigate();
-    const { marketData } = useStockData(user?.id ?? null);
-    const [allItems, setAllItems] = useState<MarketItem[]>([]);
+    const [allItems, setAllItems] = useState<AlertItem[]>([]);
     const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
     const [alertsLoading, setAlertsLoading] = useState(false);
 
@@ -36,27 +40,12 @@ const Profile = () => {
         }
     }, [user, navigate]);
 
-    // Memoize and flatten all available items from market data
+    // Load user profile, all items, and stock alert preferences
     useEffect(() => {
-        if (marketData) {
-            const all = [
-                ...marketData.seed_stock,
-                ...marketData.gear_stock,
-                ...marketData.egg_stock,
-                ...marketData.cosmetic_stock,
-                ...marketData.eventshop_stock,
-                ...marketData.travelingmerchant_stock,
-            ];
-            // Deduplicate items based on item_id
-            const uniqueItems = Array.from(new Map(all.map(item => [item.item_id, item])).values());
-            setAllItems(uniqueItems);
-        }
-    }, [marketData]);
-
-    // Load user profile and stock alert preferences
-    useEffect(() => {
-        const loadUserData = async () => {
+        const loadData = async () => {
             if (user && !('isGuest' in user)) {
+                setAlertsLoading(true);
+
                 // Load profile
                 const { data: profile } = await supabase
                     .from('profiles')
@@ -69,8 +58,36 @@ const Profile = () => {
                     setAvatarUrl(profile.avatar_url || '');
                 }
 
+                // Load all items for notifications
+                const { data: items, error: itemsError } = await supabase
+                    .from('items')
+                    .select('item_id, display_name, type');
+
+                if (itemsError) {
+                    toast({
+                        title: "Error",
+                        description: "Could not fetch the item list for notifications.",
+                        variant: "destructive",
+                    });
+                }
+
+                const eggs: AlertItem[] = [
+                    { item_id: 'common_egg', display_name: 'Common Egg', type: 'Egg' },
+                    { item_id: 'mythical_egg', display_name: 'Mythical Egg', type: 'Egg' },
+                    { item_id: 'bug_egg', display_name: 'Bug Egg', type: 'Egg' },
+                    { item_id: 'common_summer_egg', display_name: 'Common Summer Egg', type: 'Egg' },
+                    { item_id: 'rare_summer_egg', display_name: 'Rare Summer Egg', type: 'Egg' },
+                    { item_id: 'paradise_egg', display_name: 'Paradise Egg', type: 'Egg' },
+                    { item_id: 'anti_bee_egg', display_name: 'Anti Bee Egg', type: 'Egg' },
+                    { item_id: 'bee_egg', display_name: 'Bee Egg', type: 'Egg' },
+                ];
+
+                const combinedItems = [...(items || []), ...eggs];
+                const uniqueItems = Array.from(new Map(combinedItems.map(item => [item.item_id, item])).values());
+                setAllItems(uniqueItems);
+
+
                 // Load stock alerts
-                setAlertsLoading(true);
                 const { data: alerts } = await supabase
                     .from('user_stock_alerts')
                     .select('item_id')
@@ -79,11 +96,12 @@ const Profile = () => {
                 if (alerts) {
                     setSelectedAlerts(new Set(alerts.map(a => a.item_id)));
                 }
+
                 setAlertsLoading(false);
             }
         };
 
-        loadUserData();
+        loadData();
     }, [user]);
 
     const handleUpdateProfile = async () => {
@@ -270,21 +288,45 @@ const Profile = () => {
                             <p>Loading items...</p>
                         ) : (
                             <>
-                                <ScrollArea className="h-72 w-full rounded-md border p-4">
-                                    <div className="space-y-4">
-                                        {allItems.map((item) => (
-                                            <div key={item.item_id} className="flex items-center space-x-2">
-                                                <Checkbox
-                                                    id={item.item_id}
-                                                    checked={selectedAlerts.has(item.item_id)}
-                                                    onCheckedChange={(checked) => handleAlertSelectionChange(item.item_id, !!checked)}
-                                                />
-                                                <label htmlFor={item.item_id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                    {item.display_name}
-                                                </label>
-                                            </div>
+                                <ScrollArea className="h-72 w-full rounded-md border">
+                                    <Accordion type="multiple" className="w-full">
+                                        {Object.entries(
+                                            allItems.reduce((acc, item) => {
+                                                const type = item.type || 'Other';
+                                                if (!acc[type]) {
+                                                    acc[type] = [];
+                                                }
+                                                acc[type].push(item);
+                                                return acc;
+                                            }, {} as Record<string, AlertItem[]>)
+                                        )
+                                        .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
+                                        .map(([type, items]) => (
+                                            <AccordionItem value={type} key={type}>
+                                                <AccordionTrigger className="px-4 py-2 text-sm font-medium capitalize">
+                                                    {type.replace(/_/g, ' ')}
+                                                </AccordionTrigger>
+                                                <AccordionContent>
+                                                    <div className="space-y-4 p-4 border-t">
+                                                        {items
+                                                            .sort((a, b) => a.display_name.localeCompare(b.display_name))
+                                                            .map((item) => (
+                                                            <div key={item.item_id} className="flex items-center space-x-2">
+                                                                <Checkbox
+                                                                    id={item.item_id}
+                                                                    checked={selectedAlerts.has(item.item_id)}
+                                                                    onCheckedChange={(checked) => handleAlertSelectionChange(item.item_id, !!checked)}
+                                                                />
+                                                                <label htmlFor={item.item_id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                                    {item.display_name}
+                                                                </label>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </AccordionContent>
+                                            </AccordionItem>
                                         ))}
-                                    </div>
+                                    </Accordion>
                                 </ScrollArea>
                                 <Button onClick={handleSaveChanges} disabled={alertsLoading} className="w-full mt-4">
                                     {alertsLoading ? "Saving..." : "Save Preferences"}
