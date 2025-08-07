@@ -37,6 +37,7 @@ import { useStockData } from '@/hooks/useStockData';
 import { useWebSocketData } from '@/hooks/useWebSocketData';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { useNotificationDataJandel } from '@/hooks/useNotificationDataJandel';
+import { useStockAlertNotifications } from '@/hooks/useStockAlertNotifications';
 
 import { MarketBoard } from '@/components/MarketBoard';
 import { WeatherStatus } from '@/components/WeatherStatus';
@@ -77,7 +78,8 @@ const Index = () => {
     // Use separate hooks for stock data and weather data
     const { marketData, loading: stockLoading, error: stockError, refetch } = useStockData(userId);
     const { weatherData, loading: weatherLoading, error: weatherError } = useWeatherData();
-    const { notifications, loading: notificationsLoading, error: notificationsError } = useNotificationDataJandel();
+    const { notifications: jandelMessages, loading: jandelLoading, error: jandelError } = useNotificationDataJandel();
+    const { notifications: stockAlerts, loading: alertsLoading, error: alertsError } = useStockAlertNotifications(userId);
     const { travelingMerchantStock, wsStatus } = useWebSocketData(userId);
     const [autoPlayMusic, setAutoPlayMusic] = useState(false);
     const [showPlayer, setShowPlayer] = useState(false);
@@ -122,6 +124,7 @@ const Index = () => {
             title: "Welcome to Grow A Garden Guru!",
             description: "Your comprehensive tool for tracking game data and optimizing gameplay.",
         });
+
     }, []);
 
     return (
@@ -633,9 +636,10 @@ const Index = () => {
                                 )}
                                 <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
                                     <NotificationFeed
-                                        initialNotifications={notifications}
-                                        loading={notificationsLoading}
-                                        error={notificationsError}
+                                        jandelMessages={jandelMessages}
+                                        stockAlerts={stockAlerts}
+                                        loading={jandelLoading || alertsLoading}
+                                        error={jandelError || alertsError}
                                     />
                                 </div>
                             </div>
