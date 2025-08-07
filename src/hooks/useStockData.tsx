@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { StockData, StockItem } from '@/types/api';
+import type { StockData } from '@/types/api';
 import { useSmartFetch, UPDATE_INTERVALS } from './useSmartFetch';
 import isEqual from 'lodash/isEqual';
 import { supabase } from '@/integrations/supabase/client';
@@ -140,7 +140,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     ...prevMarketDataRef.current.gear_stock,
                     ...prevMarketDataRef.current.egg_stock,
                 ];
-                const oldStockMap = new Map(allOldItems.map(item => [item.item_id, item.stock]));
+                const oldStockMap = new Map(allOldItems.map(item => [item.item_id, item.quantity]));
 
                 const allNewItems = [
                     ...transformedData.seed_stock,
@@ -151,7 +151,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
                 for (const newItem of allNewItems) {
                     if (alertItemIds.has(newItem.item_id)) {
                         const oldStock = oldStockMap.get(newItem.item_id);
-                        if ((oldStock === 0 || oldStock === undefined) && newItem.stock > 0) {
+                        if ((oldStock === 0 || oldStock === undefined) && newItem.quantity > 0) {
                             toast.success(`${newItem.display_name} is back in stock!`);
                             if (debug) {
                                 console.log(`[Stock Alert] Fired for ${newItem.item_id} (${newItem.display_name})`);
