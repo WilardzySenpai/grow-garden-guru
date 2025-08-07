@@ -198,6 +198,35 @@ export interface Database {
                     received?: string;
                 };
             };
+            notifications: {
+                Row: {
+                    id: number;
+                    user_id: string;
+                    message: string;
+                    created_at: string;
+                    read: boolean;
+                    item_id: string | null;
+                    icon: string | null;
+                };
+                Insert: {
+                    id?: number;
+                    user_id: string;
+                    message: string;
+                    created_at?: string;
+                    read?: boolean;
+                    item_id?: string | null;
+                    icon?: string | null;
+                };
+                Update: {
+                    id?: number;
+                    user_id?: string;
+                    message?: string;
+                    created_at?: string;
+                    read?: boolean;
+                    item_id?: string | null;
+                    icon?: string | null;
+                };
+            };
             websocket_status: {
                 Row: {
                     id: string;
