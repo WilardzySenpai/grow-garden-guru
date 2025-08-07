@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { StockData } from '@/types/api';
+import type { StockData, StockItem } from '@/types/api';
 import { useSmartFetch, UPDATE_INTERVALS } from './useSmartFetch';
 import isEqual from 'lodash/isEqual';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface StockDataHook {
     marketData: StockData | null;
@@ -17,6 +19,8 @@ export const useStockData = (userId: string | null): StockDataHook => {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const isInitialFetchRef = useRef(true);
+    const prevMarketDataRef = useRef<StockData | null>(null);
+    const [alertItemIds, setAlertItemIds] = useState<Set<string>>(new Set());
 
     // Keep track of last update times for each data type
     const lastUpdateRef = useRef<Record<keyof typeof UPDATE_INTERVALS, number>>({
@@ -27,6 +31,27 @@ export const useStockData = (userId: string | null): StockDataHook => {
     });
 
     const debug = process.env.NODE_ENV === 'development';
+
+    // Fetch user's stock alert preferences
+    useEffect(() => {
+        const fetchUserAlerts = async () => {
+            if (!userId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('user_stock_alerts')
+                    .select('item_id')
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+
+                setAlertItemIds(new Set(data.map(item => item.item_id)));
+            } catch (err) {
+                console.error("Failed to fetch user stock alerts:", err);
+            }
+        };
+
+        fetchUserAlerts();
+    }, [userId]);
     
     const fetchStockData = useCallback(async () => {
         if (!userId) {
@@ -108,6 +133,34 @@ export const useStockData = (userId: string | null): StockDataHook => {
             // Check if the data has actually changed using deep comparison
             const hasDataChanged = !isEqual(marketData, transformedData);
             
+            // --- Stock Alert Notification Logic ---
+            if (prevMarketDataRef.current && alertItemIds.size > 0) {
+                const allOldItems = [
+                    ...prevMarketDataRef.current.seed_stock,
+                    ...prevMarketDataRef.current.gear_stock,
+                    ...prevMarketDataRef.current.egg_stock,
+                ];
+                const oldStockMap = new Map(allOldItems.map(item => [item.item_id, item.stock]));
+
+                const allNewItems = [
+                    ...transformedData.seed_stock,
+                    ...transformedData.gear_stock,
+                    ...transformedData.egg_stock,
+                ];
+
+                for (const newItem of allNewItems) {
+                    if (alertItemIds.has(newItem.item_id)) {
+                        const oldStock = oldStockMap.get(newItem.item_id);
+                        if ((oldStock === 0 || oldStock === undefined) && newItem.stock > 0) {
+                            toast.success(`${newItem.display_name} is back in stock!`);
+                            if (debug) {
+                                console.log(`[Stock Alert] Fired for ${newItem.item_id} (${newItem.display_name})`);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Update if it's initial fetch, data should update based on interval, or data has changed
             if (isInitialFetch || shouldUpdate || hasDataChanged) {
                 if (debug) {
@@ -146,6 +199,9 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     }
                     return transformedData;
                 });
+
+                prevMarketDataRef.current = transformedData;
+
 
                 if (isInitialFetchRef.current) {
                     isInitialFetchRef.current = false;
