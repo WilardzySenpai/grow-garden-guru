@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/database.types';
 
-type jandelMessages = Database['public']['Tables']['jandel_messages']['Row'];
+type Notification = Database['public']['Tables']['jandel_messages']['Row'];
 
 export const useNotificationData = () => {
-    const [jandelNotifications, jandelSetMessagesNotifications] = useState<jandelMessages[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +17,7 @@ export const useNotificationData = () => {
             if (error) {
                 setError(error.message);
             } else {
-                jandelSetMessagesNotifications(data);
+                setNotifications(data);
             }
             setLoading(false);
         };
@@ -25,7 +25,7 @@ export const useNotificationData = () => {
         fetchNotifications();
 
         const channel = supabase
-            .channel('jandel-changes')
+            .channel('notifications-changes')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'jandel_messages' },
@@ -40,5 +40,5 @@ export const useNotificationData = () => {
         };
     }, []);
 
-    return { jandelNotifications, loading, error };
+    return { notifications, loading, error };
 };
