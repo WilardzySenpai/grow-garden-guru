@@ -7,9 +7,9 @@ import { Bell, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/types/database.types';
 
-type NotificationFromSupabase = Database['public']['Tables']['notifications']['Row'];
+type jandelNotificationFromSupabase = Database['public']['Tables']['ingame_notifications']['Row'];
 
-interface Notification {
+interface jandelNotification {
     id: string;
     type: 'info' | 'warning' | 'success' | 'error';
     title: string;
@@ -18,20 +18,20 @@ interface Notification {
     read: boolean;
 }
 
-interface NotificationFeedProps {
-    initialNotifications: NotificationFromSupabase[];
+interface jandelNotificationFeedProps {
+    initialNotifications: jandelNotificationFromSupabase[];
     loading: boolean;
     error: string | null;
 }
 
-export const NotificationFeed = ({ initialNotifications, loading, error }: NotificationFeedProps) => {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+export const NotificationFeed = ({ initialNotifications, loading, error }: jandelNotificationFeedProps) => {
+    const [notifications, setNotifications] = useState<jandelNotification[]>([]);
 
     useEffect(() => {
         const transformedNotifications = initialNotifications.map(n => ({
             id: n.id,
             type: 'info' as const,
-            title: 'Game Update',
+            title: 'Janel Message (Owner)',
             message: n.message,
             timestamp: new Date(n.timestamp),
             read: false
