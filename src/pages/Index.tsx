@@ -36,7 +36,7 @@ import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
 import { useStockData } from '@/hooks/useStockData';
 import { useWebSocketData } from '@/hooks/useWebSocketData';
 import { useWeatherData } from '@/hooks/useWeatherData';
-import { useNotificationData } from '@/hooks/useNotificationData';
+import { useNotificationDataJandel } from '@/hooks/useNotificationDataJandel';
 
 import { MarketBoard } from '@/components/MarketBoard';
 import { WeatherStatus } from '@/components/WeatherStatus';
@@ -77,7 +77,7 @@ const Index = () => {
     // Use separate hooks for stock data and weather data
     const { marketData, loading: stockLoading, error: stockError, refetch } = useStockData(userId);
     const { weatherData, loading: weatherLoading, error: weatherError } = useWeatherData();
-    const { notifications, loading: notificationsLoading, error: notificationsError } = useNotificationData();
+    const { notifications, loading: notificationsLoading, error: notificationsError } = useNotificationDataJandel();
     const { travelingMerchantStock, wsStatus } = useWebSocketData(userId);
     const [autoPlayMusic, setAutoPlayMusic] = useState(false);
     const [showPlayer, setShowPlayer] = useState(false);

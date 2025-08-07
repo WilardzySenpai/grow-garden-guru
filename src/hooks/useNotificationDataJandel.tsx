@@ -4,7 +4,7 @@ import type { Database } from '@/types/database.types';
 
 type jandelMessages = Database['public']['Tables']['jandel_messages']['Row'];
 
-export const useNotificationData = () => {
+export const useNotificationDataJandel = () => {
     const [notifications, setNotifications] = useState<jandelMessages[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
