@@ -7,7 +7,7 @@ import { Bell, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/types/database.types';
 
-type jandelNotificationFromSupabase = Database['public']['Tables']['ingame_notifications']['Row'];
+type jandelNotificationFromSupabase = Database['public']['Tables']['jandel_messages']['Row'];
 
 interface jandelNotification {
     id: string;

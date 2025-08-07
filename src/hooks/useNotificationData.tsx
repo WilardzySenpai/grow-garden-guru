@@ -2,22 +2,22 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/database.types';
 
-type Notification = Database['public']['Tables']['ingame_notifications']['Row'];
+type jandelMessages = Database['public']['Tables']['jandel_messages']['Row'];
 
 export const useNotificationData = () => {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [jandelNotifications, jandelSetMessagesNotifications] = useState<jandelMessages[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchNotifications = async () => {
             setLoading(true);
-            const { data, error } = await supabase.from('ingame_notifications').select('*').order('timestamp', { ascending: false });
+            const { data, error } = await supabase.from('jandel_messages').select('*').order('timestamp', { ascending: false });
 
             if (error) {
                 setError(error.message);
             } else {
-                setNotifications(data);
+                jandelSetMessagesNotifications(data);
             }
             setLoading(false);
         };
@@ -25,10 +25,10 @@ export const useNotificationData = () => {
         fetchNotifications();
 
         const channel = supabase
-            .channel('notifications-changes')
+            .channel('jandel-changes')
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'ingame_notifications' },
+                { event: '*', schema: 'public', table: 'jandel_messages' },
                 () => {
                     fetchNotifications();
                 }
@@ -40,5 +40,5 @@ export const useNotificationData = () => {
         };
     }, []);
 
-    return { notifications, loading, error };
+    return { jandelNotifications, loading, error };
 };

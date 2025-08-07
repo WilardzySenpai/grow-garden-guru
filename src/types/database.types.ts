@@ -178,7 +178,7 @@ export interface Database {
                     last_updated?: string | null;
                 };
             };
-            ingame_notifications: {
+            jandel_messages: {
                 Row: {
                     id: string;
                     message: string;
