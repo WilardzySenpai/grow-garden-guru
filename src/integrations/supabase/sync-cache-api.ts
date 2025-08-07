@@ -1,8 +1,14 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL_URL;
+const SUPABASE_URL = 'https://emufdclxlqzwhlcsvtjt.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+export async function syncCache() {
+  for (const endpoint of endpoints) {
+    await syncTable(endpoint);
+  }
+}
 
 const endpoints = [
   {

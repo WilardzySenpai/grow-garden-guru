@@ -46,6 +46,7 @@ import { RecipePedia } from '@/components/RecipePedia';
 import { FruitCalculator } from '@/components/FruitCalculator';
 import { SystemMonitor } from '@/components/SystemMonitor';
 import { NotificationFeed } from '@/components/NotificationFeed';
+import { NotificationDiagnostic } from '@/components/NotificationDiagnostic';
 import { MobileNav } from '@/components/MobileNav';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { MaintenanceOverlay } from '@/components/MaintenanceOverlay';
@@ -634,13 +635,14 @@ const Index = () => {
                                 {isInMaintenance('notifications') && (
                                     <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
                                 )}
-                                <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : ''}>
+                                <div className={isInMaintenance('notifications') ? 'pointer-events-none blur-sm' : 'space-y-6'}>
                                     <NotificationFeed
                                         jandelMessages={jandelMessages}
                                         stockAlerts={stockAlerts}
                                         loading={jandelLoading || alertsLoading}
                                         error={jandelError || alertsError}
                                     />
+                                    <NotificationDiagnostic />
                                 </div>
                             </div>
                         </TabsContent>
