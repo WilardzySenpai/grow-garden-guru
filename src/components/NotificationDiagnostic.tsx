@@ -141,7 +141,7 @@ export const NotificationDiagnostic = () => {
       try {
         const testNotification = {
           user_id: user.id,
-          message: "Test notification from diagnostic tool",
+          message: "🎉 Test notification - Stock alert system is working!",
           item_id: "test_item",
           icon: "test"
         };
@@ -159,17 +159,19 @@ export const NotificationDiagnostic = () => {
           });
         } else {
           diagnosticResults.push({
-            name: "Notification Creation Test",
+            name: "Notification Creation Test", 
             status: "pass",
-            details: "Successfully created test notification"
+            details: "✅ Successfully created test notification! Stock alerts will work."
           });
 
-          // Clean up the test notification
-          await supabase
-            .from('notifications')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('item_id', 'test_item');
+          // Clean up the test notification after a short delay
+          setTimeout(async () => {
+            await supabase
+              .from('notifications')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('item_id', 'test_item');
+          }, 3000);
         }
       } catch (err) {
         diagnosticResults.push({
