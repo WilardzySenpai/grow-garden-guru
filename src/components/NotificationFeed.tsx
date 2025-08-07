@@ -1,59 +1,75 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, X } from 'lucide-react';
+import { Bell, X, Package } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/types/database.types';
 
-type jandelNotificationFromSupabase = Database['public']['Tables']['jandel_messages']['Row'];
+type JandelMessage = Database['public']['Tables']['jandel_messages']['Row'];
+type StockAlert = Database['public']['Tables']['notifications']['Row'];
 
-interface jandelNotification {
-    id: string;
-    type: 'info' | 'warning' | 'success' | 'error';
+// Unified notification structure
+interface UnifiedNotification {
+    id: string; // Combination of type and id
+    type: 'jandel' | 'stock_alert';
     title: string;
     message: string;
     timestamp: Date;
     read: boolean;
+    icon?: string;
+    originalId: string | number;
 }
 
-interface jandelNotificationFeedProps {
-    initialNotifications: jandelNotificationFromSupabase[];
+interface NotificationFeedProps {
+    jandelMessages: JandelMessage[];
+    stockAlerts: StockAlert[];
     loading: boolean;
     error: string | null;
 }
 
-export const NotificationFeed = ({ initialNotifications, loading, error }: jandelNotificationFeedProps) => {
-    const [notifications, setNotifications] = useState<jandelNotification[]>([]);
+export const NotificationFeed = ({ jandelMessages, stockAlerts, loading, error }: NotificationFeedProps) => {
+    const [readStatuses, setReadStatuses] = useState<Record<string, boolean>>({});
 
-    useEffect(() => {
-        const transformedNotifications = initialNotifications.map(n => ({
-            id: n.id,
-            type: 'info' as const,
-            title: 'Janel Message (Owner)',
+    const notifications = useMemo(() => {
+        const transformedJandel = jandelMessages.map(n => ({
+            id: `jandel-${n.id}`,
+            originalId: n.id,
+            type: 'jandel' as const,
+            title: 'Jandel Message',
             message: n.message,
             timestamp: new Date(n.timestamp),
-            read: false
+            read: readStatuses[`jandel-${n.id}`] || false,
+            icon: 'megaphone'
         }));
-        setNotifications(transformedNotifications);
 
-        if (transformedNotifications.length > 0) {
-            const lastNotification = transformedNotifications[0];
-            if (notifications.findIndex(n => n.id === lastNotification.id) === -1) {
-                toast({
-                    title: lastNotification.title,
-                    description: lastNotification.message,
-                });
+        const transformedAlerts = stockAlerts.map(a => ({
+            id: `stock-${a.id}`,
+            originalId: a.id,
+            type: 'stock_alert' as const,
+            title: 'Stock Alert',
+            message: a.message,
+            timestamp: new Date(a.created_at),
+            read: readStatuses[`stock-${a.id}`] || a.read,
+            icon: a.icon || 'package'
+        }));
+
+        return [...transformedJandel, ...transformedAlerts].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    }, [jandelMessages, stockAlerts, readStatuses]);
+
+    useEffect(() => {
+        if (notifications.length > 0) {
+            const lastNotification = notifications[0];
+            // Basic toast for new Jandel messages, could be expanded
+            if (lastNotification.type === 'jandel' && !lastNotification.read) {
+                 // This might need more robust logic to prevent spamming toasts
             }
         }
-    }, [initialNotifications]);
-
+    }, [notifications]);
 
     const markAsRead = (id: string) => {
-        setNotifications(prev =>
-            prev.map(notif => notif.id === id ? { ...notif, read: true } : notif)
-        );
+        setReadStatuses(prev => ({ ...prev, [id]: true }));
     };
 
     const clearNotification = (id: string) => {

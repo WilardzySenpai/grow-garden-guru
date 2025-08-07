@@ -92,7 +92,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
             }
             
             // Transform the data to match expected structure
-            const transformedData: StockData = {
+            let transformedData: StockData = {
                 seed_stock: Array.isArray(data.seed_stock) ? data.seed_stock : [],
                 gear_stock: Array.isArray(data.gear_stock) ? data.gear_stock : [],
                 egg_stock: Array.isArray(data.egg_stock) ? data.egg_stock : [],
@@ -102,6 +102,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
                 notifications: Array.isArray(data.notifications) ? data.notifications : [],
                 discord_invite: typeof data.discord_invite === 'string' ? data.discord_invite : ''
             };
+
 
             if (debug) {
                 console.log('[Stock Data] Transformed data:', transformedData);
@@ -134,7 +135,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
             const hasDataChanged = !isEqual(marketData, transformedData);
             
             // --- Stock Alert Notification Logic ---
-            if (prevMarketDataRef.current && alertItemIds.size > 0) {
+            if (prevMarketDataRef.current && alertItemIds.size > 0 && userId) {
                 const allOldItems = [
                     ...prevMarketDataRef.current.seed_stock,
                     ...prevMarketDataRef.current.gear_stock,
@@ -152,7 +153,30 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     if (alertItemIds.has(newItem.item_id)) {
                         const oldStock = oldStockMap.get(newItem.item_id);
                         if ((oldStock === 0 || oldStock === undefined) && newItem.quantity > 0) {
+                            // Show a toast for immediate feedback
                             toast.success(`${newItem.display_name} is back in stock!`);
+
+                            // Create a persistent notification
+                            const insertNotification = async () => {
+                                const { error: insertError } = await supabase
+                                    .from('notifications')
+                                    .insert({
+                                        user_id: userId,
+                                        message: `${newItem.display_name} is back in stock!`,
+                                        item_id: newItem.item_id,
+                                        icon: 'package', // Default icon, can be customized later
+                                    });
+
+                                if (insertError) {
+                                    console.error('[Stock Alert] Failed to insert notification:', insertError);
+                                    toast.error('Failed to create a notification for the stock alert.');
+                                } else if (debug) {
+                                    console.log(`[Stock Alert] Notification created for ${newItem.item_id}`);
+                                }
+                            };
+
+                            insertNotification();
+
                             if (debug) {
                                 console.log(`[Stock Alert] Fired for ${newItem.item_id} (${newItem.display_name})`);
                             }
