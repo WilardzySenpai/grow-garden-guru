@@ -178,7 +178,7 @@ export interface Database {
                     last_updated?: string | null;
                 };
             };
-            notifications: {
+            ingame_notifications: {
                 Row: {
                     id: string;
                     message: string;

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/database.types';
 
-type Notification = Database['public']['Tables']['notifications']['Row'];
+type Notification = Database['public']['Tables']['ingame_notifications']['Row'];
 
 export const useNotificationData = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -12,7 +12,7 @@ export const useNotificationData = () => {
     useEffect(() => {
         const fetchNotifications = async () => {
             setLoading(true);
-            const { data, error } = await supabase.from('notifications').select('*').order('timestamp', { ascending: false });
+            const { data, error } = await supabase.from('ingame_notifications').select('*').order('timestamp', { ascending: false });
 
             if (error) {
                 setError(error.message);
@@ -28,7 +28,7 @@ export const useNotificationData = () => {
             .channel('notifications-changes')
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'notifications' },
+                { event: '*', schema: 'public', table: 'ingame_notifications' },
                 () => {
                     fetchNotifications();
                 }
