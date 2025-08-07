@@ -1,9 +1,9 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, X, Package } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/types/database.types';
 
@@ -30,46 +30,39 @@ interface NotificationFeedProps {
 }
 
 export const NotificationFeed = ({ jandelMessages, stockAlerts, loading, error }: NotificationFeedProps) => {
-    const [readStatuses, setReadStatuses] = useState<Record<string, boolean>>({});
+    const [notifications, setNotifications] = useState<UnifiedNotification[]>([]);
 
-    const notifications = useMemo(() => {
-        const transformedJandel = jandelMessages.map(n => ({
+    useEffect(() => {
+        const transformedJandel = jandelMessages.map((n): UnifiedNotification => ({
             id: `jandel-${n.id}`,
             originalId: n.id,
             type: 'jandel' as const,
             title: 'Jandel Message',
             message: n.message,
             timestamp: new Date(n.timestamp),
-            read: readStatuses[`jandel-${n.id}`] || false,
+            read: false, // Jandel messages are always new
             icon: 'megaphone'
         }));
 
-        const transformedAlerts = stockAlerts.map(a => ({
+        const transformedAlerts = stockAlerts.map((a): UnifiedNotification => ({
             id: `stock-${a.id}`,
             originalId: a.id,
             type: 'stock_alert' as const,
             title: 'Stock Alert',
             message: a.message,
             timestamp: new Date(a.created_at),
-            read: readStatuses[`stock-${a.id}`] || a.read,
+            read: a.read,
             icon: a.icon || 'package'
         }));
 
-        return [...transformedJandel, ...transformedAlerts].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    }, [jandelMessages, stockAlerts, readStatuses]);
-
-    useEffect(() => {
-        if (notifications.length > 0) {
-            const lastNotification = notifications[0];
-            // Basic toast for new Jandel messages, could be expanded
-            if (lastNotification.type === 'jandel' && !lastNotification.read) {
-                 // This might need more robust logic to prevent spamming toasts
-            }
-        }
-    }, [notifications]);
+        const allNotifications = [...transformedJandel, ...transformedAlerts].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        setNotifications(allNotifications);
+    }, [jandelMessages, stockAlerts]);
 
     const markAsRead = (id: string) => {
-        setReadStatuses(prev => ({ ...prev, [id]: true }));
+        setNotifications(prev =>
+            prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+        );
     };
 
     const clearNotification = (id: string) => {
@@ -81,9 +74,9 @@ export const NotificationFeed = ({ jandelMessages, stockAlerts, loading, error }
     };
 
     const markAllAsRead = () => {
-        setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
         const unreadCount = notifications.filter(n => !n.read).length;
         if (unreadCount > 0) {
+            setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
             toast({
                 title: "All notifications marked as read",
                 description: `${unreadCount} notifications marked as read.`,
