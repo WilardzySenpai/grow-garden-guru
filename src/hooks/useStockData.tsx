@@ -135,6 +135,15 @@ export const useStockData = (userId: string | null): StockDataHook => {
             const hasDataChanged = !isEqual(marketData, transformedData);
             
             // --- Stock Alert Notification Logic ---
+            if (debug) {
+                console.log('[Stock Alert] Checking stock alerts:', {
+                    hasPrevData: !!prevMarketDataRef.current,
+                    alertItemsCount: alertItemIds.size,
+                    alertItems: Array.from(alertItemIds),
+                    userId: userId
+                });
+            }
+
             if (prevMarketDataRef.current && alertItemIds.size > 0 && userId) {
                 const allOldItems = [
                     ...prevMarketDataRef.current.seed_stock,
@@ -149,37 +158,62 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     ...transformedData.egg_stock,
                 ];
 
+                if (debug) {
+                    console.log('[Stock Alert] Comparing stock levels:', {
+                        oldItems: allOldItems.length,
+                        newItems: allNewItems.length
+                    });
+                }
+
                 for (const newItem of allNewItems) {
                     if (alertItemIds.has(newItem.item_id)) {
-                        const oldStock = oldStockMap.get(newItem.item_id);
-                        if ((oldStock === 0 || oldStock === undefined) && newItem.quantity > 0) {
+                        const oldStock = oldStockMap.get(newItem.item_id) || 0;
+                        
+                        if (debug) {
+                            console.log(`[Stock Alert] Checking ${newItem.display_name}:`, {
+                                itemId: newItem.item_id,
+                                oldStock,
+                                newStock: newItem.quantity,
+                                willTrigger: oldStock === 0 && newItem.quantity > 0
+                            });
+                        }
+
+                        if (oldStock === 0 && newItem.quantity > 0) {
+                            console.log(`🔔 [Stock Alert] Triggering for ${newItem.display_name}!`);
+                            
                             // Show a toast for immediate feedback
-                            toast.success(`${newItem.display_name} is back in stock!`);
+                            toast.success(`🎉 ${newItem.display_name} is back in stock!`, {
+                                description: `Quantity: ${newItem.quantity}`,
+                                action: {
+                                    label: "View Market",
+                                    onClick: () => window.location.href = "/market"
+                                }
+                            });
 
                             // Create a persistent notification
                             const insertNotification = async () => {
-                                const { error: insertError } = await supabase
-                                    .from('notifications')
-                                    .insert({
-                                        user_id: userId,
-                                        message: `${newItem.display_name} is back in stock!`,
-                                        item_id: newItem.item_id,
-                                        icon: 'package', // Default icon, can be customized later
-                                    });
+                                try {
+                                    const { error: insertError } = await supabase
+                                        .from('notifications')
+                                        .insert({
+                                            user_id: userId,
+                                            message: `${newItem.display_name} is back in stock! (Quantity: ${newItem.quantity})`,
+                                            item_id: newItem.item_id,
+                                            icon: 'stock_alert',
+                                        });
 
-                                if (insertError) {
-                                    console.error('[Stock Alert] Failed to insert notification:', insertError);
-                                    toast.error('Failed to create a notification for the stock alert.');
-                                } else if (debug) {
-                                    console.log(`[Stock Alert] Notification created for ${newItem.item_id}`);
+                                    if (insertError) {
+                                        console.error('[Stock Alert] Failed to insert notification:', insertError);
+                                        toast.error('Failed to save stock alert notification.');
+                                    } else {
+                                        console.log(`✅ [Stock Alert] Notification saved for ${newItem.display_name}`);
+                                    }
+                                } catch (err) {
+                                    console.error('[Stock Alert] Error creating notification:', err);
                                 }
                             };
 
                             insertNotification();
-
-                            if (debug) {
-                                console.log(`[Stock Alert] Fired for ${newItem.item_id} (${newItem.display_name})`);
-                            }
                         }
                     }
                 }
