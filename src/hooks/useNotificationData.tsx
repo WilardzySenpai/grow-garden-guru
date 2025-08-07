@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/database.types';
 
-type Notification = Database['public']['Tables']['jandel_messages']['Row'];
+type jandelMessages = Database['public']['Tables']['jandel_messages']['Row'];
 
 export const useNotificationData = () => {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notifications, setNotifications] = useState<jandelMessages[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
