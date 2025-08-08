@@ -13,11 +13,7 @@ import { ItemCard } from '@/components/ItemCard';
 
 import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { supabase } from '@/integrations/supabase/client';
 
 import {
     Select,
@@ -106,16 +102,12 @@ export const ItemEncyclopedia = () => {
             } else {
                 // Fallback: fetch from Supabase
                 try {
-                    // Use Vite environment variables for Supabase credentials
-                    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-                    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
-                    if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('Supabase credentials missing');
-                    const supabaseFallback = createClient(SUPABASE_URL, SUPABASE_KEY);
-                    const { data: itemsCache } = await supabaseFallback.from('items').select('*');
+                    // Use shared Supabase client
+                    const { data: itemsCache } = await supabase.from('items').select('*');
                     setItems(Array.isArray(itemsCache) ? itemsCache : []);
-                    const { data: petsCache } = await supabaseFallback.from('pets').select('*');
+                    const { data: petsCache } = await supabase.from('pets').select('*');
                     setPets(Array.isArray(petsCache) ? petsCache : []);
-                    const { data: weatherCache } = await supabaseFallback.from('weather').select('*');
+                    const { data: weatherCache } = await supabase.from('weather').select('*');
                     setWeatherItems(Array.isArray(weatherCache) ? weatherCache : []);
                     console.log('ItemEncyclopedia: Data loaded from Supabase cache');
                 } catch (cacheErr) {
