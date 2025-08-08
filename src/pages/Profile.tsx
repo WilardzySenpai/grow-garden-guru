@@ -6,10 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Leaf, ArrowLeft, User, Trash2, Bell } from 'lucide-react';
+import { Leaf, ArrowLeft, User, Trash2, Bell, TriangleAlert } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { maskEmail } from '@/lib/utils';
@@ -297,6 +298,14 @@ const Profile = () => {
                             <p>Loading items...</p>
                         ) : (
                             <>
+                                <Alert variant="destructive" className="mb-4">
+                                    <TriangleAlert className="h-4 w-4" />
+                                    <AlertTitle>Under Development</AlertTitle>
+                                    <AlertDescription>
+                                        This feature is still a work in progress and may not work as expected.
+                                        We appreciate your patience as we continue to improve it.
+                                    </AlertDescription>
+                                </Alert>
                                 <ScrollArea className="h-72 w-full rounded-md border">
                                     <Accordion type="multiple" className="w-full">
                                         {Object.entries(
