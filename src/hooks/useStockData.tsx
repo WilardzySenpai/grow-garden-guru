@@ -31,7 +31,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
         COSMETIC_MERCHANT: 0
     });
 
-    const debug = import.meta.env.DEV;
+    const debug = (typeof window !== 'undefined' && localStorage.getItem('debug') === '1') || import.meta.env.DEV;
 
     // Fetch user's stock alert preferences
     useEffect(() => {
@@ -42,10 +42,25 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     .from('user_stock_alerts')
                     .select('item_id')
                     .eq('user_id', userId);
-
-                if (error) throw error;
-
-                setAlertItemIds(new Set(data.map(item => item.item_id)));
+                
+                // Expand alert IDs with common variations (e.g., seed vs base id)
+                const baseIds = (data || []).map((item) => item.item_id);
+                const expanded = new Set<string>();
+                for (const id of baseIds) {
+                    expanded.add(id);
+                    if (id.endsWith('_seed')) {
+                        expanded.add(id.replace(/_seed$/, ''));
+                    } else {
+                        expanded.add(`${id}_seed`);
+                    }
+                }
+                if (debug) {
+                    console.log('[Stock Alert] Loaded user alert IDs:', {
+                        baseIds,
+                        expanded: Array.from(expanded)
+                    });
+                }
+                setAlertItemIds(expanded);
             } catch (err) {
                 console.error("Failed to fetch user stock alerts:", err);
             } finally {
