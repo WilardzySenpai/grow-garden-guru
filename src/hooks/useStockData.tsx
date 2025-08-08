@@ -149,6 +149,9 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     ...prevMarketDataRef.current.seed_stock,
                     ...prevMarketDataRef.current.gear_stock,
                     ...prevMarketDataRef.current.egg_stock,
+                    ...prevMarketDataRef.current.cosmetic_stock,
+                    ...prevMarketDataRef.current.eventshop_stock,
+                    ...prevMarketDataRef.current.travelingmerchant_stock,
                 ];
                 const oldStockMap = new Map(allOldItems.map(item => [item.item_id, item.quantity]));
 
@@ -156,6 +159,9 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     ...transformedData.seed_stock,
                     ...transformedData.gear_stock,
                     ...transformedData.egg_stock,
+                    ...transformedData.cosmetic_stock,
+                    ...transformedData.eventshop_stock,
+                    ...transformedData.travelingmerchant_stock,
                 ];
 
                 if (debug) {
