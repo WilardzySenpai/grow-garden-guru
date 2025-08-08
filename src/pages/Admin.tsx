@@ -16,6 +16,7 @@ import {
     Power,
     PowerOff,
     Bug,
+    BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
@@ -1428,7 +1429,8 @@ const Admin = () => {
                                         encyclopedia: { label: 'Item Encyclopedia', icon: Database, description: 'Complete database of game items' },
                                         calculator: { label: 'Fruit Calculator', icon: Settings, description: 'Fruit calculation and optimization tools' },
                                         system: { label: 'System Monitor', icon: Server, description: 'System performance and health monitoring' },
-                                        notifications: { label: 'Notifications', icon: AlertTriangle, description: 'User notifications and alerts system' }
+                                        notifications: { label: 'Notifications', icon: AlertTriangle, description: 'User notifications and alerts system' },
+                                        recipes: { label: 'Recipe Book', icon: BookOpen, description: 'Crafting and cooking recipes' }
                                     };
 
                                     const componentInfo = componentLabels[component as keyof typeof componentLabels];
