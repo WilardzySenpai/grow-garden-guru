@@ -191,21 +191,27 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     if (alertItemIds.has(newItem.item_id)) {
                         const oldStock = oldStockMap.get(newItem.item_id) || 0;
                         
+                        const willTrigger = newItem.quantity > oldStock;
                         if (debug) {
                             console.log(`[Stock Alert] Checking ${newItem.display_name}:`, {
                                 itemId: newItem.item_id,
                                 oldStock,
                                 newStock: newItem.quantity,
-                                willTrigger: oldStock === 0 && newItem.quantity > 0
+                                willTrigger
                             });
                         }
 
-                        if (oldStock === 0 && newItem.quantity > 0) {
+                        if (willTrigger) {
+                            const isRestock = oldStock === 0;
+                            const message = isRestock
+                                ? `🎉 ${newItem.display_name} is back in stock!`
+                                : `📈 ${newItem.display_name} stock has increased!`;
+
                             console.log(`🔔 [Stock Alert] Triggering for ${newItem.display_name}!`);
                             
                             // Show a toast for immediate feedback
-                            toast.success(`🎉 ${newItem.display_name} is back in stock!`, {
-                                description: `Quantity: ${newItem.quantity}`,
+                            toast.success(message, {
+                                description: `Now at quantity: ${newItem.quantity}`,
                                 action: {
                                     label: "View Market",
                                     onClick: () => window.location.href = "/market"
