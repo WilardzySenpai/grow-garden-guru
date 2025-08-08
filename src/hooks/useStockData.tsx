@@ -21,6 +21,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
     const isInitialFetchRef = useRef(true);
     const prevMarketDataRef = useRef<StockData | null>(null);
     const [alertItemIds, setAlertItemIds] = useState<Set<string>>(new Set());
+    const [isAlertsLoaded, setIsAlertsLoaded] = useState(false);
 
     // Keep track of last update times for each data type
     const lastUpdateRef = useRef<Record<keyof typeof UPDATE_INTERVALS, number>>({
@@ -47,6 +48,8 @@ export const useStockData = (userId: string | null): StockDataHook => {
                 setAlertItemIds(new Set(data.map(item => item.item_id)));
             } catch (err) {
                 console.error("Failed to fetch user stock alerts:", err);
+            } finally {
+                setIsAlertsLoaded(true);
             }
         };
 
@@ -54,8 +57,8 @@ export const useStockData = (userId: string | null): StockDataHook => {
     }, [userId]);
     
     const fetchStockData = useCallback(async () => {
-        if (!userId) {
-            if (debug) console.log('[Stock Data] No userId, skipping fetch');
+        if (!userId || !isAlertsLoaded) {
+            if (debug) console.log('[Stock Data] No userId or alerts not loaded, skipping fetch');
             return;
         }
 
@@ -149,9 +152,6 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     ...prevMarketDataRef.current.seed_stock,
                     ...prevMarketDataRef.current.gear_stock,
                     ...prevMarketDataRef.current.egg_stock,
-                    ...prevMarketDataRef.current.cosmetic_stock,
-                    ...prevMarketDataRef.current.eventshop_stock,
-                    ...prevMarketDataRef.current.travelingmerchant_stock,
                 ];
                 const oldStockMap = new Map(allOldItems.map(item => [item.item_id, item.quantity]));
 
@@ -159,9 +159,6 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     ...transformedData.seed_stock,
                     ...transformedData.gear_stock,
                     ...transformedData.egg_stock,
-                    ...transformedData.cosmetic_stock,
-                    ...transformedData.eventshop_stock,
-                    ...transformedData.travelingmerchant_stock,
                 ];
 
                 if (debug) {
@@ -225,10 +222,6 @@ export const useStockData = (userId: string | null): StockDataHook => {
                 }
             }
 
-            // This ref must be updated *after* the comparison logic and *before* the state update logic.
-            // This ensures that the next fetch will always compare against the most recent data.
-            prevMarketDataRef.current = transformedData;
-
             // Update if it's initial fetch, data should update based on interval, or data has changed
             if (isInitialFetch || shouldUpdate || hasDataChanged) {
                 if (debug) {
@@ -268,6 +261,8 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     return transformedData;
                 });
 
+                prevMarketDataRef.current = transformedData;
+
 
                 if (isInitialFetchRef.current) {
                     isInitialFetchRef.current = false;
@@ -285,7 +280,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [userId]);
+    }, [userId, isAlertsLoaded]);
 
     // Effect to trigger fetch when userId becomes available
     useEffect(() => {
