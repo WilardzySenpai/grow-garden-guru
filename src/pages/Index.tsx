@@ -630,7 +630,7 @@ const Index = () => {
                                 </div>
                             </div>
                         </TabsContent>
-                        {/* <TabsContent value="notifications">
+                        <TabsContent value="notifications">
                             <div className="relative">
                                 {isInMaintenance('notifications') && (
                                     <MaintenanceOverlay componentName="Notifications" className="absolute inset-0 z-10" />
@@ -642,10 +642,10 @@ const Index = () => {
                                         loading={jandelLoading || alertsLoading}
                                         error={jandelError || alertsError}
                                     />
-                                    <NotificationDiagnostic />
+                                    {/* <NotificationDiagnostic /> */}
                                 </div>
                             </div>
-                        </TabsContent> */}
+                        </TabsContent>
                     </Tabs>
                 )}
             </main>
