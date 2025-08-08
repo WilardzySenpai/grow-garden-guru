@@ -219,6 +219,10 @@ export const useStockData = (userId: string | null): StockDataHook => {
                 }
             }
 
+            // This ref must be updated *after* the comparison logic and *before* the state update logic.
+            // This ensures that the next fetch will always compare against the most recent data.
+            prevMarketDataRef.current = transformedData;
+
             // Update if it's initial fetch, data should update based on interval, or data has changed
             if (isInitialFetch || shouldUpdate || hasDataChanged) {
                 if (debug) {
@@ -257,8 +261,6 @@ export const useStockData = (userId: string | null): StockDataHook => {
                     }
                     return transformedData;
                 });
-
-                prevMarketDataRef.current = transformedData;
 
 
                 if (isInitialFetchRef.current) {
