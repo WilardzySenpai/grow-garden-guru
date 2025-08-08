@@ -31,7 +31,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
         COSMETIC_MERCHANT: 0
     });
 
-    const debug = process.env.NODE_ENV === 'development';
+    const debug = import.meta.env.DEV;
 
     // Fetch user's stock alert preferences
     useEffect(() => {
@@ -76,11 +76,15 @@ export const useStockData = (userId: string | null): StockDataHook => {
             setError(null);
 
             if (debug) console.log('[Stock Data] Fetching from API...');
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            const jstudioKey = (import.meta as any).env?.VITE_JSTUDIO_KEY;
+            if (jstudioKey) {
+                headers['Jstudio-key'] = jstudioKey;
+            } else if (debug) {
+                console.warn('[Stock Data] Missing Jstudio-key env; proceeding without it');
+            }
             const response = await fetch('https://api.joshlei.com/v2/growagarden/stock', {
-                headers: {
-                    'Jstudio-key': import.meta.env.VITE_JSTUDIO_KEY,
-                    'Content-Type': 'application/json'
-                }
+                headers
             });
 
             if (!response.ok) {
@@ -299,7 +303,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
     // Set up a single smart fetch with the shortest interval
     useSmartFetch(fetchStockData, UPDATE_INTERVALS.SEED_GEAR, {
         initialFetch: false, // Don't fetch immediately, let the useEffect handle it
-        debug: process.env.NODE_ENV === 'development',
+        debug: import.meta.env.DEV,
         delayMs: 3000
     });
 
