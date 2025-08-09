@@ -17,6 +17,7 @@ import { maskEmail } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { sendBrowserNotification } from '@/lib/browserNotifications';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface AlertItem {
     item_id: string;
@@ -37,9 +38,13 @@ const Profile = () => {
 
     // Browser notification permission state
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+    const [isEmbedded, setIsEmbedded] = useState(false);
     useEffect(() => {
-        if (typeof window !== 'undefined' && 'Notification' in window) {
-            setNotificationPermission(Notification.permission);
+        if (typeof window !== 'undefined') {
+            setIsEmbedded(window.top !== window.self);
+            if ('Notification' in window) {
+                setNotificationPermission(Notification.permission);
+            }
         }
     }, []);
 
@@ -208,6 +213,12 @@ const Profile = () => {
             });
             return;
         }
+        if (isEmbedded) {
+            toast({
+                title: 'Open in new tab recommended',
+                description: 'Browsers may block notification prompts in embedded preview. Open the app in a new tab and try again if this fails.',
+            });
+        }
         try {
             let perm: NotificationPermission = Notification.permission;
             if (perm === 'default') {
@@ -244,15 +255,24 @@ const Profile = () => {
             });
             return;
         }
+        if (isEmbedded) {
+            toast({
+                title: 'Open in new tab',
+                description: 'Notifications are blocked in embedded preview. Open the app in a new tab and try again.',
+                variant: 'destructive',
+            });
+            return;
+        }
         try {
-            sendBrowserNotification('Stock alerts enabled', {
-                body: 'You will be notified when your saved items restock.',
+            sendBrowserNotification('Test: Stock Alerts', {
+                body: 'Test successful! You will be notified when saved items restock.',
                 icon: '/favicon.ico',
                 url: '/market',
                 tag: 'stock-alert-test',
             });
+            toast({ title: 'Test sent', description: 'Check your system notifications.' });
         } catch (e) {
-            // no-op
+            toast({ title: 'Failed to send test', variant: 'destructive' });
         }
     };
 
@@ -309,184 +329,205 @@ const Profile = () => {
                     <p className="text-muted-foreground">Manage your profile information and account</p>
                 </div>
 
-                {/* Profile Form */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <User className="h-5 w-5" />
-                            Profile Information
-                        </CardTitle>
-                        <CardDescription>
-                            Update your display name and avatar
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="flex items-center gap-4">
-                            <Avatar className="h-20 w-20">
-                                <AvatarImage src={avatarUrl} alt="Profile" />
-                                <AvatarFallback className="text-lg">
-                                    {displayName ? displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                                <Label htmlFor="avatar-url">Avatar URL</Label>
-                                <Input id="avatar-url" type="url" placeholder="https://example.com/avatar.jpg" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="display-name">Display Name</Label>
-                            <Input id="display-name" type="text" placeholder="Enter your display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" value={maskEmail(user.email || '')} disabled className="bg-muted" />
-                            <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-                        </div>
-                        <Button onClick={handleUpdateProfile} disabled={loading} className="w-full">
-                            {loading ? "Updating..." : "Update Profile"}
-                        </Button>
-                    </CardContent>
-                </Card>
+                <Tabs defaultValue="profile" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="profile">Profile</TabsTrigger>
+                        <TabsTrigger value="notifications">Notifications</TabsTrigger>
+                        <TabsTrigger value="danger">Danger Zone</TabsTrigger>
+                    </TabsList>
 
-                {/* Browser Notifications */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Bell className="h-5 w-5" />
-                            Browser Notifications
-                        </CardTitle>
-                        <CardDescription>
-                            Enable system notifications for stock alerts while this site is open in a tab.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <div className="text-sm text-muted-foreground">
-                            Status: <span className="font-medium text-foreground capitalize">{notificationPermission}</span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <Button onClick={handleEnableNotifications} disabled={notificationPermission === 'granted'}>
-                                {notificationPermission === 'granted' ? 'Enabled' : 'Enable notifications'}
-                            </Button>
-                            <Button variant="secondary" onClick={handleTestNotification} disabled={notificationPermission !== 'granted'}>
-                                Send test notification
-                            </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            Note: We only send browser notifications when the tab is hidden to avoid duplicate toasts.
-                        </p>
-                    </CardContent>
-                </Card>
-
-                {/* Stock Alerts */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Bell className="h-5 w-5" />
-                            Stock Notifications
-                        </CardTitle>
-                        <CardDescription>
-                            Select items to be notified about when they are back in stock.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {alertsLoading ? (
-                            <p>Loading items...</p>
-                        ) : (
-                            <>
-                                <Alert variant="destructive" className="mb-4">
-                                    <TriangleAlert className="h-4 w-4" />
-                                    <AlertTitle>Under Development</AlertTitle>
-                                    <AlertDescription>
-                                        This feature is still a work in progress and may not work as expected.
-                                        We appreciate your patience as we continue to improve it.
-                                    </AlertDescription>
-                                </Alert>
-                                <ScrollArea className="h-72 w-full rounded-md border">
-                                    <Accordion type="multiple" className="w-full">
-                                        {Object.entries(
-                                            allItems.reduce((acc, item) => {
-                                                const type = item.type || 'Other';
-                                                if (!acc[type]) {
-                                                    acc[type] = [];
-                                                }
-                                                acc[type].push(item);
-                                                return acc;
-                                            }, {} as Record<string, AlertItem[]>)
-                                        )
-                                        .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
-                                        .map(([type, items]) => (
-                                            <AccordionItem value={type} key={type}>
-                                                <AccordionTrigger className="px-4 py-2 text-sm font-medium capitalize">
-                                                    {type.replace(/_/g, ' ')}
-                                                </AccordionTrigger>
-                                                <AccordionContent>
-                                                    <div className="space-y-4 p-4 border-t">
-                                                        {items
-                                                            .sort((a, b) => a.display_name.localeCompare(b.display_name))
-                                                            .map((item) => (
-                                                            <div key={item.item_id} className="flex items-center space-x-2">
-                                                                <Checkbox
-                                                                    id={item.item_id}
-                                                                    checked={selectedAlerts.has(item.item_id)}
-                                                                    onCheckedChange={(checked) => handleAlertSelectionChange(item.item_id, !!checked)}
-                                                                />
-                                                                <label htmlFor={item.item_id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                                    {item.display_name}
-                                                                </label>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </AccordionContent>
-                                            </AccordionItem>
-                                        ))}
-                                    </Accordion>
-                                </ScrollArea>
-                                <Button onClick={handleSaveChanges} disabled={alertsLoading} className="w-full mt-4">
-                                    {alertsLoading ? "Saving..." : "Save Preferences"}
+                    <TabsContent value="profile">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <User className="h-5 w-5" />
+                                    Profile Information
+                                </CardTitle>
+                                <CardDescription>
+                                    Update your display name and avatar
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <Avatar className="h-20 w-20">
+                                        <AvatarImage src={avatarUrl} alt="Profile" />
+                                        <AvatarFallback className="text-lg">
+                                            {displayName ? displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <Label htmlFor="avatar-url">Avatar URL</Label>
+                                        <Input id="avatar-url" type="url" placeholder="https://example.com/avatar.jpg" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="display-name">Display Name</Label>
+                                    <Input id="display-name" type="text" placeholder="Enter your display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input id="email" type="email" value={maskEmail(user.email || '')} disabled className="bg-muted" />
+                                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                                </div>
+                                <Button onClick={handleUpdateProfile} disabled={loading} className="w-full">
+                                    {loading ? "Updating..." : "Update Profile"}
                                 </Button>
-                            </>
-                        )}
-                    </CardContent>
-                </Card>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
 
-                {/* Danger Zone */}
-                <Card className="border-destructive/20">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-destructive">
-                            <Trash2 className="h-5 w-5" />
-                            Danger Zone
-                        </CardTitle>
-                        <CardDescription>
-                            Permanently delete your account and all associated data
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" className="w-full">Delete Account</Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete your
-                                        account and remove all your data from our servers.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        onClick={handleDeleteAccount}
-                                        disabled={deleteLoading}
-                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    >
-                                        {deleteLoading ? "Deleting..." : "Yes, delete my account"}
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </CardContent>
-                </Card>
+                    <TabsContent value="notifications" className="space-y-6">
+                        {/* Browser Notifications */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Bell className="h-5 w-5" />
+                                    Browser Notifications
+                                </CardTitle>
+                                <CardDescription>
+                                    Enable system notifications for stock alerts while this site is open in a tab.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {isEmbedded && (
+                                    <Alert className="mb-2">
+                                        <TriangleAlert className="h-4 w-4" />
+                                        <AlertTitle>Open in a new tab</AlertTitle>
+                                        <AlertDescription>
+                                            Notifications may be blocked in this embedded preview. Open the app in a new tab and try again.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                                <div className="text-sm text-muted-foreground">
+                                    Status: <span className="font-medium text-foreground capitalize">{notificationPermission}</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <Button onClick={handleEnableNotifications} disabled={notificationPermission === 'granted'}>
+                                        {notificationPermission === 'granted' ? 'Enabled' : 'Enable notifications'}
+                                    </Button>
+                                    <Button variant="secondary" onClick={handleTestNotification} disabled={notificationPermission !== 'granted'}>
+                                        Send test notification
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Note: We only send browser notifications when the tab is hidden to avoid duplicate toasts.
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        {/* Stock Alerts */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Bell className="h-5 w-5" />
+                                    Stock Notifications
+                                </CardTitle>
+                                <CardDescription>
+                                    Select items to be notified about when they are back in stock.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {alertsLoading ? (
+                                    <p>Loading items...</p>
+                                ) : (
+                                    <>
+                                        <Alert variant="destructive" className="mb-4">
+                                            <TriangleAlert className="h-4 w-4" />
+                                            <AlertTitle>Under Development</AlertTitle>
+                                            <AlertDescription>
+                                                This feature is still a work in progress and may not work as expected.
+                                                We appreciate your patience as we continue to improve it.
+                                            </AlertDescription>
+                                        </Alert>
+                                        <ScrollArea className="h-72 w-full rounded-md border">
+                                            <Accordion type="multiple" className="w-full">
+                                                {Object.entries(
+                                                    allItems.reduce((acc, item) => {
+                                                        const type = item.type || 'Other';
+                                                        if (!acc[type]) {
+                                                            acc[type] = [];
+                                                        }
+                                                        acc[type].push(item);
+                                                        return acc;
+                                                    }, {} as Record<string, AlertItem[]>)
+                                                )
+                                                .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
+                                                .map(([type, items]) => (
+                                                    <AccordionItem value={type} key={type}>
+                                                        <AccordionTrigger className="px-4 py-2 text-sm font-medium capitalize">
+                                                            {type.replace(/_/g, ' ')}
+                                                        </AccordionTrigger>
+                                                        <AccordionContent>
+                                                            <div className="space-y-4 p-4 border-t">
+                                                                {items
+                                                                    .sort((a, b) => a.display_name.localeCompare(b.display_name))
+                                                                    .map((item) => (
+                                                                    <div key={item.item_id} className="flex items-center space-x-2">
+                                                                        <Checkbox
+                                                                            id={item.item_id}
+                                                                            checked={selectedAlerts.has(item.item_id)}
+                                                                            onCheckedChange={(checked) => handleAlertSelectionChange(item.item_id, !!checked)}
+                                                                        />
+                                                                        <label htmlFor={item.item_id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                                            {item.display_name}
+                                                                        </label>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                                ))}
+                                            </Accordion>
+                                        </ScrollArea>
+                                        <Button onClick={handleSaveChanges} disabled={alertsLoading} className="w-full mt-4">
+                                            {alertsLoading ? "Saving..." : "Save Preferences"}
+                                        </Button>
+                                    </>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="danger">
+                        <Card className="border-destructive/20">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-destructive">
+                                    <Trash2 className="h-5 w-5" />
+                                    Danger Zone
+                                </CardTitle>
+                                <CardDescription>
+                                    Permanently delete your account and all associated data
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" className="w-full">Delete Account</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete your
+                                                account and remove all your data from our servers.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={handleDeleteAccount}
+                                                disabled={deleteLoading}
+                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            >
+                                                {deleteLoading ? "Deleting..." : "Yes, delete my account"}
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );
