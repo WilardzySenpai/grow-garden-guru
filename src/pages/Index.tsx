@@ -642,7 +642,7 @@ const Index = () => {
                                         loading={jandelLoading || alertsLoading}
                                         error={jandelError || alertsError}
                                     />
-                                    {/* <NotificationDiagnostic /> */}
+                                    <NotificationDiagnostic />
                                 </div>
                             </div>
                         </TabsContent>
