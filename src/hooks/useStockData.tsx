@@ -219,10 +219,9 @@ export const useStockData = (userId: string | null): StockDataHook => {
                                 }
                             });
 
-                            // Browser notification
+                            // Browser notification (only when tab is hidden to avoid duplicates)
                             try {
-                                const notifyWhenActive = localStorage.getItem("notifyWhenActive") === "true";
-                                if (notifyWhenActive || document.hidden) {
+                                if (typeof window !== 'undefined' && 'Notification' in window && document.hidden) {
                                     sendBrowserNotification('Stock Alert', {
                                         body: `${newItem.display_name} ${isRestock ? 'is back in stock' : 'stock increased'} — Qty: ${newItem.quantity}`,
                                         icon: '/favicon.ico',
