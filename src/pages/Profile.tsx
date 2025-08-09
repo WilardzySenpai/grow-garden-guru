@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { maskEmail } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { sendBrowserNotification } from '@/lib/browserNotifications';
 
 interface AlertItem {
     item_id: string;
@@ -33,6 +34,14 @@ const Profile = () => {
     const [allItems, setAllItems] = useState<AlertItem[]>([]);
     const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
     const [alertsLoading, setAlertsLoading] = useState(false);
+
+    // Browser notification permission state
+    const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            setNotificationPermission(Notification.permission);
+        }
+    }, []);
 
     // Redirect if not logged in or if guest
     useEffect(() => {
@@ -190,6 +199,63 @@ const Profile = () => {
         }
     };
 
+    const handleEnableNotifications = async () => {
+        if (typeof window === 'undefined' || !('Notification' in window)) {
+            toast({
+                title: 'Unsupported',
+                description: 'Your browser does not support notifications.',
+                variant: 'destructive',
+            });
+            return;
+        }
+        try {
+            let perm: NotificationPermission = Notification.permission;
+            if (perm === 'default') {
+                perm = await Notification.requestPermission();
+            }
+            setNotificationPermission(perm);
+            if (perm === 'granted') {
+                toast({
+                    title: 'Notifications enabled',
+                    description: 'You will receive stock alerts when the tab is in the background.',
+                });
+            } else {
+                toast({
+                    title: 'Permission not granted',
+                    description: 'You can enable notifications in your browser settings.',
+                    variant: 'destructive',
+                });
+            }
+        } catch (e) {
+            toast({
+                title: 'Error',
+                description: 'Could not request notification permission.',
+                variant: 'destructive',
+            });
+        }
+    };
+
+    const handleTestNotification = () => {
+        if (notificationPermission !== 'granted') {
+            toast({
+                title: 'Permission required',
+                description: 'Enable notifications first.',
+                variant: 'destructive',
+            });
+            return;
+        }
+        try {
+            sendBrowserNotification('Stock alerts enabled', {
+                body: 'You will be notified when your saved items restock.',
+                icon: '/favicon.ico',
+                url: '/market',
+                tag: 'stock-alert-test',
+            });
+        } catch (e) {
+            // no-op
+        }
+    };
+
     const handleDeleteAccount = async () => {
         if (!user || ('isGuest' in user)) return;
 
@@ -279,6 +345,35 @@ const Profile = () => {
                         <Button onClick={handleUpdateProfile} disabled={loading} className="w-full">
                             {loading ? "Updating..." : "Update Profile"}
                         </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Browser Notifications */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Bell className="h-5 w-5" />
+                            Browser Notifications
+                        </CardTitle>
+                        <CardDescription>
+                            Enable system notifications for stock alerts while this site is open in a tab.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <div className="text-sm text-muted-foreground">
+                            Status: <span className="font-medium text-foreground capitalize">{notificationPermission}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <Button onClick={handleEnableNotifications} disabled={notificationPermission === 'granted'}>
+                                {notificationPermission === 'granted' ? 'Enabled' : 'Enable notifications'}
+                            </Button>
+                            <Button variant="secondary" onClick={handleTestNotification} disabled={notificationPermission !== 'granted'}>
+                                Send test notification
+                            </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Note: We only send browser notifications when the tab is hidden to avoid duplicate toasts.
+                        </p>
                     </CardContent>
                 </Card>
 
