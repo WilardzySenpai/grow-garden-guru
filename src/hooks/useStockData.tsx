@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { StockData, StockItem } from '@/types/api';
+import type { StockData, MarketItem } from '@/types/api';
 import { toast } from 'sonner';
 import { sendBrowserNotification } from '@/lib/browserNotifications';
 import StockWorker from '@/workers/stock.worker.ts?worker';
@@ -45,7 +45,7 @@ export const useStockData = (userId: string | null): StockDataHook => {
                 if (loading) setLoading(false);
                 if (refreshing) setRefreshing(false);
             } else if (type === 'stock_alert') {
-                const stockItem = item as StockItem;
+                const stockItem = item as MarketItem;
                 const message = isRestock
                     ? `🎉 ${stockItem.display_name} is back in stock!`
                     : `📈 ${stockItem.display_name} stock has increased!`;
