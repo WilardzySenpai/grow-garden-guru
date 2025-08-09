@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { sendBrowserNotification } from '@/lib/browserNotifications';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { NotificationSettings } from '@/components/NotificationSettings';
 
 interface AlertItem {
     item_id: string;
@@ -377,43 +378,7 @@ const Profile = () => {
                     </TabsContent>
 
                     <TabsContent value="notifications" className="space-y-6">
-                        {/* Browser Notifications */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Bell className="h-5 w-5" />
-                                    Browser Notifications
-                                </CardTitle>
-                                <CardDescription>
-                                    Enable system notifications for stock alerts while this site is open in a tab.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                {isEmbedded && (
-                                    <Alert className="mb-2">
-                                        <TriangleAlert className="h-4 w-4" />
-                                        <AlertTitle>Open in a new tab</AlertTitle>
-                                        <AlertDescription>
-                                            Notifications may be blocked in this embedded preview. Open the app in a new tab and try again.
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                                <div className="text-sm text-muted-foreground">
-                                    Status: <span className="font-medium text-foreground capitalize">{notificationPermission}</span>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <Button onClick={handleEnableNotifications} disabled={notificationPermission === 'granted'}>
-                                        {notificationPermission === 'granted' ? 'Enabled' : 'Enable notifications'}
-                                    </Button>
-                                    <Button variant="secondary" onClick={handleTestNotification} disabled={notificationPermission !== 'granted'}>
-                                        Send test notification
-                                    </Button>
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Note: We only send browser notifications when the tab is hidden to avoid duplicate toasts.
-                                </p>
-                            </CardContent>
-                        </Card>
+                        <NotificationSettings />
 
                         {/* Stock Alerts */}
                         <Card>

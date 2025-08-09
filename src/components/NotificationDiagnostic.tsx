@@ -5,8 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle, AlertTriangle, Bell, Database, Wifi } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { CheckCircle, XCircle, AlertTriangle, Bell, Database, Wifi, Send } from 'lucide-react';
+import { toast } from 'sonner';
+import { sendBrowserNotification } from '@/lib/browserNotifications';
 
 interface DiagnosticResult {
     name: string;
@@ -21,13 +22,28 @@ export const NotificationDiagnostic = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [stockAlerts, setStockAlerts] = useState<any[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
+    const [permissionStatus, setPermissionStatus] = useState<NotificationPermission | null>(null);
+
+    useEffect(() => {
+        if ('Notification' in window) {
+            setPermissionStatus(Notification.permission);
+        }
+    }, []);
+
+    const sendTestNotification = () => {
+        toast.info("Sending test notification...", {
+            description: "Check your system notifications.",
+        });
+        sendBrowserNotification("👋 Test Notification", {
+            body: "If you see this, your browser notifications are working!",
+            url: window.location.href, // links back to the current page
+        });
+    };
 
     const runDiagnostics = async () => {
         if (!user || 'isGuest' in user) {
-            toast({
-                title: "Authentication Required",
+            toast.error("Authentication Required", {
                 description: "Please log in to run diagnostics.",
-                variant: "destructive"
             });
             return;
         }
@@ -36,7 +52,26 @@ export const NotificationDiagnostic = () => {
         const diagnosticResults: DiagnosticResult[] = [];
 
         try {
-            // 1. Check if user can access user_stock_alerts table
+            // 1. Browser Notification Permission
+            if ('Notification' in window) {
+                const permission = Notification.permission;
+                setPermissionStatus(permission);
+                diagnosticResults.push({
+                    name: "Browser Notification Permission",
+                    status: permission === 'granted' ? 'pass' : permission === 'denied' ? 'fail' : 'warning',
+                    details: `Permission status is: ${permission.toUpperCase()}`,
+                    fix: permission === 'denied' ? "You must enable notifications in your browser settings for this site." : "Click 'Allow' when your browser asks for permission."
+                });
+            } else {
+                diagnosticResults.push({
+                    name: "Browser Notification Permission",
+                    status: "fail",
+                    details: "Browser does not support the Notifications API.",
+                    fix: "Try using a modern browser like Chrome, Firefox, or Safari."
+                });
+            }
+
+            // 2. Check if user can access user_stock_alerts table
             try {
                 const { data: alerts, error: alertsError } = await supabase
                     .from('user_stock_alerts')
@@ -137,11 +172,11 @@ export const NotificationDiagnostic = () => {
                 });
             }
 
-            // 4. Test notification creation
+            // 5. Test notification creation (database)
             try {
                 const testNotification = {
                     user_id: user.id,
-                    message: "🎉 Test notification - Stock alert system is working!",
+                    message: "🎉 Test DB notification - System is able to save alerts.",
                     item_id: "test_item",
                     icon: "test"
                 };
@@ -152,16 +187,16 @@ export const NotificationDiagnostic = () => {
 
                 if (insertError) {
                     diagnosticResults.push({
-                        name: "Notification Creation Test",
+                        name: "Database Notification Creation",
                         status: "fail",
-                        details: `Cannot create notifications: ${insertError.message}`,
+                        details: `Cannot create DB notifications: ${insertError.message}`,
                         fix: "Check INSERT permissions on notifications table"
                     });
                 } else {
                     diagnosticResults.push({
-                        name: "Notification Creation Test",
+                        name: "Database Notification Creation",
                         status: "pass",
-                        details: "✅ Successfully created test notification! Stock alerts will work."
+                        details: "✅ Successfully created a test notification in the database."
                     });
 
                     // Clean up the test notification after a short delay
@@ -175,14 +210,14 @@ export const NotificationDiagnostic = () => {
                 }
             } catch (err) {
                 diagnosticResults.push({
-                    name: "Notification Creation Test",
+                    name: "Database Notification Creation",
                     status: "fail",
-                    details: `Error creating test notification: ${err}`,
+                    details: `Error creating test DB notification: ${err}`,
                     fix: "Check database connection and permissions"
                 });
             }
 
-            // 5. Check webhook/realtime connection
+            // 6. Check webhook/realtime connection
             try {
                 const channel = supabase
                     .channel('diagnostic-test')
@@ -263,8 +298,17 @@ export const NotificationDiagnostic = () => {
                         disabled={isRunning || !user || 'isGuest' in user}
                         className="flex items-center gap-2"
                     >
-                        {isRunning ? 'Running...' : 'Run Diagnostics'}
+                        {isRunning ? 'Running...' : 'Run Backend Diagnostics'}
                         <Database className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        onClick={sendTestNotification}
+                        disabled={!user || 'isGuest' in user || permissionStatus !== 'granted'}
+                        className="flex items-center gap-2"
+                        variant="outline"
+                    >
+                        Send Test Notification
+                        <Send className="h-4 w-4" />
                     </Button>
                 </div>
 
@@ -346,9 +390,9 @@ export const NotificationDiagnostic = () => {
 
                         <div className="space-y-2">
                             <h4 className="font-semibold">3. Notification Delivery</h4>
-                            <p>• Toast notification appears immediately</p>
-                            <p>• Persistent notification saved to database</p>
-                            <p>• Appears in the Live Notification Feed</p>
+                            <p>• <strong>Browser Notification:</strong> Sent if permission is granted. This is a system-level notification.</p>
+                            <p>• <strong>Toast Notification:</strong> Appears in-app for immediate feedback.</p>
+                            <p>• <strong>Database Notification:</strong> Saved to your account and appears in the Live Notification Feed.</p>
                         </div>
 
                         <div className="space-y-2">
