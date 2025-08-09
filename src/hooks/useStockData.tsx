@@ -4,6 +4,7 @@ import { useSmartFetch, UPDATE_INTERVALS } from './useSmartFetch';
 import isEqual from 'lodash/isEqual';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { sendBrowserNotification } from '@/lib/browserNotifications';
 
 interface StockDataHook {
     marketData: StockData | null;
@@ -217,6 +218,20 @@ export const useStockData = (userId: string | null): StockDataHook => {
                                     onClick: () => window.location.href = "/market"
                                 }
                             });
+
+                            // Browser notification (only when tab is hidden to avoid duplicates)
+                            try {
+                                if (typeof window !== 'undefined' && 'Notification' in window && document.hidden) {
+                                    sendBrowserNotification('Stock Alert', {
+                                        body: `${newItem.display_name} ${isRestock ? 'is back in stock' : 'stock increased'} — Qty: ${newItem.quantity}`,
+                                        icon: '/favicon.ico',
+                                        url: '/market',
+                                        tag: `stock-${newItem.item_id}`
+                                    });
+                                }
+                            } catch (e) {
+                                console.warn('[Stock Alert] Browser notification failed:', e);
+                            }
 
                             // Create a persistent notification
                             const insertNotification = async () => {
