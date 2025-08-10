@@ -191,57 +191,42 @@ export const useStockData = (userId: string | null): StockDataHook => {
                 for (const newItem of allNewItems) {
                     if (alertItemIds.has(newItem.item_id)) {
                         const oldStock = oldStockMap.get(newItem.item_id) || 0;
-
-                        const wasOutOfStock = (oldStock ?? 0) <= 0;
-                        const nowInStock = newItem.quantity > 0;
-                        const willTrigger = wasOutOfStock && nowInStock;
-
+                        
+                        const willTrigger = newItem.quantity > oldStock;
                         if (debug) {
                             console.log(`[Stock Alert] Checking ${newItem.display_name}:`, {
                                 itemId: newItem.item_id,
                                 oldStock,
                                 newStock: newItem.quantity,
-                                wasOutOfStock,
-                                nowInStock,
                                 willTrigger
                             });
                         }
 
                         if (willTrigger) {
-                            const message = `🎉 ${newItem.display_name} is back in stock!`;
+                            const isRestock = oldStock === 0;
+                            const message = isRestock
+                                ? `🎉 ${newItem.display_name} is back in stock!`
+                                : `📈 ${newItem.display_name} stock has increased!`;
 
-                            console.log(`🔔 [Stock Alert] Triggering RESTOCK for ${newItem.display_name}!`);
+                            console.log(`🔔 [Stock Alert] Triggering for ${newItem.display_name}!`);
                             
-                            // Show a toast for immediate feedback (always)
+                            // Show a toast for immediate feedback
                             toast.success(message, {
                                 description: `Now at quantity: ${newItem.quantity}`,
                                 action: {
                                     label: "View Market",
-                                    onClick: () => (window.location.href = "/market"),
-                                },
+                                    onClick: () => window.location.href = "/market"
+                                }
                             });
 
-                            // Browser notification (always if permission granted)
+                            // Browser notification (only when tab is hidden to avoid duplicates)
                             try {
-                                const canNotify =
-                                    typeof window !== 'undefined' &&
-                                    'Notification' in window &&
-                                    Notification.permission === 'granted';
-
-                                if (canNotify) {
+                                if (typeof window !== 'undefined' && 'Notification' in window && document.hidden) {
                                     sendBrowserNotification('Stock Alert', {
-                                        body: `${newItem.display_name} is back in stock — Qty: ${newItem.quantity}`,
+                                        body: `${newItem.display_name} ${isRestock ? 'is back in stock' : 'stock increased'} — Qty: ${newItem.quantity}`,
                                         icon: '/favicon.ico',
                                         url: '/market',
-                                        tag: `stock-${newItem.item_id}`,
-                                    });
-                                } else if (debug) {
-                                    console.log('[Stock Alert] Skipping browser notification', {
-                                        hidden: typeof document !== 'undefined' ? document.hidden : undefined,
-                                        permission:
-                                            typeof window !== 'undefined' && 'Notification' in window
-                                                ? Notification.permission
-                                                : 'unavailable',
+                                        tag: `stock-${newItem.item_id}`
                                     });
                                 }
                             } catch (e) {
