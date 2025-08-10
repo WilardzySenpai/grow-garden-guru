@@ -35,6 +35,7 @@ const Profile = () => {
     const [allItems, setAllItems] = useState<AlertItem[]>([]);
     const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
     const [alertsLoading, setAlertsLoading] = useState(false);
+    const [searchFilters, setSearchFilters] = useState<Record<string, string>>({});
 
     // Browser notification permission state
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
@@ -515,8 +516,46 @@ const Profile = () => {
                                                         </AccordionTrigger>
                                                         <AccordionContent>
                                                             <div className="space-y-4 p-4 border-t">
+                                                                <div className="space-y-4 mb-4">
+                                                                    <Input 
+                                                                        type="search"
+                                                                        placeholder="🔍 Search items..."
+                                                                        className="w-full"
+                                                                        onChange={(e) => {
+                                                                            const searchValue = e.target.value.toLowerCase();
+                                                                            setSearchFilters((prev) => ({
+                                                                                ...prev,
+                                                                                [type]: searchValue
+                                                                            }));
+                                                                        }}
+                                                                    />
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <Checkbox
+                                                                            id={`select-all-${type}`}
+                                                                            checked={items.every(item => selectedAlerts.has(item.item_id))}
+                                                                            onCheckedChange={(checked) => {
+                                                                                const newSet = new Set(selectedAlerts);
+                                                                                items.forEach(item => {
+                                                                                    if (checked) {
+                                                                                        newSet.add(item.item_id);
+                                                                                    } else {
+                                                                                        newSet.delete(item.item_id);
+                                                                                    }
+                                                                                });
+                                                                                setSelectedAlerts(newSet);
+                                                                            }}
+                                                                        />
+                                                                        <label htmlFor={`select-all-${type}`} className="text-sm font-medium">
+                                                                            Select All
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
                                                                 {items
                                                                     .sort((a, b) => a.display_name.localeCompare(b.display_name))
+                                                                    .filter(item => 
+                                                                        !searchFilters[type] || 
+                                                                        item.display_name.toLowerCase().includes(searchFilters[type])
+                                                                    )
                                                                     .map((item) => (
                                                                     <div key={item.item_id} className="flex items-center space-x-2">
                                                                         <Checkbox
