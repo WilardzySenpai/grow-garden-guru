@@ -77,7 +77,7 @@ const Profile = () => {
                 const { data: items, error: itemsError } = await supabase
                     .from('items')
                     .select('item_id, display_name, type')
-                    .in('type', ['crate', 'seed', 'gear']);
+                    .in('type', ['crate']);
 
                 if (itemsError) {
                     toast({
@@ -98,7 +98,63 @@ const Profile = () => {
                     { item_id: 'bee_egg', display_name: 'Bee Egg', type: 'Egg' },
                 ];
 
-                const combinedItems = [...(items || []), ...eggs];
+                const seeds: AlertItem[] = [
+                    { item_id: 'carrot', display_name: 'Carrot', type: 'Seed' },
+                    { item_id: 'strawberry', display_name: 'Strawberry', type: 'Seed' },
+                    { item_id: 'blueberry', display_name: 'Blueberry', type: 'Seed' },
+                    { item_id: 'orange_tulip', display_name: 'Orange Tulip', type: 'Seed' },
+                    { item_id: 'tomato', display_name: 'Tomato', type: 'Seed' },
+                    { item_id: 'corn', display_name: 'Corn', type: 'Seed' },
+                    { item_id: 'daffodil', display_name: 'Daffodil', type: 'Seed' },
+                    { item_id: 'watermelon', display_name: 'Watermelon', type: 'Seed' },
+                    { item_id: 'pumpkin', display_name: 'Pumpkin', type: 'Seed' },
+                    { item_id: 'apple', display_name: 'Apple', type: 'Seed' },
+                    { item_id: 'bamboo', display_name: 'Bamboo', type: 'Seed' },
+                    { item_id: 'coconut', display_name: 'Coconut', type: 'Seed' },
+                    { item_id: 'cactus', display_name: 'Cactus', type: 'Seed' },
+                    { item_id: 'dragon_fruit', display_name: 'Dragon Fruit', type: 'Seed' },
+                    { item_id: 'mango', display_name: 'Mango', type: 'Seed' },
+                    { item_id: 'grape', display_name: 'Grape', type: 'Seed' },
+                    { item_id: 'mushroom', display_name: 'Mushroom', type: 'Seed' },
+                    { item_id: 'pepper', display_name: 'Pepper', type: 'Seed' },
+                    { item_id: 'cacao', display_name: 'Cacao', type: 'Seed' },
+                    { item_id: 'beanstalk', display_name: 'Beanstalk', type: 'Seed' },
+                    { item_id: 'ember_lily', display_name: 'Ember Lily', type: 'Seed' },
+                    { item_id: 'sugar_apple', display_name: 'Sugar Apple', type: 'Seed' },
+                    { item_id: 'burning_bud', display_name: 'Burning Bud', type: 'Seed' },
+                    { item_id: 'giant_pinecone', display_name: 'Giant Pinecone', type: 'Seed' },
+                    { item_id: 'elder_strawberry', display_name: 'Elder Strawberry', type: 'Seed' },
+                ];
+
+                const gears: AlertItem[] = [
+                    { item_id: 'watering_can', display_name: 'Watering Can', type: 'Gear' },
+                    { item_id: 'trowel', display_name: 'Trowel', type: 'Gear' },
+                    { item_id: 'trading_ticket', display_name: 'Trading Ticket', type: 'Gear' },
+                    { item_id: 'recall_wrench', display_name: 'Recall Wrench', type: 'Gear' },
+                    { item_id: 'basic_sprinkler', display_name: 'Basic Sprinkler', type: 'Gear' },
+                    { item_id: 'advanced_sprinkler', display_name: 'Advanced Sprinkler', type: 'Gear' },
+                    { item_id: 'premium_sprinkler', display_name: 'Premium Sprinkler', type: 'Gear' },
+                    { item_id: 'medium_treat', display_name: 'Medium Treat', type: 'Gear' },
+                    { item_id: 'medium_toy', display_name: 'Medium Toy', type: 'Gear' },
+                    { item_id: 'star_caller', display_name: 'Star Caller', type: 'Gear' },
+                    { item_id: 'night_staff', display_name: 'Night Staff', type: 'Gear' },
+                    { item_id: 'godly_sprinkler', display_name: 'Godly Sprinkler', type: 'Gear' },
+                    { item_id: 'magnifying_glass', display_name: 'Magnifying Glass', type: 'Gear' },
+                    { item_id: 'master_sprinkler', display_name: 'Master Sprinkler', type: 'Gear' },
+                    { item_id: 'cleaning_spray', display_name: 'Cleaning Spray', type: 'Gear' },
+                    { item_id: 'favorite_tool', display_name: 'Favorite Tool', type: 'Gear' },
+                    { item_id: 'harvest_tool', display_name: 'Harvest Tool', type: 'Gear' },
+                    { item_id: 'friendship_pot', display_name: 'Friendship Pot', type: 'Gear' },
+                    { item_id: 'levelup_lollipop', display_name: 'Levelup Lollipop', type: 'Gear' },
+                    { item_id: 'grandmaster_sprinkler', display_name: 'Grandmaster Sprinkler', type: 'Gear' },
+                    { item_id: 'mutation_spray_wet', display_name: 'Mutation Spray (Wet)', type: 'Gear' },
+                    { item_id: 'mutation_spray_windstruck', display_name: 'Mutation Spray (Windstruck)', type: 'Gear' },
+                    { item_id: 'mutation_spray_verdant', display_name: 'Mutation Spray (Verdant)', type: 'Gear' },
+                    { item_id: 'mutation_spray_disco', display_name: 'Mutation Spray (Disco)', type: 'Gear' },
+                    { item_id: 'honey_sprinkler', display_name: 'Honey Sprinkler', type: 'Gear' },
+                ];
+
+                const combinedItems = [...(items || []), ...eggs, ...seeds, ...gears];
                 const uniqueItems = Array.from(new Map(combinedItems.map(item => [item.item_id, item])).values());
                 setAllItems(uniqueItems);
 
