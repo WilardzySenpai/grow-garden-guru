@@ -9,7 +9,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Leaf, ArrowLeft, User, Trash2, Bell, TriangleAlert } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -35,6 +34,7 @@ const Profile = () => {
     const [allItems, setAllItems] = useState<AlertItem[]>([]);
     const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
     const [alertsLoading, setAlertsLoading] = useState(false);
+    const [searchFilter, setSearchFilter] = useState("");
     const [searchFilters, setSearchFilters] = useState<Record<string, string>>({});
 
     // Browser notification permission state
@@ -496,8 +496,38 @@ const Profile = () => {
                                                 We appreciate your patience as we continue to improve it.
                                             </AlertDescription>
                                         </Alert>
-                                        <ScrollArea className="h-72 w-full rounded-md border">
-                                            <Accordion type="multiple" className="w-full">
+                                        <div className="space-y-4">
+                                            <Input 
+                                                type="search"
+                                                placeholder="🔍 Search all items..."
+                                                className="w-full"
+                                                onChange={(e) => {
+                                                    const searchValue = e.target.value.toLowerCase();
+                                                    setSearchFilter(searchValue);
+                                                }}
+                                            />
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="select-all"
+                                                    checked={allItems.every(item => selectedAlerts.has(item.item_id))}
+                                                    onCheckedChange={(checked) => {
+                                                        const newSet = new Set(selectedAlerts);
+                                                        allItems.forEach(item => {
+                                                            if (checked) {
+                                                                newSet.add(item.item_id);
+                                                            } else {
+                                                                newSet.delete(item.item_id);
+                                                            }
+                                                        });
+                                                        setSelectedAlerts(newSet);
+                                                    }}
+                                                />
+                                                <label htmlFor="select-all" className="text-sm font-medium">
+                                                    Select All Items
+                                                </label>
+                                            </div>
+                                            
+                                            <ScrollArea className="h-72 w-full rounded-md border p-4">
                                                 {Object.entries(
                                                     allItems.reduce((acc, item) => {
                                                         const type = item.type || 'Other';
@@ -510,53 +540,40 @@ const Profile = () => {
                                                 )
                                                 .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
                                                 .map(([type, items]) => (
-                                                    <AccordionItem value={type} key={type}>
-                                                        <AccordionTrigger className="px-4 py-2 text-sm font-medium capitalize">
-                                                            {type.replace(/_/g, ' ')}
-                                                        </AccordionTrigger>
-                                                        <AccordionContent>
-                                                            <div className="space-y-4 p-4 border-t">
-                                                                <div className="space-y-4 mb-4">
-                                                                    <Input 
-                                                                        type="search"
-                                                                        placeholder="🔍 Search items..."
-                                                                        className="w-full"
-                                                                        onChange={(e) => {
-                                                                            const searchValue = e.target.value.toLowerCase();
-                                                                            setSearchFilters((prev) => ({
-                                                                                ...prev,
-                                                                                [type]: searchValue
-                                                                            }));
-                                                                        }}
-                                                                    />
-                                                                    <div className="flex items-center space-x-2">
-                                                                        <Checkbox
-                                                                            id={`select-all-${type}`}
-                                                                            checked={items.every(item => selectedAlerts.has(item.item_id))}
-                                                                            onCheckedChange={(checked) => {
-                                                                                const newSet = new Set(selectedAlerts);
-                                                                                items.forEach(item => {
-                                                                                    if (checked) {
-                                                                                        newSet.add(item.item_id);
-                                                                                    } else {
-                                                                                        newSet.delete(item.item_id);
-                                                                                    }
-                                                                                });
-                                                                                setSelectedAlerts(newSet);
-                                                                            }}
-                                                                        />
-                                                                        <label htmlFor={`select-all-${type}`} className="text-sm font-medium">
-                                                                            Select All
-                                                                        </label>
-                                                                    </div>
-                                                                </div>
-                                                                {items
-                                                                    .sort((a, b) => a.display_name.localeCompare(b.display_name))
-                                                                    .filter(item => 
-                                                                        !searchFilters[type] || 
-                                                                        item.display_name.toLowerCase().includes(searchFilters[type])
-                                                                    )
-                                                                    .map((item) => (
+                                                    <div key={type} className="mb-6 last:mb-0">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <h3 className="text-sm font-semibold capitalize">
+                                                                {type.replace(/_/g, ' ')}
+                                                            </h3>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Checkbox
+                                                                    id={`select-all-${type}`}
+                                                                    checked={items.every(item => selectedAlerts.has(item.item_id))}
+                                                                    onCheckedChange={(checked) => {
+                                                                        const newSet = new Set(selectedAlerts);
+                                                                        items.forEach(item => {
+                                                                            if (checked) {
+                                                                                newSet.add(item.item_id);
+                                                                            } else {
+                                                                                newSet.delete(item.item_id);
+                                                                            }
+                                                                        });
+                                                                        setSelectedAlerts(newSet);
+                                                                    }}
+                                                                />
+                                                                <label htmlFor={`select-all-${type}`} className="text-xs font-medium">
+                                                                    Select All {type}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {items
+                                                                .sort((a, b) => a.display_name.localeCompare(b.display_name))
+                                                                .filter(item => 
+                                                                    !searchFilter || 
+                                                                    item.display_name.toLowerCase().includes(searchFilter)
+                                                                )
+                                                                .map((item) => (
                                                                     <div key={item.item_id} className="flex items-center space-x-2">
                                                                         <Checkbox
                                                                             id={item.item_id}
@@ -568,12 +585,14 @@ const Profile = () => {
                                                                         </label>
                                                                     </div>
                                                                 ))}
-                                                            </div>
-                                                        </AccordionContent>
-                                                    </AccordionItem>
+                                                        </div>
+                                                    </div>
                                                 ))}
-                                            </Accordion>
-                                        </ScrollArea>
+                                            </ScrollArea>
+                                            <Button onClick={handleSaveChanges} disabled={alertsLoading} className="w-full mt-4">
+                                                {alertsLoading ? "Saving..." : "Save Preferences"}
+                                            </Button>
+                                        </div>
                                         <Button onClick={handleSaveChanges} disabled={alertsLoading} className="w-full mt-4">
                                             {alertsLoading ? "Saving..." : "Save Preferences"}
                                         </Button>
