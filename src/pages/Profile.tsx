@@ -589,9 +589,6 @@ const Profile = () => {
                                                     </div>
                                                 ))}
                                             </ScrollArea>
-                                            <Button onClick={handleSaveChanges} disabled={alertsLoading} className="w-full mt-4">
-                                                {alertsLoading ? "Saving..." : "Save Preferences"}
-                                            </Button>
                                         </div>
                                         <Button onClick={handleSaveChanges} disabled={alertsLoading} className="w-full mt-4">
                                             {alertsLoading ? "Saving..." : "Save Preferences"}
