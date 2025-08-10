@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { sendBrowserNotification } from '@/lib/browserNotifications';
 
 interface StockAlert {
     item_id: string;
@@ -24,16 +25,37 @@ export const useWebSocketData = (userId: string | null): WebSocketDataHook => {
     const JSTUDIO_KEY = import.meta.env.VITE_JSTUDIO_KEY;
 
     // Effect to show toast when a stock alert is received
-    useEffect(() => {
-        if (stockAlert) {
-            toast({
-                title: 'Item in Stock!',
-                description: stockAlert.message,
+useEffect(() => {
+    if (!stockAlert) return;
+
+    // In-app toast
+    toast({
+        title: 'Item in Stock!',
+        description: stockAlert.message,
+    });
+
+    // Browser/system notification when the tab is hidden
+    try {
+        if (
+            typeof window !== 'undefined' &&
+            'Notification' in window &&
+            document.hidden &&
+            Notification.permission === 'granted'
+        ) {
+            sendBrowserNotification('Stock Alert', {
+                body: stockAlert.message,
+                icon: '/favicon.ico',
+                url: '/market',
+                tag: `stock-${stockAlert.item_id}`,
             });
-            // Reset alert after showing to prevent re-triggering
-            setStockAlert(null);
         }
-    }, [stockAlert]);
+    } catch (err) {
+        console.warn('[WebSocket Alert] Browser notification failed:', err);
+    }
+
+    // Reset alert to prevent re-triggering
+    setStockAlert(null);
+}, [stockAlert]);
 
     useEffect(() => {
         const fetchStatus = async () => {
