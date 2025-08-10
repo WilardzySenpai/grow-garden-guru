@@ -221,12 +221,23 @@ export const useStockData = (userId: string | null): StockDataHook => {
 
                             // Browser notification (only when tab is hidden to avoid duplicates)
                             try {
-                                if (typeof window !== 'undefined' && 'Notification' in window && document.hidden) {
+                                const canNotify =
+                                    typeof window !== 'undefined' &&
+                                    'Notification' in window &&
+                                    document.hidden &&
+                                    Notification.permission === 'granted';
+
+                                if (canNotify) {
                                     sendBrowserNotification('Stock Alert', {
                                         body: `${newItem.display_name} ${isRestock ? 'is back in stock' : 'stock increased'} — Qty: ${newItem.quantity}`,
                                         icon: '/favicon.ico',
                                         url: '/market',
-                                        tag: `stock-${newItem.item_id}`
+                                        tag: `stock-${newItem.item_id}`,
+                                    });
+                                } else if (debug) {
+                                    console.log('[Stock Alert] Skipping browser notification', {
+                                        hidden: typeof document !== 'undefined' ? document.hidden : undefined,
+                                        permission: (typeof window !== 'undefined' && 'Notification' in window) ? Notification.permission : 'unavailable',
                                     });
                                 }
                             } catch (e) {
