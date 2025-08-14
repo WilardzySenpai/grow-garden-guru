@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { Leaf, BarChart3, User, ArrowRight } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,7 +19,55 @@ const Hub = () => {
     const { user, signOut, loading } = useAuth();
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="min-h-screen bg-background">
+                <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+                    <div className="container mx-auto px-4 py-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                                <div>
+                                    <Skeleton className="h-6 w-64 mb-2" />
+                                    <Skeleton className="h-4 w-48" />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="h-9 w-9 rounded-md" />
+                                <Skeleton className="h-8 w-32 rounded-md" />
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <main className="container mx-auto p-4 mt-10">
+                    <div className="text-center">
+                        <Skeleton className="h-10 w-80 mx-auto mb-4" />
+                        <Skeleton className="h-6 w-64 mx-auto" />
+                    </div>
+                    <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-32" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-4 w-full mb-2" />
+                                <Skeleton className="h-4 w-3/4 mb-4" />
+                                <Skeleton className="h-10 w-full" />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-32" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-4 w-full mb-2" />
+                                <Skeleton className="h-4 w-2/3 mb-4" />
+                                <Skeleton className="h-10 w-full" />
+                            </CardContent>
+                        </Card>
+                    </div>
+                </main>
+            </div>
+        );
     }
 
     if (!user || 'isGuest' in user) {
