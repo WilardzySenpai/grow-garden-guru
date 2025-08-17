@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -153,6 +153,7 @@ export type Database = {
           id: string
           market: boolean
           notifications: boolean
+          recipes: boolean
           system: boolean
           updated_at: string
           updated_by: string | null
@@ -164,6 +165,7 @@ export type Database = {
           id?: string
           market?: boolean
           notifications?: boolean
+          recipes?: boolean
           system?: boolean
           updated_at?: string
           updated_by?: string | null
@@ -175,6 +177,7 @@ export type Database = {
           id?: string
           market?: boolean
           notifications?: boolean
+          recipes?: boolean
           system?: boolean
           updated_at?: string
           updated_by?: string | null
@@ -284,6 +287,36 @@ export type Database = {
           discord_id?: string | null
           display_name?: string | null
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_crop_checklist: {
+        Row: {
+          created_at: string
+          crop_item_id: string
+          id: string
+          is_planted: boolean
+          planted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          crop_item_id: string
+          id?: string
+          is_planted?: boolean
+          planted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          crop_item_id?: string
+          id?: string
+          is_planted?: boolean
+          planted_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -415,11 +448,11 @@ export type Database = {
         Returns: undefined
       }
       set_admin_role: {
-        Args: { uid: string; is_admin: boolean }
+        Args: { is_admin: boolean; uid: string }
         Returns: string
       }
       set_claim: {
-        Args: { uid: string; claim: string; value: Json }
+        Args: { claim: string; uid: string; value: Json }
         Returns: string
       }
     }

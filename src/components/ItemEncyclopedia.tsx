@@ -10,6 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 import { Menu, Search, X } from 'lucide-react';
 import { ItemCard } from '@/components/ItemCard';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@/hooks/useAuth';
 
 import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
@@ -28,6 +30,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 export const ItemEncyclopedia = () => {
     const isMobile = useIsMobile();
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('items');
     const [activeSubTab, setActiveSubTab] = useState('all');
@@ -36,6 +39,7 @@ export const ItemEncyclopedia = () => {
     const [items, setItems] = useState<ItemInfo[]>([]);
     const [weatherItems, setWeatherItems] = useState<WeatherData[]>([]);
     const [pets, setPets] = useState<PetInfo[]>([]);
+    const [userCropChecklist, setUserCropChecklist] = useState<Record<string, boolean>>({});
 
     // For zoom modal
     const [zoomedPetImg, setZoomedPetImg] = useState<string | null>(null);
@@ -50,7 +54,65 @@ export const ItemEncyclopedia = () => {
 
     useEffect(() => {
         fetchEncyclopediaData();
-    }, []);
+        if (user && !('isGuest' in user)) {
+            loadUserCropChecklist();
+        }
+    }, [user]);
+
+    const loadUserCropChecklist = async () => {
+        if (!user || 'isGuest' in user) return;
+        
+        try {
+            const { data, error } = await supabase
+                .from('user_crop_checklist')
+                .select('crop_item_id, is_planted')
+                .eq('user_id', user.id);
+            
+            if (error) throw error;
+            
+            const checklistMap: Record<string, boolean> = {};
+            data?.forEach(item => {
+                checklistMap[item.crop_item_id] = item.is_planted;
+            });
+            setUserCropChecklist(checklistMap);
+        } catch (err) {
+            console.error('Failed to load crop checklist:', err);
+        }
+    };
+
+    const toggleCropChecklist = async (cropId: string, isPlanted: boolean) => {
+        if (!user || 'isGuest' in user) return;
+        
+        try {
+            const { error } = await supabase
+                .from('user_crop_checklist')
+                .upsert({
+                    user_id: user.id,
+                    crop_item_id: cropId,
+                    is_planted: isPlanted,
+                    planted_at: isPlanted ? new Date().toISOString() : null
+                }, { onConflict: 'user_id,crop_item_id' });
+            
+            if (error) throw error;
+            
+            setUserCropChecklist(prev => ({
+                ...prev,
+                [cropId]: isPlanted
+            }));
+            
+            toast({
+                title: isPlanted ? "✅ Crop planted!" : "❌ Crop removed",
+                description: `${cropId} has been ${isPlanted ? 'added to' : 'removed from'} your checklist.`
+            });
+        } catch (err) {
+            console.error('Failed to update crop checklist:', err);
+            toast({
+                title: "Error",
+                description: "Failed to update crop checklist.",
+                variant: "destructive"
+            });
+        }
+    };
 
     const fetchEncyclopediaData = async () => {
         try {
@@ -411,6 +473,86 @@ export const ItemEncyclopedia = () => {
             cropSpecific: 'Sunflower'
         }
     ];
+
+    // Crop categories data structure
+    const cropCategories = {
+        'Berry Plants': [
+            'elderstrawberry', 'lingonberry', 'strawberry', 'white_mulberry', 
+            'celestiberry', 'raspberry', 'grape', 'blueberry'
+        ],
+        'Blossom Type Plants': [
+            'bone_blossom', 'candy_blossom', 'moon_blossom', 'cherry_blossom'
+        ],
+        'Candy Type Plants': [
+            'sugarglaze', 'candy_blossom', 'easter_egg', 'blue_lollipop', 
+            'candy_sunflower', 'chocolate_carrot', 'red_lollipop'
+        ],
+        'Flower Type Plants': [
+            'candy_blossom', 'burning_bud', 'veinpetal', 'ember_lily', 
+            'honeysuckle', 'sunflower', 'moon_blossom', 'cherry_blossom'
+        ],
+        'Fruit Type Crops': [
+            'grandtomato', 'sugar_apple', 'crownmelon', 'moon_melon', 
+            'lingonberry', 'maple_apple', 'banana', 'pineapple'
+        ],
+        'Fungus Type Crops': [
+            'mushroom', 'horned_dinoshroom', 'glowshroom', 'nectarshade'
+        ],
+        'Leafy Type Crops': [
+            'grandtomato', 'sugar_apple', 'twistedtangle', 'giant_pinecone', 
+            'beanstalk', 'honeysuckle', 'sunflower', 'spiked_mango'
+        ],
+        'Night Type Crops': [
+            'moon_melon', 'moon_blossom', 'moon_mango', 'starfruit', 
+            'celestiberry', 'blood_banana', 'mint', 'moonflower'
+        ],
+        'Prehistoric Plants': [
+            'bone_blossom', 'amber_spine', 'lingonberry', 'grand_volcania', 
+            'horned_dinoshroom', 'horsetail', 'fossilight', 'firefly_fern'
+        ],
+        'Prickly Fruits': [
+            'pricklefruit', 'twistedtangle', 'spiked_mango', 'venus_fly_trap', 
+            'horned_dinoshroom', 'pineapple', 'prickly_pear', 'dragon_fruit'
+        ],
+        'Sour Type Crops': [
+            'lemon', 'starfruit', 'passionfruit', 'cranberry'
+        ],
+        'Spicy Type Crops': [
+            'jalapeno', 'ember_lily', 'dragon_pepper', 'bell_pepper', 
+            'pepper', 'grand_volcania', 'horned_dinoshroom', 'cacao'
+        ],
+        'Stalky Type Crops': [
+            'spring_onion', 'sugarglaze', 'burning_bud', 'veinpetal', 
+            'tallasparagus', 'beanstalk', 'elephant_ears', 'grand_volcania'
+        ],
+        'Summer Crops': [
+            'butternut_squash', 'sugar_apple', 'bell_pepper', 'banana', 
+            'elephant_ears', 'tomato', 'prickly_pear', 'pineapple'
+        ],
+        'Sweet Type Crops': [
+            'sugarglaze', 'candy_blossom', 'sugar_apple', 'crownmelon', 
+            'moon_melon', 'spiked_mango', 'banana'
+        ],
+        'Toxic Type Crops': [
+            'foxglove', 'nightshade'
+        ],
+        'Tropical Type Crops': [
+            'banana', 'pineapple', 'coconut', 'mango', 'cocovine', 
+            'dragon_fruit', 'parasol_flower', 'starfruit'
+        ],
+        'Vegetable Type Crops': [
+            'king_cabbage', 'grandtomato', 'rhubarb', 'tallasparagus', 
+            'jalapeno', 'beanstalk', 'dragon_pepper', 'violet_corn'
+        ],
+        'Woody Type Crops': [
+            'rhubarb', 'giant_pinecone', 'maple_apple', 'moon_blossom', 
+            'mango', 'coconut', 'peach', "traveler's_fruit"
+        ],
+        'Zen Type Fruit': [
+            'tranquilbloom', 'spiked_mango', 'maple_apple', 'serenity', 
+            'enkaku', 'hinomai', 'luckybamboo', 'taro_flower'
+        ]
+    };
 
     // Filter functions with null safety
     const filteredItems = items.filter(item =>
@@ -812,10 +954,11 @@ export const ItemEncyclopedia = () => {
                                 <SelectContent className="w-full bg-background border-2">
                                     <SelectGroup>
                                         <SelectLabel>Categories</SelectLabel>
-                                        <SelectItem value="items">📦 Items ({filteredItems.length})</SelectItem>
-                                        <SelectItem value="mutations">🧬 Mutations ({filteredMutations.length})</SelectItem>
-                                        <SelectItem value="weather">🌦️ Weather ({filteredWeather.length})</SelectItem>
-                                        <SelectItem value="pets">🐾 Pets ({filteredPets.length})</SelectItem>
+                                         <SelectItem value="items">📦 Items ({filteredItems.length})</SelectItem>
+                                         <SelectItem value="crops">🌱 Crop Categories</SelectItem>
+                                         <SelectItem value="mutations">🧬 Mutations ({filteredMutations.length})</SelectItem>
+                                         <SelectItem value="weather">🌦️ Weather ({filteredWeather.length})</SelectItem>
+                                         <SelectItem value="pets">🐾 Pets ({filteredPets.length})</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
@@ -842,18 +985,21 @@ export const ItemEncyclopedia = () => {
                         </div>
                     ) : (
                         <TabsList>
-                            <TabsTrigger value="items">
-                                📦 Items ({filteredItems.length})
-                            </TabsTrigger>
-                            <TabsTrigger value="mutations">
-                                🧬 Mutations ({filteredMutations.length})
-                            </TabsTrigger>
-                            <TabsTrigger value="weather">
-                                🌦️ Weather ({filteredWeather.length})
-                            </TabsTrigger>
-                            <TabsTrigger value="pets">
-                                🐾 Pets ({filteredPets.length})
-                            </TabsTrigger>
+                             <TabsTrigger value="items">
+                                 📦 Items ({filteredItems.length})
+                             </TabsTrigger>
+                             <TabsTrigger value="crops">
+                                 🌱 Crop Categories
+                             </TabsTrigger>
+                             <TabsTrigger value="mutations">
+                                 🧬 Mutations ({filteredMutations.length})
+                             </TabsTrigger>
+                             <TabsTrigger value="weather">
+                                 🌦️ Weather ({filteredWeather.length})
+                             </TabsTrigger>
+                             <TabsTrigger value="pets">
+                                 🐾 Pets ({filteredPets.length})
+                             </TabsTrigger>
                         </TabsList>
                     )}
 
@@ -917,10 +1063,96 @@ export const ItemEncyclopedia = () => {
                             <TabsContent value="events">
                                 {renderItemTable(eventItems)}
                             </TabsContent>
-                        </Tabs>
-                    </TabsContent>
+                         </Tabs>
+                     </TabsContent>
 
-                    <TabsContent value="mutations">
+                     <TabsContent value="crops">
+                         <div className="space-y-6">
+                             {Object.entries(cropCategories).map(([categoryName, crops]) => (
+                                 <Card key={categoryName}>
+                                     <CardHeader>
+                                         <CardTitle className="flex items-center gap-2">
+                                             <span className="text-lg">🌱</span>
+                                             {categoryName}
+                                             <Badge variant="secondary">{crops.length} crops</Badge>
+                                         </CardTitle>
+                                     </CardHeader>
+                                     <CardContent>
+                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                             {crops.map((cropId) => {
+                                                 const cropItem = items.find(item => 
+                                                     item.item_id === cropId || 
+                                                     item.display_name?.toLowerCase().replace(/\s+/g, '_') === cropId ||
+                                                     item.display_name?.toLowerCase().replace(/\s+/g, '') === cropId.replace(/_/g, '')
+                                                 );
+                                                 const isPlanted = userCropChecklist[cropId] || false;
+                                                 const isLoggedIn = user && !('isGuest' in user);
+                                                 
+                                                 return (
+                                                     <div key={cropId} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                                                         {cropItem ? (
+                                                             <>
+                                                                 <img
+                                                                     src={cropItem.icon}
+                                                                     alt={cropItem.display_name}
+                                                                     className="w-8 h-8 object-contain"
+                                                                     onError={(e) => {
+                                                                         e.currentTarget.style.display = 'none';
+                                                                     }}
+                                                                 />
+                                                                 <div className="flex-1">
+                                                                     <div className="font-medium">{cropItem.display_name}</div>
+                                                                     <div className="text-sm text-muted-foreground">{cropItem.rarity}</div>
+                                                                 </div>
+                                                             </>
+                                                         ) : (
+                                                             <>
+                                                                 <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">🌱</div>
+                                                                 <div className="flex-1">
+                                                                     <div className="font-medium capitalize">{cropId.replace(/_/g, ' ')}</div>
+                                                                     <div className="text-sm text-muted-foreground">Not found in database</div>
+                                                                 </div>
+                                                             </>
+                                                         )}
+                                                         {isLoggedIn && (
+                                                             <div className="flex items-center gap-2">
+                                                                 <Checkbox
+                                                                     checked={isPlanted}
+                                                                     onCheckedChange={(checked) => toggleCropChecklist(cropId, !!checked)}
+                                                                     className="h-5 w-5"
+                                                                 />
+                                                                 <span className="text-sm text-muted-foreground">
+                                                                     {isPlanted ? "Planted" : "Not planted"}
+                                                                 </span>
+                                                             </div>
+                                                         )}
+                                                         {!isLoggedIn && (
+                                                             <div className="text-sm text-muted-foreground">Login to track</div>
+                                                         )}
+                                                     </div>
+                                                 );
+                                             })}
+                                         </div>
+                                         {user && !('isGuest' in user) && (
+                                             <div className="mt-4 text-sm text-muted-foreground">
+                                                 Progress: {crops.filter(cropId => userCropChecklist[cropId]).length} / {crops.length} planted
+                                                 <div className="w-full bg-muted rounded-full h-2 mt-2">
+                                                     <div 
+                                                         className="bg-primary h-2 rounded-full transition-all duration-300"
+                                                         style={{ 
+                                                             width: `${(crops.filter(cropId => userCropChecklist[cropId]).length / crops.length) * 100}%` 
+                                                         }}
+                                                     />
+                                                 </div>
+                                             </div>
+                                         )}
+                                     </CardContent>
+                                 </Card>
+                             ))}
+                         </div>
+                     </TabsContent>
+
+                     <TabsContent value="mutations">
                         <Tabs defaultValue="all" className="space-y-6">
                             <TabsList>
                                 <TabsTrigger value="all">
