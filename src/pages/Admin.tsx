@@ -32,7 +32,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { useMaintenanceMode } from '@/hooks/useMaintenanceMode';
-import { BugReportManagement } from '@/components/admin/BugReportManagement';
+import { ContactManagement } from '@/components/admin/imports';
 
 const ADMIN_DISCORD_ID = "939867069070065714";
 
@@ -54,7 +54,7 @@ const Admin = () => {
     const [showApiManagement, setShowApiManagement] = useState(false);
     const [showMarketAnalytics, setShowMarketAnalytics] = useState(false);
     const [showMaintenanceMode, setShowMaintenanceMode] = useState(false);
-    const [showBugReports, setShowBugReports] = useState(false);
+    const [showContactManagement, setShowContactManagement] = useState(false);
     const [dbStats, setDbStats] = useState<any>({});
     const [analyticsData, setAnalyticsData] = useState<any>({});
     const [apiData, setApiData] = useState<any>({});
@@ -1326,7 +1326,7 @@ const Admin = () => {
         );
     }
 
-    if (showBugReports) {
+    if (showContactManagement) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
                 {/* Header */}
@@ -1336,7 +1336,7 @@ const Admin = () => {
                             <div className="flex items-center gap-3">
                                 <Button
                                     variant="ghost"
-                                    onClick={() => setShowBugReports(false)}
+                                    onClick={() => setShowContactManagement(false)}
                                     className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
                                 >
                                     <ArrowLeft className="h-4 w-4" />
@@ -1345,20 +1345,20 @@ const Admin = () => {
                             </div>
                             <Badge variant="secondary" className="flex items-center gap-2">
                                 <Bug className="h-3 w-3" />
-                                Bug Reports
+                                Contact Management
                             </Badge>
                         </div>
                     </div>
                 </header>
 
-                {/* Bug Reports Content */}
+                {/* Contact Management Content */}
                 <div className="container mx-auto px-4 py-8">
                     <div className="max-w-6xl mx-auto space-y-6">
                         <div>
-                            <h1 className="text-3xl font-bold text-foreground">Bug Reports</h1>
-                            <p className="text-muted-foreground">Review and manage user-submitted bug reports</p>
+                            <h1 className="text-3xl font-bold text-foreground">Contact Management</h1>
+                            <p className="text-muted-foreground">Review and manage all user submissions including bug reports, suggestions, and contact messages</p>
                         </div>
-                        <BugReportManagement />
+                        <ContactManagement />
                     </div>
                 </div>
             </div>
@@ -1493,8 +1493,8 @@ const Admin = () => {
     const adminSections = [
         {
             icon: Bug,
-            title: "Bug Reports",
-            description: "View and manage user bug reports",
+            title: "Contact Management",
+            description: "View and manage all user submissions",
             color: "text-red-500",
             count: "New"
         },
@@ -1654,8 +1654,8 @@ const Admin = () => {
                                         className="w-full"
                                         variant="outline"
                                         onClick={() => {
-                                            if (section.title === "Bug Reports") {
-                                                setShowBugReports(true);
+                                            if (section.title === "Contact Management") {
+                                                setShowContactManagement(true);
                                             } else if (section.title === "User Management") {
                                                 setShowUserManagement(true);
                                                 fetchUsers();

@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,29 +6,36 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { BugReportFormData } from '@/types/bugReport';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ContactFormData } from '@/types/contact';
 import { toast } from 'sonner';
+import { MessageSquare, Bug, Lightbulb, HelpCircle } from 'lucide-react';
 
-export default function BugReport() {
+export default function Contact() {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formData, setFormData] = useState<BugReportFormData>({
+    const [formData, setFormData] = useState<ContactFormData>({
+        purpose: 'contact',
         message: '',
         external_image_url: '',
     });
 
+    const purposeOptions = [
+        { value: 'contact', label: 'Contacting me', icon: MessageSquare },
+        { value: 'bug_report', label: 'Bug report', icon: Bug },
+        { value: 'suggestion', label: 'Suggestion', icon: Lightbulb },
+        { value: 'other', label: 'Other', icon: HelpCircle },
+    ];
 
     const handleImageUpload = async (file: File) => {
         try {
             const fileExt = file.name.split('.').pop();
             const timestamp = Date.now();
             const randomString = Math.random().toString(36).substring(2, 15);
-            // Use user ID if authenticated, otherwise use 'guest'
             const userId = user ? user.id : 'guest';
             const filePath = `${userId}/${timestamp}_${randomString}.${fileExt}`;
 
-            const { error: uploadError, data } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('bug-reports')
                 .upload(filePath, file, {
                     cacheControl: '3600',
@@ -63,18 +69,19 @@ export default function BugReport() {
                 image_url = await handleImageUpload(formData.image);
             }
 
-            // Use user ID if authenticated, otherwise generate a guest ID
             const userId = user ? user.id : `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
             const { error } = await supabase
-                .from('bug_reports')
+                .from('contacts')
                 .insert({
                     user_id: userId,
+                    purpose: formData.purpose,
+                    subject: formData.subject || null,
                     message: formData.message,
                     image_url,
                     external_image_url: formData.external_image_url || null,
                     status: 'pending',
-                    is_guest: !user // Add flag to identify guest submissions
+                    is_guest: !user
                 });
 
             if (error) {
@@ -82,37 +89,87 @@ export default function BugReport() {
                 throw error;
             }
 
-            toast.success('Bug report submitted successfully! Thank you for your feedback.');
-            setFormData({ message: '', external_image_url: '' });
+            const purposeLabel = purposeOptions.find(option => option.value === formData.purpose)?.label;
+            toast.success(`${purposeLabel} submitted successfully! Thank you for your message.`);
+            
+            setFormData({ 
+                purpose: 'contact', 
+                message: '', 
+                external_image_url: '' 
+            });
         } catch (error) {
-            console.error('Error submitting bug report:', error);
-            toast.error(error instanceof Error ? error.message : 'Failed to submit bug report');
+            console.error('Error submitting contact:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to submit message');
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const selectedPurpose = purposeOptions.find(option => option.value === formData.purpose);
+    const IconComponent = selectedPurpose?.icon || MessageSquare;
+
     return (
-        <div className="container mx-auto py-8">
+        <div className="container mx-auto py-8 max-w-2xl">
             <Card>
                 <CardHeader>
-                    <CardTitle>Submit a Bug Report</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                        <IconComponent className="h-6 w-6" />
+                        Contact Us
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <Label htmlFor="message">Description</Label>
-                            <Textarea
-                                id="message"
-                                placeholder="Please describe the issue you encountered..."
-                                value={formData.message}
-                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                required
+                            <Label htmlFor="purpose">Purpose</Label>
+                            <Select
+                                value={formData.purpose}
+                                onValueChange={(value: ContactFormData['purpose']) => 
+                                    setFormData({ ...formData, purpose: value })
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select purpose" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {purposeOptions.map((option) => {
+                                        const IconComp = option.icon;
+                                        return (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                <div className="flex items-center gap-2">
+                                                    <IconComp className="h-4 w-4" />
+                                                    {option.label}
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="subject">Subject (Optional)</Label>
+                            <Input
+                                id="subject"
+                                placeholder="Brief description of your message"
+                                value={formData.subject || ''}
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="image">Screenshot (Optional)</Label>
+                            <Label htmlFor="message">Message</Label>
+                            <Textarea
+                                id="message"
+                                placeholder="Please describe your message in detail..."
+                                value={formData.message}
+                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                required
+                                rows={6}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="image">Screenshot/Image (Optional)</Label>
                             <Input
                                 id="image"
                                 type="file"
@@ -137,8 +194,8 @@ export default function BugReport() {
                             />
                         </div>
 
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Submitting...' : 'Submit Report'}
+                        <Button type="submit" disabled={isSubmitting} className="w-full">
+                            {isSubmitting ? 'Submitting...' : 'Submit Message'}
                         </Button>
                     </form>
                 </CardContent>

@@ -204,11 +204,11 @@ const Home = () => {
                                 FAQ
                             </a>
                             <a
-                                href="/bug-report"
+                                href="/contact"
                                 className="text-sm text-primary font-semibold hover:underline transition-colors px-3 py-1 rounded bg-accent/40 border border-accent/30 shadow-sm"
-                                aria-label="Report a Bug"
+                                aria-label="Contact Us"
                             >
-                                Report Bug
+                                Contact
                             </a>
                             <a
                                 href="/privacy-policy"

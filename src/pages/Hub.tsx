@@ -199,7 +199,7 @@ const Hub = () => {
                     <div className="flex justify-center gap-4">
                         <Link to="/faq" className="text-primary hover:underline">FAQ</Link>
                         <span>•</span>
-                        <Link to="/bug-report" className="text-primary hover:underline">Report Bug</Link>
+                        <Link to="/contact" className="text-primary hover:underline">Contact</Link>
                     </div>
                 </div>
             </main>

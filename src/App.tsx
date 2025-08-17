@@ -13,7 +13,7 @@ import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
-import BugReport from "./pages/BugReport";
+import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Hub from "./pages/Hub";
 import About from "./pages/About";
@@ -36,7 +36,7 @@ const App = () => (
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/admin" element={<Admin />} />
                             <Route path="/faq" element={<FAQ />} />
-                            <Route path="/bug-report" element={<BugReport />} />
+                            <Route path="/contact" element={<Contact />} />
                             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                             <Route path="/about" element={<About />} />
                             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
