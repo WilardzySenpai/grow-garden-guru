@@ -50,38 +50,44 @@ export type Database = {
         }
         Relationships: []
       }
-      bug_reports: {
+      contacts: {
         Row: {
-          created_at: string | null
+          created_at: string
           external_image_url: string | null
           id: string
           image_url: string | null
           is_guest: boolean | null
           message: string
+          purpose: string
           status: string | null
-          updated_at: string | null
+          subject: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           external_image_url?: string | null
           id?: string
           image_url?: string | null
           is_guest?: boolean | null
           message: string
+          purpose: string
           status?: string | null
-          updated_at?: string | null
+          subject?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           external_image_url?: string | null
           id?: string
           image_url?: string | null
           is_guest?: boolean | null
           message?: string
+          purpose?: string
           status?: string | null
-          updated_at?: string | null
+          subject?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
