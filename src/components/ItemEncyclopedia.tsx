@@ -972,6 +972,7 @@ export const ItemEncyclopedia = () => {
     }
 
     return (
+    <div>
         <Card>
             <CardHeader className="pb-2">
                 <div className="space-y-4">
@@ -1527,5 +1528,5 @@ export const ItemEncyclopedia = () => {
             onClose={closeFullItemView}
         />
     </div>
-    );
+    )
 };
