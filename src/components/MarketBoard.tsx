@@ -18,9 +18,36 @@ interface MarketBoardProps {
 
 export const MarketBoard = ({ marketData, loading, error, onRefetch }: MarketBoardProps) => {
     const isMobile = useIsMobile();
-    const [activeTab, setActiveTab] = useState('seeds');
+    
+    // Initialize activeTab from URL hash or default to 'seeds'
+    const getInitialTab = () => {
+        const hash = window.location.hash.replace('#', '');
+        const validTabs = ['seeds', 'gear', 'eggs', 'cosmetics', 'event', 'merchant'];
+        return validTabs.includes(hash) ? hash : 'seeds';
+    };
+    
+    const [activeTab, setActiveTab] = useState(getInitialTab);
 
-    // Remove internal loading/error state since it's now passed from parent
+    // Handle tab changes - update both state and URL hash
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        window.location.hash = tab;
+    };
+
+    // Listen for hash changes (browser back/forward)
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash.replace('#', '');
+            const validTabs = ['seeds', 'gear', 'eggs', 'cosmetics', 'event', 'merchant'];
+            if (validTabs.includes(hash)) {
+                setActiveTab(hash);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
     // Update loading state when data is received
     useEffect(() => {
         if (marketData) {
@@ -183,7 +210,7 @@ export const MarketBoard = ({ marketData, loading, error, onRefetch }: MarketBoa
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <Tabs value={activeTab} onValueChange={handleTabChange}>
                         {isMobile ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -193,12 +220,12 @@ export const MarketBoard = ({ marketData, loading, error, onRefetch }: MarketBoa
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-full">
-                                    <DropdownMenuItem onSelect={() => setActiveTab('seeds')}>Seeds</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setActiveTab('gear')}>Gear</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setActiveTab('eggs')}>Eggs</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setActiveTab('cosmetics')}>Cosmetics</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setActiveTab('event')}>Event Shop</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setActiveTab('merchant')}>Merchant</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleTabChange('seeds')}>Seeds</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleTabChange('gear')}>Gear</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleTabChange('eggs')}>Eggs</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleTabChange('cosmetics')}>Cosmetics</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleTabChange('event')}>Event Shop</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleTabChange('merchant')}>Merchant</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         ) : (
