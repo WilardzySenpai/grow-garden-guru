@@ -30,7 +30,35 @@ interface NotificationFeedProps {
 }
 
 export const NotificationFeed = ({ jandelMessages, stockAlerts, loading, error }: NotificationFeedProps) => {
+    // Initialize activeTab from URL hash or default to 'all'
+    const getInitialTab = () => {
+        const hash = window.location.hash.replace('#', '');
+        const validTabs = ['all', 'jandel', 'stock'];
+        return validTabs.includes(hash) ? hash : 'all';
+    };
+    
+    const [activeTab, setActiveTab] = useState(getInitialTab);
     const [notifications, setNotifications] = useState<UnifiedNotification[]>([]);
+
+    // Handle tab changes - update both state and URL hash
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        window.location.hash = tab;
+    };
+
+    // Listen for hash changes (browser back/forward)
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash.replace('#', '');
+            const validTabs = ['all', 'jandel', 'stock'];
+            if (validTabs.includes(hash)) {
+                setActiveTab(hash);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
 
     useEffect(() => {
         const transformedJandel = jandelMessages.map((n): UnifiedNotification => ({

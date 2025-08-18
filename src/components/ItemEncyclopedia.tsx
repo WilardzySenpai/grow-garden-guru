@@ -10,6 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 import { Menu, Search, X } from 'lucide-react';
 import { ItemCard } from '@/components/ItemCard';
+import { ItemContextMenu } from '@/components/ItemContextMenu';
+import { FullItemView } from '@/components/FullItemView';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -31,15 +33,46 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 export const ItemEncyclopedia = () => {
     const isMobile = useIsMobile();
     const { user } = useAuth();
+    
+    // Initialize tabs from URL hash
+    const getInitialTabs = () => {
+        const hash = window.location.hash.replace('#', '');
+        const parts = hash.split('/');
+        const mainTab = parts[0] || 'items';
+        const subTab = parts[1] || 'all';
+        
+        const validMainTabs = ['items', 'crops', 'mutations', 'weather', 'pets'];
+        const validSubTabs = ['all', 'seeds', 'gear', 'eggs', 'cosmetics', 'event', 'merchant'];
+        
+        return {
+            mainTab: validMainTabs.includes(mainTab) ? mainTab : 'items',
+            subTab: validSubTabs.includes(subTab) ? subTab : 'all'
+        };
+    };
+    
+    const { mainTab: initialMainTab, subTab: initialSubTab } = getInitialTabs();
+    
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState('items');
-    const [activeSubTab, setActiveSubTab] = useState('all');
+    const [activeTab, setActiveTab] = useState(initialMainTab);
+    const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [items, setItems] = useState<ItemInfo[]>([]);
     const [weatherItems, setWeatherItems] = useState<WeatherData[]>([]);
     const [pets, setPets] = useState<PetInfo[]>([]);
     const [userCropChecklist, setUserCropChecklist] = useState<Record<string, boolean>>({});
+
+    // Context menu and full item view states
+    const [contextMenu, setContextMenu] = useState<{
+        isOpen: boolean;
+        position: { x: number; y: number };
+        item: ItemInfo | null;
+    }>({ isOpen: false, position: { x: 0, y: 0 }, item: null });
+    
+    const [fullItemView, setFullItemView] = useState<{
+        isOpen: boolean;
+        item: ItemInfo | null;
+    }>({ isOpen: false, item: null });
 
     // For zoom modal
     const [zoomedPetImg, setZoomedPetImg] = useState<string | null>(null);
@@ -51,6 +84,55 @@ export const ItemEncyclopedia = () => {
 
     // Handler to clear search
     const handleClearSearch = () => setSearchTerm('');
+
+    // Handle tab changes - update both state and URL hash
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        const subTab = tab === 'items' ? activeSubTab : 'all';
+        window.location.hash = `${tab}/${subTab}`;
+    };
+
+    const handleSubTabChange = (subTab: string) => {
+        setActiveSubTab(subTab);
+        window.location.hash = `${activeTab}/${subTab}`;
+    };
+
+    // Listen for hash changes (browser back/forward)
+    useEffect(() => {
+        const handleHashChange = () => {
+            const { mainTab, subTab } = getInitialTabs();
+            setActiveTab(mainTab);
+            setActiveSubTab(subTab);
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
+    // Handle item right-click
+    const handleItemRightClick = (e: React.MouseEvent, item: ItemInfo) => {
+        e.preventDefault();
+        setContextMenu({
+            isOpen: true,
+            position: { x: e.clientX, y: e.clientY },
+            item
+        });
+    };
+
+    // Close context menu
+    const closeContextMenu = () => {
+        setContextMenu({ isOpen: false, position: { x: 0, y: 0 }, item: null });
+    };
+
+    // Open full item view
+    const openFullItemView = (item: ItemInfo) => {
+        setFullItemView({ isOpen: true, item });
+    };
+
+    // Close full item view
+    const closeFullItemView = () => {
+        setFullItemView({ isOpen: false, item: null });
+    };
 
     useEffect(() => {
         fetchEncyclopediaData();
@@ -616,7 +698,12 @@ export const ItemEncyclopedia = () => {
                     <ScrollArea className="h-[calc(100vh-300px)]">
                         <div className="space-y-4 px-2">
                             {itemList.map((item) => (
-                                <ItemCard key={item.item_id} item={item} />
+                                <div
+                                    key={item.item_id}
+                                    onContextMenu={(e) => handleItemRightClick(e, item)}
+                                >
+                                    <ItemCard item={item} />
+                                </div>
                             ))}
                         </div>
                     </ScrollArea>
@@ -639,7 +726,12 @@ export const ItemEncyclopedia = () => {
                     </TableHeader>
                     <TableBody>
                         {itemList.map((item) => (
-                            <TableRow key={item.item_id} className="hover:bg-accent/50">
+                            <TableRow 
+                                key={item.item_id} 
+                                className="hover:bg-accent/50 cursor-pointer"
+                                onContextMenu={(e) => handleItemRightClick(e, item)}
+                                onClick={() => openFullItemView(item)}
+                            >
                                 <TableCell className="font-medium">
                                     <div className="flex items-center gap-2">
                                         <img
@@ -943,11 +1035,11 @@ export const ItemEncyclopedia = () => {
                     </Card>
                 )}
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
                     {isMobile ? (
                         <div className="space-y-4">
                             {/* Primary Category Selection */}
-                            <Select value={activeTab} onValueChange={setActiveTab}>
+                            <Select value={activeTab} onValueChange={handleTabChange}>
                                 <SelectTrigger className="w-full bg-background border-2">
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
@@ -965,7 +1057,7 @@ export const ItemEncyclopedia = () => {
 
                             {/* Secondary Category Selection - Only show if primary category is selected */}
                             {activeTab === 'items' && (
-                                <Select value={activeSubTab} onValueChange={setActiveSubTab}>
+                                <Select value={activeSubTab} onValueChange={handleSubTabChange}>
                                     <SelectTrigger className="w-full bg-background border-2">
                                         <SelectValue placeholder="Select type" />
                                     </SelectTrigger>
@@ -1004,7 +1096,7 @@ export const ItemEncyclopedia = () => {
                     )}
 
                     <TabsContent value="items">
-                        <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
+                        <Tabs value={activeSubTab} onValueChange={handleSubTabChange} className="space-y-6">
                             {isMobile ? (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -1014,12 +1106,12 @@ export const ItemEncyclopedia = () => {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-full">
-                                        <DropdownMenuItem onSelect={() => setActiveSubTab('all')}>All ({filteredItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => setActiveSubTab('seeds')}>Seeds ({seedItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => setActiveSubTab('gear')}>Gear ({gearItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => setActiveSubTab('eggs')}>Eggs ({eggItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => setActiveSubTab('cosmetics')}>Cosmetics ({cosmeticItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => setActiveSubTab('events')}>Events ({eventItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleSubTabChange('all')}>All ({filteredItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleSubTabChange('seeds')}>Seeds ({seedItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleSubTabChange('gear')}>Gear ({gearItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleSubTabChange('eggs')}>Eggs ({eggItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleSubTabChange('cosmetics')}>Cosmetics ({cosmeticItems.length})</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleSubTabChange('events')}>Events ({eventItems.length})</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             ) : (
@@ -1418,5 +1510,22 @@ export const ItemEncyclopedia = () => {
                 </Tabs>
             </CardContent>
         </Card>
+
+        {/* Context Menu */}
+        <ItemContextMenu
+            item={contextMenu.item!}
+            isOpen={contextMenu.isOpen}
+            position={contextMenu.position}
+            onClose={closeContextMenu}
+            onViewItem={openFullItemView}
+        />
+
+        {/* Full Item View */}
+        <FullItemView
+            item={fullItemView.item}
+            isOpen={fullItemView.isOpen}
+            onClose={closeFullItemView}
+        />
+    </div>
     );
 };

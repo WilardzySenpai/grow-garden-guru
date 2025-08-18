@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,14 @@ interface EnvironmentalMutationData {
 }
 
 export const FruitCalculator = () => {
+    // Initialize activeTab from URL hash or default to 'calculator'
+    const getInitialTab = () => {
+        const hash = window.location.hash.replace('#', '');
+        const validTabs = ['calculator', 'reverse'];
+        return validTabs.includes(hash) ? hash : 'calculator';
+    };
+    
+    const [activeTab, setActiveTab] = useState(getInitialTab);
     const [cropName, setCropName] = useState('');
     const [mass, setMass] = useState('');
     const [variantMutation, setVariantMutation] = useState('');
@@ -37,6 +45,26 @@ export const FruitCalculator = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [targetValue, setTargetValue] = useState('');
     const [reverseCalcResult, setReverseCalcResult] = useState('');
+
+    // Handle tab changes - update both state and URL hash
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        window.location.hash = tab;
+    };
+
+    // Listen for hash changes (browser back/forward)
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash.replace('#', '');
+            const validTabs = ['calculator', 'reverse'];
+            if (validTabs.includes(hash)) {
+                setActiveTab(hash);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
 
     const filteredCrops = useMemo(() => {
         return staticCropData.filter(crop =>
