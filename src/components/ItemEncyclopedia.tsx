@@ -571,80 +571,116 @@ export const ItemEncyclopedia = () => {
     // Crop categories data structure
     const cropCategories = {
         'Berry Plants': [
-            'elderstrawberry', 'lingonberry', 'strawberry', 'white_mulberry', 
-            'celestiberry', 'raspberry', 'grape', 'blueberry'
+            'blueberry', 'celestiberry', 'cranberry', 'elderstrawberry',
+            'grape', 'lingonberry', 'raspberry', 'strawberry', 'white_mulberry'
         ],
-        'Blossom Type Plants': [
-            'bone_blossom', 'candy_blossom', 'moon_blossom', 'cherry_blossom'
+        'Blossom Plants': [
+            'bone_blossom', 'candy_blossom', 'cherry_blossom', 'moon_blossom'
         ],
-        'Candy Type Plants': [
-            'sugarglaze', 'candy_blossom', 'easter_egg', 'blue_lollipop', 
-            'candy_sunflower', 'chocolate_carrot', 'red_lollipop'
+        'Candy Plants': [
+            'blue_lollipop', 'candy_blossom', 'candy_sunflower', 'chocolate_carrot',
+            'easter_egg', 'red_lollipop', 'sugarglaze'
         ],
-        'Flower Type Plants': [
-            'candy_blossom', 'burning_bud', 'veinpetal', 'ember_lily', 
-            'honeysuckle', 'sunflower', 'moon_blossom', 'cherry_blossom'
+        'Flower Plants': [
+            'bee_balm', 'burning_bud', 'candy_blossom', 'candy_sunflower',
+            'cherry_blossom', 'crocus', 'daffodil', 'delphinium', 'ember_lily',
+            'enkaku', 'firework_flower', 'foxglove', 'grand_volcania', 'hinomai',
+            'honeysuckle', 'lavender', 'liberty_lily', 'lilac', 'lily_of_the_valley',
+            'lotus', 'manuka_flower', 'monoblooma', 'moon_blossom', 'moonflower',
+            'nightshade', 'noble_flower', 'orange_tulip', 'parasol_flower', 'pink_lily',
+            'pink_tulip', 'purple_dahlia', 'rafflesia', 'rose', 'rosy_delight',
+            'serenity', 'soft_sunshine', 'stonebite', 'succulent', 'sunflower',
+            'taro_flower', 'veinpetal', 'zenflare'
         ],
-        'Fruit Type Crops': [
-            'grandtomato', 'sugar_apple', 'crownmelon', 'moon_melon', 
-            'lingonberry', 'maple_apple', 'banana', 'pineapple'
+        'Fruit Plants': [
+            'apple', 'avocado', 'banana', 'blood_banana', 'blueberry', 'celestiberry',
+            'coconut', 'cranberry', 'crown_melon', 'dragon_fruit', 'durian', 'grandtomato',
+            'grape', 'green_apple', 'hive_fruit', 'kiwi', 'lemon', 'lime', 'lingonberry',
+            'loquat', 'mango', 'maple_apple', 'moon_mango', 'moon_melon', 'nectarine',
+            'papaya', 'passionfruit', 'peach', 'pear', 'pineapple', 'raspberry',
+            'starfruit', 'strawberry', 'sugar_apple', "traveler's_fruit", 'watermelon', 'white_mulberry'
         ],
-        'Fungus Type Crops': [
-            'mushroom', 'horned_dinoshroom', 'glowshroom', 'nectarshade'
+        'Fungus Plants': [
+            'glowshroom', 'horned_dinoshroom', 'mega_mushroom', 'mushroom',
+            'nectarshade', 'sinisterdrip'
         ],
-        'Leafy Type Crops': [
-            'grandtomato', 'sugar_apple', 'twistedtangle', 'giant_pinecone', 
-            'beanstalk', 'honeysuckle', 'sunflower', 'spiked_mango'
+        'Leafy Plants': [
+            'aloe_vera', 'apple', 'beanstalk', 'bee_balm', 'blood_banana', 'blueberry',
+            'cacao', 'cantaloupe', 'cauliflower', 'celestiberry', 'cocovine', 'cranberry',
+            'eggplant', 'elephant_ears', 'firefly_fern', 'foxglove', 'giant_pinecone',
+            'grandtomato', 'grape', 'green_apple', 'hive_fruit', 'honeysuckle', 'lilac',
+            'lily_of_the_valley', 'lumira', 'mango', 'maple_apple', 'mint', 'moon_blossom',
+            'moon_mango', 'moonflower', 'nectarine', 'noble_flower', 'parasol_flower',
+            'peach', 'pineapple', 'pink_lily', 'pitcher_plant', 'pumpkin', 'purple_dahlia',
+            'rafflesia', 'raspberry', 'rose', 'rosy_delight', 'spiked_mango', 'starfruit',
+            'strawberry', 'sugar_apple', 'sunflower', 'tomato', "traveler's_fruit",
+            'twistedtangle', 'watermelon'
         ],
-        'Night Type Crops': [
-            'moon_melon', 'moon_blossom', 'moon_mango', 'starfruit', 
-            'celestiberry', 'blood_banana', 'mint', 'moonflower'
+        'Night Plants': [
+            'blood_banana', 'celestiberry', 'glowshroom', 'mint', 'moon_blossom',
+            'moon_mango', 'moon_melon', 'moonflower', 'nightshade', 'starfruit'
         ],
         'Prehistoric Plants': [
-            'bone_blossom', 'amber_spine', 'lingonberry', 'grand_volcania', 
-            'horned_dinoshroom', 'horsetail', 'fossilight', 'firefly_fern'
+            'amber_spine', 'bone_blossom', 'boneboo', 'firefly_fern', 'fossilight',
+            'grand_volcania', 'horned_dinoshroom', 'horsetail', 'lingonberry', 'paradise_petal', 'stonebite'
         ],
-        'Prickly Fruits': [
-            'pricklefruit', 'twistedtangle', 'spiked_mango', 'venus_fly_trap', 
-            'horned_dinoshroom', 'pineapple', 'prickly_pear', 'dragon_fruit'
+        'Prickly Plants': [
+            'aloe_vera', 'cactus', 'celestiberry', 'dragon_fruit', 'durian',
+            'horned_dinoshroom', 'nectar_thorn', 'pineapple', 'pricklefruit',
+            'prickly_pear', 'spiked_mango', 'twistedtangle', 'venus_fly_trap'
         ],
-        'Sour Type Crops': [
-            'lemon', 'starfruit', 'passionfruit', 'cranberry'
+        'Sour Plants': [
+            'cranberry', 'lemon', 'lime', 'passionfruit', 'starfruit'
         ],
-        'Spicy Type Crops': [
-            'jalapeno', 'ember_lily', 'dragon_pepper', 'bell_pepper', 
-            'pepper', 'grand_volcania', 'horned_dinoshroom', 'cacao'
+        'Spicy Plants': [
+            'bell_pepper', 'cacao', 'dragon_pepper', 'ember_lily', 'horned_dinoshroom',
+            'jalapeno', 'papaya', 'pepper'
         ],
-        'Stalky Type Crops': [
-            'spring_onion', 'sugarglaze', 'burning_bud', 'veinpetal', 
-            'tallasparagus', 'beanstalk', 'elephant_ears', 'grand_volcania'
+        'Stalky Plants': [
+            'bamboo', 'beanstalk', 'bendboo', 'boneboo', 'burning_bud', 'cocovine',
+            'dandelion', 'elephant_ears', 'firefly_fern', 'grand_volcania',
+            'horned_dinoshroom', 'lily_of_the_valley', 'lotus', 'lucky_bamboo',
+            'mushroom', 'pitcher_plant', 'spring_onion', 'stonebite', 'sugarglaze',
+            'tallasparagus', 'veinpetal'
         ],
-        'Summer Crops': [
-            'butternut_squash', 'sugar_apple', 'bell_pepper', 'banana', 
-            'elephant_ears', 'tomato', 'prickly_pear', 'pineapple'
+        'Summer Plants': [
+            'aloe_vera', 'avocado', 'banana', 'bell_pepper', 'blueberry', 'butternut_squash',
+            'cantaloupe', 'carrot', 'cauliflower', 'delphinium', 'elephant_ears', 'feijoa',
+            'green_apple', 'guanabana', 'kiwi', 'lily_of_the_valley', 'loquat', 'parasol_flower',
+            'peace_lily', 'pear', 'pineapple', 'pitcher_plant', 'prickly_pear', 'rafflesia',
+            'rosy_delight', 'strawberry', 'sugar_apple', 'tomato', "traveler's_fruit", 'watermelon', 'wild_carrot'
         ],
-        'Sweet Type Crops': [
-            'sugarglaze', 'candy_blossom', 'sugar_apple', 'crownmelon', 
-            'moon_melon', 'spiked_mango', 'banana'
+        'Sweet Plants': [
+            'banana', 'blue_lollipop', 'blueberry', 'candy_blossom', 'candy_sunflower',
+            'chocolate_carrot', 'crown_melon', 'easter_egg', 'grape', 'mango', 'moon_melon',
+            'nectar_thorn', 'peach', 'pear', 'raspberry', 'red_lollipop', 'spiked_mango',
+            'starfruit', 'strawberry', 'sugar_apple', 'sugarglaze', 'watermelon'
         ],
-        'Toxic Type Crops': [
+        'Toxic Plants': [
             'foxglove', 'nightshade'
         ],
-        'Tropical Type Crops': [
-            'banana', 'pineapple', 'coconut', 'mango', 'cocovine', 
-            'dragon_fruit', 'parasol_flower', 'starfruit'
+        'Tropical Plants': [
+            'banana', 'coconut', 'cocovine', 'dragon_fruit', 'durian', 'mango',
+            'papaya', 'parasol_flower', 'passionfruit', 'pineapple', 'starfruit', 'watermelon'
         ],
-        'Vegetable Type Crops': [
-            'king_cabbage', 'grandtomato', 'rhubarb', 'tallasparagus', 
-            'jalapeno', 'beanstalk', 'dragon_pepper', 'violet_corn'
+        'Vegetable Plants': [
+            'avocado', 'beanstalk', 'bell_pepper', 'carrot', 'cauliflower', 'chocolate_carrot',
+            'corn', 'dragon_pepper', 'eggplant', 'grandtomato', 'jalapeno', 'king_cabbage',
+            'mint', 'onion', 'pepper', 'pumpkin', 'purple_cabbage', 'rhubarb', 'tallasparagus',
+            'taro_flower', 'tomato', 'violet_corn', 'wild_carrot'
         ],
-        'Woody Type Crops': [
-            'rhubarb', 'giant_pinecone', 'maple_apple', 'moon_blossom', 
-            'mango', 'coconut', 'peach', "traveler's_fruit"
+        'Woody Plants': [
+            'apple', 'avocado', 'cacao', 'coconut', 'cocovine', 'durian', 'feijoa',
+            'giant_pinecone', 'hive_fruit', 'kiwi', 'mango', 'maple_apple', 'moon_blossom',
+            'moon_mango', 'nectarine', 'papaya', 'peach', 'pear', 'rhubarb', "traveler's_fruit"
         ],
-        'Zen Type Fruit': [
-            'tranquilbloom', 'spiked_mango', 'maple_apple', 'serenity', 
-            'enkaku', 'hinomai', 'luckybamboo', 'taro_flower'
+        'Zen Plants': [
+            'dezen', 'enkaku', 'hinomai', 'lucky_bamboo', 'maple_apple', 'monoblooma',
+            'sakura_bush', 'serenity', 'soft_sunshine', 'spiked_mango', 'taro_flower',
+            'tranquil_bloom', 'zen_rocks', 'zenflare'
+        ],
+        'Root Plants': [
+            'carrot', 'chocolate_carrot', 'onion', 'spring_onion', 'wild_carrot'
         ]
     };
 
