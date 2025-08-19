@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -30,27 +30,28 @@ import {
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
+const getHashData = () => {
+    const hash = window.location.hash.replace('#', '');
+    const parts = hash.split('/');
+    const mainTab = parts[0] || 'items';
+    const subTab = parts[1] || 'all';
+    const itemId = parts.length > 2 ? parts[2] : null;
+
+    const validMainTabs = ['items', 'crops', 'mutations', 'weather', 'pets'];
+    const validSubTabs = ['all', 'seeds', 'gear', 'eggs', 'cosmetics', 'event', 'merchant'];
+
+    return {
+        mainTab: validMainTabs.includes(mainTab) ? mainTab : 'items',
+        subTab: validSubTabs.includes(subTab) ? subTab : 'all',
+        itemId
+    };
+};
+
 export const ItemEncyclopedia = () => {
     const isMobile = useIsMobile();
     const { user } = useAuth();
-    
-    // Initialize tabs from URL hash
-    const getInitialTabs = () => {
-        const hash = window.location.hash.replace('#', '');
-        const parts = hash.split('/');
-        const mainTab = parts[0] || 'items';
-        const subTab = parts[1] || 'all';
-        
-        const validMainTabs = ['items', 'crops', 'mutations', 'weather', 'pets'];
-        const validSubTabs = ['all', 'seeds', 'gear', 'eggs', 'cosmetics', 'event', 'merchant'];
-        
-        return {
-            mainTab: validMainTabs.includes(mainTab) ? mainTab : 'items',
-            subTab: validSubTabs.includes(subTab) ? subTab : 'all'
-        };
-    };
-    
-    const { mainTab: initialMainTab, subTab: initialSubTab } = getInitialTabs();
+
+    const { mainTab: initialMainTab, subTab: initialSubTab } = getHashData();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState(initialMainTab);
@@ -97,106 +98,17 @@ export const ItemEncyclopedia = () => {
         window.location.hash = `${activeTab}/${subTab}`;
     };
 
-    // Listen for hash changes (browser back/forward)
-    useEffect(() => {
-        const handleHashChange = () => {
-            const { mainTab, subTab } = getInitialTabs();
-            setActiveTab(mainTab);
-            setActiveSubTab(subTab);
-        };
-
-        window.addEventListener('hashchange', handleHashChange);
-        return () => window.removeEventListener('hashchange', handleHashChange);
-    }, []);
-
-    // Handle item right-click
-    const handleItemRightClick = (e: React.MouseEvent, item: ItemInfo) => {
-        e.preventDefault();
-        setContextMenu({
-            isOpen: true,
-            position: { x: e.clientX, y: e.clientY },
-            item
-        });
-    };
-
-    // Close context menu
-    const closeContextMenu = () => {
-        setContextMenu({ isOpen: false, position: { x: 0, y: 0 }, item: null });
-    };
-
     // Open full item view
-    const openFullItemView = (item: ItemInfo) => {
+    const openFullItemView = useCallback((item: ItemInfo) => {
         setFullItemView({ isOpen: true, item });
-    };
+    }, []);
 
     // Close full item view
     const closeFullItemView = () => {
         setFullItemView({ isOpen: false, item: null });
     };
 
-    useEffect(() => {
-        fetchEncyclopediaData();
-        if (user && !('isGuest' in user)) {
-            loadUserCropChecklist();
-        }
-    }, [user]);
-
-    const loadUserCropChecklist = async () => {
-        if (!user || 'isGuest' in user) return;
-        
-        try {
-            const { data, error } = await supabase
-                .from('user_crop_checklist')
-                .select('crop_item_id, is_planted')
-                .eq('user_id', user.id);
-            
-            if (error) throw error;
-            
-            const checklistMap: Record<string, boolean> = {};
-            data?.forEach(item => {
-                checklistMap[item.crop_item_id] = item.is_planted;
-            });
-            setUserCropChecklist(checklistMap);
-        } catch (err) {
-            console.error('Failed to load crop checklist:', err);
-        }
-    };
-
-    const toggleCropChecklist = async (cropId: string, isPlanted: boolean) => {
-        if (!user || 'isGuest' in user) return;
-        
-        try {
-            const { error } = await supabase
-                .from('user_crop_checklist')
-                .upsert({
-                    user_id: user.id,
-                    crop_item_id: cropId,
-                    is_planted: isPlanted,
-                    planted_at: isPlanted ? new Date().toISOString() : null
-                }, { onConflict: 'user_id,crop_item_id' });
-            
-            if (error) throw error;
-            
-            setUserCropChecklist(prev => ({
-                ...prev,
-                [cropId]: isPlanted
-            }));
-            
-            toast({
-                title: isPlanted ? "✅ Crop planted!" : "❌ Crop removed",
-                description: `${cropId} has been ${isPlanted ? 'added to' : 'removed from'} your checklist.`
-            });
-        } catch (err) {
-            console.error('Failed to update crop checklist:', err);
-            toast({
-                title: "Error",
-                description: "Failed to update crop checklist.",
-                variant: "destructive"
-            });
-        }
-    };
-
-    const fetchEncyclopediaData = async () => {
+    const fetchEncyclopediaData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -273,6 +185,106 @@ export const ItemEncyclopedia = () => {
             });
         } finally {
             setLoading(false);
+        }
+    }, []);
+
+    const loadUserCropChecklist = useCallback(async () => {
+        if (!user || 'isGuest' in user) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('user_crop_checklist')
+                .select('crop_item_id, is_planted')
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+
+            const checklistMap: Record<string, boolean> = {};
+            data?.forEach(item => {
+                checklistMap[item.crop_item_id] = item.is_planted;
+            });
+            setUserCropChecklist(checklistMap);
+        } catch (err) {
+            console.error('Failed to load crop checklist:', err);
+        }
+    }, [user]);
+
+    // Listen for hash changes (browser back/forward)
+    useEffect(() => {
+        const handleHashChange = () => {
+            const { mainTab, subTab } = getHashData();
+            setActiveTab(mainTab);
+            setActiveSubTab(subTab);
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
+    // Handle opening item view from URL
+    useEffect(() => {
+        const { itemId } = getHashData();
+        if (itemId && items.length > 0) {
+            const itemToView = items.find(item => item.item_id === itemId);
+            if (itemToView) {
+                openFullItemView(itemToView);
+            }
+        }
+    }, [items, openFullItemView]);
+
+    // Handle item right-click
+    const handleItemRightClick = (e: React.MouseEvent, item: ItemInfo) => {
+        e.preventDefault();
+        setContextMenu({
+            isOpen: true,
+            position: { x: e.clientX, y: e.clientY },
+            item
+        });
+    };
+
+    // Close context menu
+    const closeContextMenu = () => {
+        setContextMenu({ isOpen: false, position: { x: 0, y: 0 }, item: null });
+    };
+
+    useEffect(() => {
+        fetchEncyclopediaData();
+        if (user && !('isGuest' in user)) {
+            loadUserCropChecklist();
+        }
+    }, [user, loadUserCropChecklist, fetchEncyclopediaData]);
+
+    const toggleCropChecklist = async (cropId: string, isPlanted: boolean) => {
+        if (!user || 'isGuest' in user) return;
+
+        try {
+            const { error } = await supabase
+                .from('user_crop_checklist')
+                .upsert({
+                    user_id: user.id,
+                    crop_item_id: cropId,
+                    is_planted: isPlanted,
+                    planted_at: isPlanted ? new Date().toISOString() : null
+                }, { onConflict: 'user_id,crop_item_id' });
+
+            if (error) throw error;
+
+            setUserCropChecklist(prev => ({
+                ...prev,
+                [cropId]: isPlanted
+            }));
+
+            toast({
+                title: isPlanted ? "✅ Crop planted!" : "❌ Crop removed",
+                description: `${cropId} has been ${isPlanted ? 'added to' : 'removed from'} your checklist.`
+            });
+        } catch (err) {
+            console.error('Failed to update crop checklist:', err);
+            toast({
+                title: "Error",
+                description: "Failed to update crop checklist.",
+                variant: "destructive"
+            });
         }
     };
 
