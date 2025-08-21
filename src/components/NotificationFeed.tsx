@@ -67,7 +67,7 @@ export const NotificationFeed = ({ jandelMessages, stockAlerts, loading, error }
             type: 'jandel' as const,
             title: 'Jandel Message',
             message: n.message,
-            timestamp: new Date(n.timestamp),
+            timestamp: new Date(n.timestamp * 1000),
             read: false, // Jandel messages are always new
             icon: 'megaphone'
         }));
