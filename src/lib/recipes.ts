@@ -20,7 +20,7 @@ export interface Recipe {
     tiers: RecipeTier[];
 }
 
-const recipes: Recipe[] = [
+export const recipes: Recipe[] = [
     {
         name: 'Corn Dog',
         icon: '🌭',
