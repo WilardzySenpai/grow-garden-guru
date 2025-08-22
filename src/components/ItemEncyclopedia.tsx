@@ -602,10 +602,14 @@ export const ItemEncyclopedia = () => {
         } else if (sortOrder === 'category') {
             // Find categories that contain this item
             const aCategories = Object.entries(cropCategories)
-                .filter(([_, items]) => items.includes(a.item_id))
+                .filter(([_, subCategories]) =>
+                    Object.values(subCategories).flat().includes(a.item_id)
+                )
                 .map(([category]) => category);
             const bCategories = Object.entries(cropCategories)
-                .filter(([_, items]) => items.includes(b.item_id))
+                .filter(([_, subCategories]) =>
+                    Object.values(subCategories).flat().includes(b.item_id)
+                )
                 .map(([category]) => category);
             
             // Sort by first category, then by name within category
@@ -1155,87 +1159,117 @@ export const ItemEncyclopedia = () => {
 
                      <TabsContent value="crops">
                          <div className="space-y-6">
-                             {Object.entries(cropCategories).map(([categoryName, crops]) => (
-                                 <Card key={categoryName}>
-                                     <CardHeader>
-                                         <CardTitle className="flex items-center gap-2">
-                                             <span className="text-lg">🌱</span>
-                                             {categoryName}
-                                             <Badge variant="secondary">{crops.length} crops</Badge>
-                                         </CardTitle>
-                                     </CardHeader>
-                                     <CardContent>
-                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                             {crops.map((cropId) => {
-                                                 const cropItem = items.find(item => 
-                                                     item.item_id === cropId || 
-                                                     item.display_name?.toLowerCase().replace(/\s+/g, '_') === cropId ||
-                                                     item.display_name?.toLowerCase().replace(/\s+/g, '') === cropId.replace(/_/g, '')
-                                                 );
-                                                 const isPlanted = userCropChecklist[cropId] || false;
-                                                 const isLoggedIn = user && !('isGuest' in user);
-                                                 
-                                                 return (
-                                                     <div key={cropId} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
-                                                         {cropItem ? (
-                                                             <>
-                                                                 <img
-                                                                     src={cropItem.icon}
-                                                                     alt={cropItem.display_name}
-                                                                     className="w-8 h-8 object-contain"
-                                                                     onError={(e) => {
-                                                                         e.currentTarget.style.display = 'none';
-                                                                     }}
-                                                                 />
-                                                                 <div className="flex-1">
-                                                                     <div className="font-medium">{cropItem.display_name}</div>
-                                                                     <div className="text-sm text-muted-foreground">{cropItem.rarity}</div>
+                             <div className="flex justify-between items-center gap-4">
+                                 <Select
+                                     value={selectedCropType || "all"}
+                                     onValueChange={(value) => setSelectedCropType(value)}
+                                 >
+                                     <SelectTrigger className="w-[200px]">
+                                         <SelectValue placeholder="Select crop type..." />
+                                     </SelectTrigger>
+                                     <SelectContent>
+                                         <SelectGroup>
+                                             <SelectLabel>Crop Types</SelectLabel>
+                                             <SelectItem value="all">All Types</SelectItem>
+                                             {Object.keys(cropCategories).map((type) => (
+                                                 <SelectItem key={type} value={type}>{type}</SelectItem>
+                                             ))}
+                                         </SelectGroup>
+                                     </SelectContent>
+                                 </Select>
+                             </div>
+
+                             {Object.entries(
+                                selectedCropType === "all" 
+                                    ? cropCategories 
+                                    : { [selectedCropType]: cropCategories[selectedCropType] }
+                             ).map(([categoryName, subCategories]) => {
+                                 const allCropsInCategory = Object.values(subCategories).flat();
+                                 const totalCrops = allCropsInCategory.length;
+                                 const plantedCrops = allCropsInCategory.filter(cropId => userCropChecklist[cropId]).length;
+
+                                 return (
+                                     <Card key={categoryName}>
+                                         <CardHeader>
+                                             <CardTitle className="flex items-center gap-2">
+                                                 <span className="text-lg">🌱</span>
+                                                 {categoryName}
+                                                 <Badge variant="secondary">{totalCrops} crops</Badge>
+                                             </CardTitle>
+                                         </CardHeader>
+                                         <CardContent>
+                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                 {allCropsInCategory.map((cropId) => {
+                                                     const cropItem = items.find(item =>
+                                                         item.item_id === cropId ||
+                                                         item.display_name?.toLowerCase().replace(/\s+/g, '_') === cropId ||
+                                                         item.display_name?.toLowerCase().replace(/\s+/g, '') === cropId.replace(/_/g, '')
+                                                     );
+                                                     const isPlanted = userCropChecklist[cropId] || false;
+                                                     const isLoggedIn = user && !('isGuest' in user);
+
+                                                     return (
+                                                         <div key={cropId} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                                                             {cropItem ? (
+                                                                 <>
+                                                                     <img
+                                                                         src={cropItem.icon}
+                                                                         alt={cropItem.display_name}
+                                                                         className="w-8 h-8 object-contain"
+                                                                         onError={(e) => {
+                                                                             e.currentTarget.style.display = 'none';
+                                                                         }}
+                                                                     />
+                                                                     <div className="flex-1">
+                                                                         <div className="font-medium">{cropItem.display_name}</div>
+                                                                         <div className="text-sm text-muted-foreground">{cropItem.rarity}</div>
+                                                                     </div>
+                                                                 </>
+                                                             ) : (
+                                                                 <>
+                                                                     <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">🌱</div>
+                                                                     <div className="flex-1">
+                                                                         <div className="font-medium capitalize">{cropId.replace(/_/g, ' ')}</div>
+                                                                         <div className="text-sm text-muted-foreground">Not found in database</div>
+                                                                     </div>
+                                                                 </>
+                                                             )}
+                                                             {isLoggedIn && (
+                                                                 <div className="flex items-center gap-2">
+                                                                     <Checkbox
+                                                                         checked={isPlanted}
+                                                                         onCheckedChange={(checked) => toggleCropChecklist(cropId, !!checked)}
+                                                                         className="h-5 w-5"
+                                                                     />
+                                                                     <span className="text-sm text-muted-foreground">
+                                                                         {isPlanted ? "Planted" : "Not planted"}
+                                                                     </span>
                                                                  </div>
-                                                             </>
-                                                         ) : (
-                                                             <>
-                                                                 <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">🌱</div>
-                                                                 <div className="flex-1">
-                                                                     <div className="font-medium capitalize">{cropId.replace(/_/g, ' ')}</div>
-                                                                     <div className="text-sm text-muted-foreground">Not found in database</div>
-                                                                 </div>
-                                                             </>
-                                                         )}
-                                                         {isLoggedIn && (
-                                                             <div className="flex items-center gap-2">
-                                                                 <Checkbox
-                                                                     checked={isPlanted}
-                                                                     onCheckedChange={(checked) => toggleCropChecklist(cropId, !!checked)}
-                                                                     className="h-5 w-5"
-                                                                 />
-                                                                 <span className="text-sm text-muted-foreground">
-                                                                     {isPlanted ? "Planted" : "Not planted"}
-                                                                 </span>
-                                                             </div>
-                                                         )}
-                                                         {!isLoggedIn && (
-                                                             <div className="text-sm text-muted-foreground">Login to track</div>
-                                                         )}
-                                                     </div>
-                                                 );
-                                             })}
-                                         </div>
-                                         {user && !('isGuest' in user) && (
-                                             <div className="mt-4 text-sm text-muted-foreground">
-                                                 Progress: {crops.filter(cropId => userCropChecklist[cropId]).length} / {crops.length} planted
-                                                 <div className="w-full bg-muted rounded-full h-2 mt-2">
-                                                     <div 
-                                                         className="bg-primary h-2 rounded-full transition-all duration-300"
-                                                         style={{ 
-                                                             width: `${(crops.filter(cropId => userCropChecklist[cropId]).length / crops.length) * 100}%` 
-                                                         }}
-                                                     />
-                                                 </div>
+                                                             )}
+                                                             {!isLoggedIn && (
+                                                                 <div className="text-sm text-muted-foreground">Login to track</div>
+                                                             )}
+                                                         </div>
+                                                     );
+                                                 })}
                                              </div>
-                                         )}
-                                     </CardContent>
-                                 </Card>
-                             ))}
+                                             {user && !('isGuest' in user) && (
+                                                 <div className="mt-4 text-sm text-muted-foreground">
+                                                     Progress: {plantedCrops} / {totalCrops} planted
+                                                     <div className="w-full bg-muted rounded-full h-2 mt-2">
+                                                         <div
+                                                             className="bg-primary h-2 rounded-full transition-all duration-300"
+                                                             style={{
+                                                                 width: `${totalCrops > 0 ? (plantedCrops / totalCrops) * 100 : 0}%`
+                                                             }}
+                                                         />
+                                                     </div>
+                                                 </div>
+                                             )}
+                                         </CardContent>
+                                     </Card>
+                                 );
+                             })}
                          </div>
                      </TabsContent>
 
