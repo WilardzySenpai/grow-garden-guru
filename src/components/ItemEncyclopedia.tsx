@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Menu, Search, X } from 'lucide-react';
+import { Menu, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ItemCard } from '@/components/ItemCard';
 import { ItemContextMenu } from '@/components/ItemContextMenu';
 import { FullItemView } from '@/components/FullItemView';
@@ -33,14 +33,22 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 const getHashData = () => {
     const hash = window.location.hash.replace('#', '');
-    const parts = hash.split('/');
+    const [path, query] = hash.split('?');
+    const parts = path.split('/');
 
-    // Expects hash like: encyclopedia/items/all
+    // Parse query parameters
+    const params = new URLSearchParams(query || '');
+    let page = parseInt(params.get('page') || '1', 10);
+    if (isNaN(page) || page < 1) {
+        page = 1;
+    }
+
+    // Expects hash like: encyclopedia/items/all?page=2
     // parts[0] = 'encyclopedia'
     if (parts[0] !== 'encyclopedia') {
         // If the hash doesn't start with encyclopedia, it might be an old URL
         // or a different main tab. Return default values for this component.
-        return { mainTab: 'items', subTab: 'all', itemId: null };
+        return { mainTab: 'items', subTab: 'all', itemId: null, page: 1 };
     }
 
     const mainTab = parts[1] || 'items';
@@ -56,7 +64,8 @@ const getHashData = () => {
         return {
             mainTab: finalMainTab,
             subTab: finalSubTab,
-            itemId
+            itemId,
+            page
         };
     }
 
@@ -65,15 +74,19 @@ const getHashData = () => {
     return {
         mainTab: finalMainTab,
         subTab: validSubTabs.includes(subTab) ? subTab : 'all',
-        itemId
+        itemId,
+        page
     };
 };
+
+const ITEMS_PER_PAGE = 24; // Configurable number of items per page
 
 export const ItemEncyclopedia = () => {
     const isMobile = useIsMobile();
     const { user } = useAuth();
 
-    const { mainTab: initialMainTab, subTab: initialSubTab, itemId: initialItemId } = getHashData();
+    const { mainTab: initialMainTab, subTab: initialSubTab, itemId: initialItemId, page: initialPage } = getHashData();
+    const [currentPage, setCurrentPage] = useState(initialPage || 1);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState(initialMainTab);
@@ -128,12 +141,23 @@ export const ItemEncyclopedia = () => {
 
     const handleSubTabChange = (subTab: string) => {
         setActiveSubTab(subTab);
-        window.location.hash = `encyclopedia/${activeTab}/${subTab}`;
+        setCurrentPage(1); // Reset to first page when changing tabs
+        window.location.hash = `encyclopedia/${activeTab}/${subTab}?page=1`;
     };
 
     const handleCropTypeChange = (cropType: string) => {
         setSelectedCropType(cropType);
-        window.location.hash = `encyclopedia/crops/${cropType.toLowerCase()}`;
+        setCurrentPage(1); // Reset to first page when changing crop type
+        window.location.hash = `encyclopedia/crops/${cropType.toLowerCase()}?page=1`;
+    };
+
+    const handlePageChange = (page: number, filteredItemsLength: number) => {
+        const maxPage = Math.ceil(filteredItemsLength / ITEMS_PER_PAGE);
+        if (page >= 1 && page <= maxPage) {
+            setCurrentPage(page);
+            const hash = `encyclopedia/${activeTab}/${activeSubTab}`;
+            window.location.hash = `${hash}?page=${page}`;
+        }
     };
 
     // Open full item view
@@ -254,9 +278,10 @@ export const ItemEncyclopedia = () => {
     // Listen for hash changes (browser back/forward)
     useEffect(() => {
         const handleHashChange = () => {
-            const { mainTab, subTab, itemId } = getHashData();
+            const { mainTab, subTab, itemId, page } = getHashData();
             setActiveTab(mainTab);
             setActiveSubTab(subTab);
+            setCurrentPage(page);
 
             if (mainTab === 'crops') {
                 if (subTab.toLowerCase() === 'all') {
@@ -708,12 +733,17 @@ export const ItemEncyclopedia = () => {
     const unknownPets = filteredPets.filter(pet => pet.rarity === 'Unknown');
 
     const renderItemTable = (itemList: ItemInfo[]) => {
+        // Calculate pagination
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const paginatedItems = itemList.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+        const totalPages = Math.ceil(itemList.length / ITEMS_PER_PAGE);
+
         if (isMobile) {
             return (
                 <div className="space-y-4 pb-4">
                     <ScrollArea className="h-[calc(100vh-300px)]">
                         <div className="space-y-4 px-2">
-                            {itemList.map((item) => (
+                            {paginatedItems.map((item) => (
                                 <div
                                     key={item.item_id}
                                     onContextMenu={(e) => handleItemRightClick(e, item)}
@@ -721,6 +751,46 @@ export const ItemEncyclopedia = () => {
                                     <ItemCard item={item} />
                                 </div>
                             ))}
+                        </div>
+                        {/* Pagination Controls */}
+                        <div className="flex items-center justify-between mt-4 px-4">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1, itemList.length)}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4 mr-2" />
+                                Previous
+                            </Button>
+                            <div className="flex items-center gap-2">
+                                {totalPages > 1 && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    const pageNumber = currentPage <= 2 ? i + 1 :
+                                        currentPage >= totalPages - 2 ?
+                                            totalPages - (4 - i) :
+                                            currentPage - 2 + i;
+                                    if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) return null;
+                                    return (
+                                        <Button
+                                            key={pageNumber}
+                                            variant={currentPage === pageNumber ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => handlePageChange(pageNumber, itemList.length)}
+                                        >
+                                            {pageNumber}
+                                        </Button>
+                                    );
+                                })}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1, itemList.length)}
+                                disabled={currentPage >= totalPages}
+                            >
+                                Next
+                                <ChevronRight className="h-4 w-4 ml-2" />
+                            </Button>
                         </div>
                     </ScrollArea>
                 </div>
@@ -741,7 +811,7 @@ export const ItemEncyclopedia = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {itemList.map((item) => (
+                        {paginatedItems.map((item) => (
                             <TableRow 
                                 key={item.item_id} 
                                 className="hover:bg-accent/50 cursor-pointer"
@@ -774,6 +844,46 @@ export const ItemEncyclopedia = () => {
                         ))}
                     </TableBody>
                 </Table>
+                {/* Desktop Pagination Controls */}
+                <div className="flex items-center justify-between p-4 border-t">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1, itemList.length)}
+                        disabled={currentPage === 1}
+                    >
+                        <ChevronLeft className="h-4 w-4 mr-2" />
+                        Previous
+                    </Button>
+                    <div className="flex items-center gap-2">
+                        {totalPages > 1 && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            const pageNumber = currentPage <= 2 ? i + 1 :
+                                currentPage >= totalPages - 2 ?
+                                    totalPages - (4 - i) :
+                                    currentPage - 2 + i;
+                            if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) return null;
+                            return (
+                                <Button
+                                    key={pageNumber}
+                                    variant={currentPage === pageNumber ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => handlePageChange(pageNumber, itemList.length)}
+                                >
+                                    {pageNumber}
+                                </Button>
+                            );
+                        })}
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1, itemList.length)}
+                        disabled={currentPage >= totalPages}
+                    >
+                        Next
+                        <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                </div>
             </div>
         );
     };
@@ -1154,6 +1264,16 @@ export const ItemEncyclopedia = () => {
 
                     <TabsContent value="items">
                         <Tabs value={activeSubTab} onValueChange={handleSubTabChange} className="space-y-6">
+                            {!isMobile && (
+                                <TabsList>
+                                    <TabsTrigger value="all">All Items ({filteredItems.length})</TabsTrigger>
+                                    <TabsTrigger value="seeds">Seeds ({seedItems.length})</TabsTrigger>
+                                    <TabsTrigger value="gear">Gear ({gearItems.length})</TabsTrigger>
+                                    <TabsTrigger value="eggs">Eggs ({eggItems.length})</TabsTrigger>
+                                    <TabsTrigger value="cosmetics">Cosmetics ({cosmeticItems.length})</TabsTrigger>
+                                    <TabsTrigger value="events">Event Items ({eventItems.length})</TabsTrigger>
+                                </TabsList>
+                            )}
                             <TabsContent value="all">
                                 {renderItemTable(filteredItems)}
                             </TabsContent>
