@@ -14,6 +14,7 @@ import { ItemContextMenu } from '@/components/ItemContextMenu';
 import { FullItemView } from '@/components/FullItemView';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
+import { cropCategories } from '@/lib/cropCategories';
 
 import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
@@ -47,10 +48,22 @@ const getHashData = () => {
     const itemId = parts.length > 3 ? parts[3] : null;
 
     const validMainTabs = ['items', 'crops', 'mutations', 'weather', 'pets'];
+    const finalMainTab = validMainTabs.includes(mainTab) ? mainTab : 'items';
+
+    if (finalMainTab === 'crops') {
+        const cropTypeKeys = Object.keys(cropCategories).map(k => k.toLowerCase());
+        const finalSubTab = (subTab && (cropTypeKeys.includes(subTab.toLowerCase()) || subTab.toLowerCase() === 'all')) ? subTab : 'all';
+        return {
+            mainTab: finalMainTab,
+            subTab: finalSubTab,
+            itemId
+        };
+    }
+
     const validSubTabs = ['all', 'seeds', 'gear', 'eggs', 'cosmetics', 'events', 'merchant'];
 
     return {
-        mainTab: validMainTabs.includes(mainTab) ? mainTab : 'items',
+        mainTab: finalMainTab,
         subTab: validSubTabs.includes(subTab) ? subTab : 'all',
         itemId
     };
@@ -60,17 +73,28 @@ export const ItemEncyclopedia = () => {
     const isMobile = useIsMobile();
     const { user } = useAuth();
 
-    const { mainTab: initialMainTab, subTab: initialSubTab } = getHashData();
+    const { mainTab: initialMainTab, subTab: initialSubTab, itemId: initialItemId } = getHashData();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState(initialMainTab);
     const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
+    const [sortOrder, setSortOrder] = useState<'a-z' | 'z-a' | 'category'>('a-z');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [items, setItems] = useState<ItemInfo[]>([]);
     const [weatherItems, setWeatherItems] = useState<WeatherData[]>([]);
     const [pets, setPets] = useState<PetInfo[]>([]);
     const [userCropChecklist, setUserCropChecklist] = useState<Record<string, boolean>>({});
+    const [selectedCropType, setSelectedCropType] = useState<string>(() => {
+        if (initialMainTab === 'crops') {
+            if (initialSubTab.toLowerCase() === 'all') {
+                return 'all';
+            }
+            const cropTypeKeys = Object.keys(cropCategories);
+            return cropTypeKeys.find(k => k.toLowerCase() === initialSubTab.toLowerCase()) || 'all';
+        }
+        return 'all';
+    });
 
     // Context menu and full item view states
     const [contextMenu, setContextMenu] = useState<{
@@ -107,14 +131,23 @@ export const ItemEncyclopedia = () => {
         window.location.hash = `encyclopedia/${activeTab}/${subTab}`;
     };
 
+    const handleCropTypeChange = (cropType: string) => {
+        setSelectedCropType(cropType);
+        window.location.hash = `encyclopedia/crops/${cropType.toLowerCase()}`;
+    };
+
     // Open full item view
     const openFullItemView = useCallback((item: ItemInfo) => {
         setFullItemView({ isOpen: true, item });
-    }, []);
+        // Update URL with the item information
+        window.location.hash = `encyclopedia/${activeTab}/${item.type}/${item.item_id}`;
+    }, [activeTab]);
 
     // Close full item view
     const closeFullItemView = () => {
         setFullItemView({ isOpen: false, item: null });
+        // Remove item from URL when closing
+        window.location.hash = `encyclopedia/${activeTab}/${activeSubTab}`;
     };
 
     const fetchEncyclopediaData = useCallback(async () => {
@@ -221,14 +254,29 @@ export const ItemEncyclopedia = () => {
     // Listen for hash changes (browser back/forward)
     useEffect(() => {
         const handleHashChange = () => {
-            const { mainTab, subTab } = getHashData();
+            const { mainTab, subTab, itemId } = getHashData();
             setActiveTab(mainTab);
             setActiveSubTab(subTab);
+
+            if (mainTab === 'crops') {
+                if (subTab.toLowerCase() === 'all') {
+                    setSelectedCropType('all');
+                } else {
+                    const cropTypeKeys = Object.keys(cropCategories);
+                    const capitalizedCropType = cropTypeKeys.find(k => k.toLowerCase() === subTab.toLowerCase()) || 'all';
+                    setSelectedCropType(capitalizedCropType);
+                }
+            }
+            
+            // Close item view if no item in URL
+            if (!itemId && fullItemView.isOpen) {
+                closeFullItemView();
+            }
         };
 
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
-    }, []);
+    }, [fullItemView.isOpen, closeFullItemView]);
 
     // Handle opening item view from URL
     useEffect(() => {
@@ -577,129 +625,40 @@ export const ItemEncyclopedia = () => {
         }
     ];
 
-    // Crop categories data structure
-    const cropCategories = {
-        'Berry Plants': [
-            'blueberry', 'celestiberry', 'cranberry', 'elderstrawberry',
-            'grape', 'lingonberry', 'raspberry', 'strawberry', 'white_mulberry'
-        ],
-        'Blossom Plants': [
-            'bone_blossom', 'candy_blossom', 'cherry_blossom', 'moon_blossom'
-        ],
-        'Candy Plants': [
-            'blue_lollipop', 'candy_blossom', 'candy_sunflower', 'chocolate_carrot',
-            'easter_egg', 'red_lollipop', 'sugarglaze'
-        ],
-        'Flower Plants': [
-            'bee_balm', 'burning_bud', 'candy_blossom', 'candy_sunflower',
-            'cherry_blossom', 'crocus', 'daffodil', 'delphinium', 'ember_lily',
-            'enkaku', 'firework_flower', 'foxglove', 'grand_volcania', 'hinomai',
-            'honeysuckle', 'lavender', 'liberty_lily', 'lilac', 'lily_of_the_valley',
-            'lotus', 'manuka_flower', 'monoblooma', 'moon_blossom', 'moonflower',
-            'nightshade', 'noble_flower', 'orange_tulip', 'parasol_flower', 'pink_lily',
-            'pink_tulip', 'purple_dahlia', 'rafflesia', 'rose', 'rosy_delight',
-            'serenity', 'soft_sunshine', 'stonebite', 'succulent', 'sunflower',
-            'taro_flower', 'veinpetal', 'zenflare'
-        ],
-        'Fruit Plants': [
-            'apple', 'avocado', 'banana', 'blood_banana', 'blueberry', 'celestiberry',
-            'coconut', 'cranberry', 'crown_melon', 'dragon_fruit', 'durian', 'grandtomato',
-            'grape', 'green_apple', 'hive_fruit', 'kiwi', 'lemon', 'lime', 'lingonberry',
-            'loquat', 'mango', 'maple_apple', 'moon_mango', 'moon_melon', 'nectarine',
-            'papaya', 'passionfruit', 'peach', 'pear', 'pineapple', 'raspberry',
-            'starfruit', 'strawberry', 'sugar_apple', "traveler's_fruit", 'watermelon', 'white_mulberry'
-        ],
-        'Fungus Plants': [
-            'glowshroom', 'horned_dinoshroom', 'mega_mushroom', 'mushroom',
-            'nectarshade', 'sinisterdrip'
-        ],
-        'Leafy Plants': [
-            'aloe_vera', 'apple', 'beanstalk', 'bee_balm', 'blood_banana', 'blueberry',
-            'cacao', 'cantaloupe', 'cauliflower', 'celestiberry', 'cocovine', 'cranberry',
-            'eggplant', 'elephant_ears', 'firefly_fern', 'foxglove', 'giant_pinecone',
-            'grandtomato', 'grape', 'green_apple', 'hive_fruit', 'honeysuckle', 'lilac',
-            'lily_of_the_valley', 'lumira', 'mango', 'maple_apple', 'mint', 'moon_blossom',
-            'moon_mango', 'moonflower', 'nectarine', 'noble_flower', 'parasol_flower',
-            'peach', 'pineapple', 'pink_lily', 'pitcher_plant', 'pumpkin', 'purple_dahlia',
-            'rafflesia', 'raspberry', 'rose', 'rosy_delight', 'spiked_mango', 'starfruit',
-            'strawberry', 'sugar_apple', 'sunflower', 'tomato', "traveler's_fruit",
-            'twistedtangle', 'watermelon'
-        ],
-        'Night Plants': [
-            'blood_banana', 'celestiberry', 'glowshroom', 'mint', 'moon_blossom',
-            'moon_mango', 'moon_melon', 'moonflower', 'nightshade', 'starfruit'
-        ],
-        'Prehistoric Plants': [
-            'amber_spine', 'bone_blossom', 'boneboo', 'firefly_fern', 'fossilight',
-            'grand_volcania', 'horned_dinoshroom', 'horsetail', 'lingonberry', 'paradise_petal', 'stonebite'
-        ],
-        'Prickly Plants': [
-            'aloe_vera', 'cactus', 'celestiberry', 'dragon_fruit', 'durian',
-            'horned_dinoshroom', 'nectar_thorn', 'pineapple', 'pricklefruit',
-            'prickly_pear', 'spiked_mango', 'twistedtangle', 'venus_fly_trap'
-        ],
-        'Sour Plants': [
-            'cranberry', 'lemon', 'lime', 'passionfruit', 'starfruit'
-        ],
-        'Spicy Plants': [
-            'bell_pepper', 'cacao', 'dragon_pepper', 'ember_lily', 'horned_dinoshroom',
-            'jalapeno', 'papaya', 'pepper'
-        ],
-        'Stalky Plants': [
-            'bamboo', 'beanstalk', 'bendboo', 'boneboo', 'burning_bud', 'cocovine',
-            'dandelion', 'elephant_ears', 'firefly_fern', 'grand_volcania',
-            'horned_dinoshroom', 'lily_of_the_valley', 'lotus', 'lucky_bamboo',
-            'mushroom', 'pitcher_plant', 'spring_onion', 'stonebite', 'sugarglaze',
-            'tallasparagus', 'veinpetal'
-        ],
-        'Summer Plants': [
-            'aloe_vera', 'avocado', 'banana', 'bell_pepper', 'blueberry', 'butternut_squash',
-            'cantaloupe', 'carrot', 'cauliflower', 'delphinium', 'elephant_ears', 'feijoa',
-            'green_apple', 'guanabana', 'kiwi', 'lily_of_the_valley', 'loquat', 'parasol_flower',
-            'peace_lily', 'pear', 'pineapple', 'pitcher_plant', 'prickly_pear', 'rafflesia',
-            'rosy_delight', 'strawberry', 'sugar_apple', 'tomato', "traveler's_fruit", 'watermelon', 'wild_carrot'
-        ],
-        'Sweet Plants': [
-            'banana', 'blue_lollipop', 'blueberry', 'candy_blossom', 'candy_sunflower',
-            'chocolate_carrot', 'crown_melon', 'easter_egg', 'grape', 'mango', 'moon_melon',
-            'nectar_thorn', 'peach', 'pear', 'raspberry', 'red_lollipop', 'spiked_mango',
-            'starfruit', 'strawberry', 'sugar_apple', 'sugarglaze', 'watermelon'
-        ],
-        'Toxic Plants': [
-            'foxglove', 'nightshade'
-        ],
-        'Tropical Plants': [
-            'banana', 'coconut', 'cocovine', 'dragon_fruit', 'durian', 'mango',
-            'papaya', 'parasol_flower', 'passionfruit', 'pineapple', 'starfruit', 'watermelon'
-        ],
-        'Vegetable Plants': [
-            'avocado', 'beanstalk', 'bell_pepper', 'carrot', 'cauliflower', 'chocolate_carrot',
-            'corn', 'dragon_pepper', 'eggplant', 'grandtomato', 'jalapeno', 'king_cabbage',
-            'mint', 'onion', 'pepper', 'pumpkin', 'purple_cabbage', 'rhubarb', 'tallasparagus',
-            'taro_flower', 'tomato', 'violet_corn', 'wild_carrot'
-        ],
-        'Woody Plants': [
-            'apple', 'avocado', 'cacao', 'coconut', 'cocovine', 'durian', 'feijoa',
-            'giant_pinecone', 'hive_fruit', 'kiwi', 'mango', 'maple_apple', 'moon_blossom',
-            'moon_mango', 'nectarine', 'papaya', 'peach', 'pear', 'rhubarb', "traveler's_fruit"
-        ],
-        'Zen Plants': [
-            'dezen', 'enkaku', 'hinomai', 'lucky_bamboo', 'maple_apple', 'monoblooma',
-            'sakura_bush', 'serenity', 'soft_sunshine', 'spiked_mango', 'taro_flower',
-            'tranquil_bloom', 'zen_rocks', 'zenflare'
-        ],
-        'Root Plants': [
-            'carrot', 'chocolate_carrot', 'onion', 'spring_onion', 'wild_carrot'
-        ]
-    };
-
     // Filter functions with null safety
     const filteredItems = items.filter(item =>
         (item.display_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (item.item_id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (item.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (item.rarity?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
+    ).sort((a, b) => {
+        if (sortOrder === 'a-z') {
+            return (a.display_name || '').localeCompare(b.display_name || '');
+        } else if (sortOrder === 'z-a') {
+            return (b.display_name || '').localeCompare(a.display_name || '');
+        } else if (sortOrder === 'category') {
+            // Find categories that contain this item
+            const aCategories = Object.entries(cropCategories)
+                .filter(([_, subCategories]) =>
+                    Object.values(subCategories).flat().includes(a.item_id)
+                )
+                .map(([category]) => category);
+            const bCategories = Object.entries(cropCategories)
+                .filter(([_, subCategories]) =>
+                    Object.values(subCategories).flat().includes(b.item_id)
+                )
+                .map(([category]) => category);
+            
+            // Sort by first category, then by name within category
+            const aCategory = aCategories[0] || 'ZZZ';
+            const bCategory = bCategories[0] || 'ZZZ';
+            if (aCategory === bCategory) {
+                return (a.display_name || '').localeCompare(b.display_name || '');
+            }
+            return aCategory.localeCompare(bCategory);
+        }
+        return 0;
+    });
 
     const filteredMutations = mutations.filter(mutation =>
         mutation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1033,51 +992,91 @@ export const ItemEncyclopedia = () => {
         <Card>
             <CardHeader className="pb-2">
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xl">📚</span>
-                                <CardTitle className="text-2xl">Encyclopedia</CardTitle>
-                                {isAdmin && (
-                                    <Button
-                                        variant="outline"
-                                        className="ml-4"
-                                        disabled={refreshing}
-                                        onClick={async () => {
-                                            setRefreshing(true);
-                                            try {
-                                                // Call backend endpoint to trigger sync
-                                                const resp = await fetch('/api/admin/sync-cache', { method: 'POST' });
-                                                if (!resp.ok) throw new Error('Sync failed');
-                                                toast({ title: 'Cache Updated', description: 'Encyclopedia cache refreshed.' });
-                                                await fetchEncyclopediaData();
-                                            } catch (err) {
-                                                toast({ title: 'Sync Error', description: 'Failed to refresh cache.', variant: 'destructive' });
-                                            } finally {
-                                                setRefreshing(false);
-                                            }
-                                        }}
-                                    >
-                                        {refreshing ? 'Refreshing...' : 'Refresh Cache'}
-                                    </Button>
-                                )}
-                            </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                            <span className="text-xl">📚</span>
+                            <CardTitle className="text-2xl">Encyclopedia</CardTitle>
+                            <Badge variant="secondary" className="h-6 text-xs sm:text-sm">
+                                {totalResults} results
+                            </Badge>
                         </div>
-                        <Badge variant="secondary" className="h-6">
-                            {filteredItems.length + filteredMutations.length + filteredWeather.length + filteredPets.length} results
-                        </Badge>
-                    </div>
-                    <div className="relative">
-                        <Input
-                            placeholder="Search items, mutations, weather..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-secondary/50 border-0"
-                        />
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <span className="text-muted-foreground text-sm">
-                                {searchTerm ? '755 results' : 'Type to search...'}
-                            </span>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                            {activeTab !== 'crops' && (<>
+                                <div className="relative w-full sm:w-auto">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search everything..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-8 w-full sm:w-[250px] md:w-[300px]"
+                                    />
+                                    {searchTerm && (
+                                        <button
+                                            onClick={handleClearSearch}
+                                            className="absolute right-2 top-2.5"
+                                        >
+                                            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                        </button>
+                                    )}
+                                </div>
+                                <Select
+                                    value={sortOrder}
+                                    onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
+                                >
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Sort by..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Sort Order</SelectLabel>
+                                            <SelectItem value="a-z">Name (A to Z)</SelectItem>
+                                            <SelectItem value="z-a">Name (Z to A)</SelectItem>
+                                            <SelectItem value="category">By Category</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </>)}
+                            {activeTab === 'crops' && (
+                                <Select
+                                    value={selectedCropType || "all"}
+                                    onValueChange={handleCropTypeChange}
+                                >
+                                    <SelectTrigger className="w-[200px]">
+                                        <SelectValue placeholder="Select crop type..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Crop Types</SelectLabel>
+                                            <SelectItem value="all">All Types</SelectItem>
+                                            {Object.keys(cropCategories).map((type) => (
+                                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                            {isAdmin && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={refreshing}
+                                    onClick={async () => {
+                                        setRefreshing(true);
+                                        try {
+                                            const resp = await fetch('/api/admin/sync-cache', { method: 'POST' });
+                                            if (!resp.ok) throw new Error('Sync failed');
+                                            toast({ title: 'Cache Updated', description: 'Encyclopedia cache refreshed.' });
+                                            await fetchEncyclopediaData();
+                                        } catch (err) {
+                                            toast({ title: 'Sync Error', description: 'Failed to refresh cache.', variant: 'destructive' });
+                                        } finally {
+                                            setRefreshing(false);
+                                        }
+                                    }}
+                                >
+                                    {refreshing ? 'Refreshing...' : 'Refresh Cache'}
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1155,46 +1154,6 @@ export const ItemEncyclopedia = () => {
 
                     <TabsContent value="items">
                         <Tabs value={activeSubTab} onValueChange={handleSubTabChange} className="space-y-6">
-                            {isMobile ? (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="w-full">
-                                            <Menu className="h-4 w-4 mr-2" />
-                                            {activeSubTab.charAt(0).toUpperCase() + activeSubTab.slice(1)}
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="w-full">
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('all')}>All ({filteredItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('seeds')}>Seeds ({seedItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('gear')}>Gear ({gearItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('eggs')}>Eggs ({eggItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('cosmetics')}>Cosmetics ({cosmeticItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('events')}>Events ({eventItems.length})</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            ) : (
-                                <TabsList>
-                                    <TabsTrigger value="all">
-                                        All ({filteredItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="seeds">
-                                        Seeds ({seedItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="gear">
-                                        Gear ({gearItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="eggs">
-                                        Eggs ({eggItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="cosmetics">
-                                        Cosmetics ({cosmeticItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="events">
-                                        Events ({eventItems.length})
-                                    </TabsTrigger>
-                                </TabsList>
-                            )}
-
                             <TabsContent value="all">
                                 {renderItemTable(filteredItems)}
                             </TabsContent>
@@ -1218,87 +1177,97 @@ export const ItemEncyclopedia = () => {
 
                      <TabsContent value="crops">
                          <div className="space-y-6">
-                             {Object.entries(cropCategories).map(([categoryName, crops]) => (
-                                 <Card key={categoryName}>
-                                     <CardHeader>
-                                         <CardTitle className="flex items-center gap-2">
-                                             <span className="text-lg">🌱</span>
-                                             {categoryName}
-                                             <Badge variant="secondary">{crops.length} crops</Badge>
-                                         </CardTitle>
-                                     </CardHeader>
-                                     <CardContent>
-                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                             {crops.map((cropId) => {
-                                                 const cropItem = items.find(item => 
-                                                     item.item_id === cropId || 
-                                                     item.display_name?.toLowerCase().replace(/\s+/g, '_') === cropId ||
-                                                     item.display_name?.toLowerCase().replace(/\s+/g, '') === cropId.replace(/_/g, '')
-                                                 );
-                                                 const isPlanted = userCropChecklist[cropId] || false;
-                                                 const isLoggedIn = user && !('isGuest' in user);
-                                                 
-                                                 return (
-                                                     <div key={cropId} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
-                                                         {cropItem ? (
-                                                             <>
-                                                                 <img
-                                                                     src={cropItem.icon}
-                                                                     alt={cropItem.display_name}
-                                                                     className="w-8 h-8 object-contain"
-                                                                     onError={(e) => {
-                                                                         e.currentTarget.style.display = 'none';
-                                                                     }}
-                                                                 />
-                                                                 <div className="flex-1">
-                                                                     <div className="font-medium">{cropItem.display_name}</div>
-                                                                     <div className="text-sm text-muted-foreground">{cropItem.rarity}</div>
+                             {Object.entries(
+                                selectedCropType === "all" 
+                                    ? cropCategories 
+                                    : { [selectedCropType]: cropCategories[selectedCropType] }
+                             ).map(([categoryName, subCategories]) => {
+                                 const allCropsInCategory = Object.values(subCategories).flat() as string[];
+                                 const totalCrops = allCropsInCategory.length;
+                                 const plantedCrops = allCropsInCategory.filter(cropId => userCropChecklist[cropId]).length;
+
+                                 return (
+                                     <Card key={categoryName}>
+                                         <CardHeader>
+                                             <CardTitle className="flex items-center gap-2">
+                                                 <span className="text-lg">🌱</span>
+                                                 {categoryName}
+                                                 <Badge variant="secondary">{totalCrops} crops</Badge>
+                                             </CardTitle>
+                                         </CardHeader>
+                                         <CardContent>
+                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                 {allCropsInCategory.map((cropId: string) => {
+                                                     const cropItem = items.find(item =>
+                                                         item.item_id === cropId ||
+                                                         item.display_name?.toLowerCase().replace(/\s+/g, '_') === cropId ||
+                                                         item.display_name?.toLowerCase().replace(/\s+/g, '') === cropId.replace(/_/g, '')
+                                                     );
+                                                     const isPlanted = userCropChecklist[cropId] || false;
+                                                     const isLoggedIn = user && !('isGuest' in user);
+
+                                                     return (
+                                                         <div key={cropId} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                                                             {cropItem ? (
+                                                                 <>
+                                                                     <img
+                                                                         src={cropItem.icon}
+                                                                         alt={cropItem.display_name}
+                                                                         className="w-8 h-8 object-contain"
+                                                                         onError={(e) => {
+                                                                             e.currentTarget.style.display = 'none';
+                                                                         }}
+                                                                     />
+                                                                     <div className="flex-1">
+                                                                         <div className="font-medium">{cropItem.display_name}</div>
+                                                                         <div className="text-sm text-muted-foreground">{cropItem.rarity}</div>
+                                                                     </div>
+                                                                 </>
+                                                             ) : (
+                                                                 <>
+                                                                     <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">🌱</div>
+                                                                     <div className="flex-1">
+                                                                         <div className="font-medium capitalize">{cropId.replace(/_/g, ' ')}</div>
+                                                                         <div className="text-sm text-muted-foreground">Not found in database</div>
+                                                                     </div>
+                                                                 </>
+                                                             )}
+                                                             {isLoggedIn && (
+                                                                 <div className="flex items-center gap-2">
+                                                                     <Checkbox
+                                                                         checked={isPlanted}
+                                                                         onCheckedChange={(checked) => toggleCropChecklist(cropId, !!checked)}
+                                                                         className="h-5 w-5"
+                                                                     />
+                                                                     <span className="text-sm text-muted-foreground">
+                                                                         {isPlanted ? "Planted" : "Not planted"}
+                                                                     </span>
                                                                  </div>
-                                                             </>
-                                                         ) : (
-                                                             <>
-                                                                 <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">🌱</div>
-                                                                 <div className="flex-1">
-                                                                     <div className="font-medium capitalize">{cropId.replace(/_/g, ' ')}</div>
-                                                                     <div className="text-sm text-muted-foreground">Not found in database</div>
-                                                                 </div>
-                                                             </>
-                                                         )}
-                                                         {isLoggedIn && (
-                                                             <div className="flex items-center gap-2">
-                                                                 <Checkbox
-                                                                     checked={isPlanted}
-                                                                     onCheckedChange={(checked) => toggleCropChecklist(cropId, !!checked)}
-                                                                     className="h-5 w-5"
-                                                                 />
-                                                                 <span className="text-sm text-muted-foreground">
-                                                                     {isPlanted ? "Planted" : "Not planted"}
-                                                                 </span>
-                                                             </div>
-                                                         )}
-                                                         {!isLoggedIn && (
-                                                             <div className="text-sm text-muted-foreground">Login to track</div>
-                                                         )}
-                                                     </div>
-                                                 );
-                                             })}
-                                         </div>
-                                         {user && !('isGuest' in user) && (
-                                             <div className="mt-4 text-sm text-muted-foreground">
-                                                 Progress: {crops.filter(cropId => userCropChecklist[cropId]).length} / {crops.length} planted
-                                                 <div className="w-full bg-muted rounded-full h-2 mt-2">
-                                                     <div 
-                                                         className="bg-primary h-2 rounded-full transition-all duration-300"
-                                                         style={{ 
-                                                             width: `${(crops.filter(cropId => userCropChecklist[cropId]).length / crops.length) * 100}%` 
-                                                         }}
-                                                     />
-                                                 </div>
+                                                             )}
+                                                             {!isLoggedIn && (
+                                                                 <div className="text-sm text-muted-foreground">Login to track</div>
+                                                             )}
+                                                         </div>
+                                                     );
+                                                 })}
                                              </div>
-                                         )}
-                                     </CardContent>
-                                 </Card>
-                             ))}
+                                             {user && !('isGuest' in user) && (
+                                                 <div className="mt-4 text-sm text-muted-foreground">
+                                                     Progress: {plantedCrops} / {totalCrops} planted
+                                                     <div className="w-full bg-muted rounded-full h-2 mt-2">
+                                                         <div
+                                                             className="bg-primary h-2 rounded-full transition-all duration-300"
+                                                             style={{
+                                                                 width: `${totalCrops > 0 ? (plantedCrops / totalCrops) * 100 : 0}%`
+                                                             }}
+                                                         />
+                                                     </div>
+                                                 </div>
+                                             )}
+                                         </CardContent>
+                                     </Card>
+                                 );
+                             })}
                          </div>
                      </TabsContent>
 
