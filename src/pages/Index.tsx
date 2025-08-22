@@ -136,8 +136,10 @@ const Index = () => {
     useEffect(() => {
         const hash = window.location.hash.replace('#', '');
         const validTabs = ['market', 'encyclopedia', 'recipes', 'calculator', 'notifications'];
-        if (validTabs.includes(hash)) {
-            setActiveTab(hash);
+        const activeMainTab = validTabs.find(tab => hash.startsWith(tab));
+
+        if (activeMainTab) {
+            setActiveTab(activeMainTab);
         } else {
             // Default to market tab and update hash
             setActiveTab('market');

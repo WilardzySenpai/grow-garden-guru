@@ -33,12 +33,21 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 const getHashData = () => {
     const hash = window.location.hash.replace('#', '');
     const parts = hash.split('/');
-    const mainTab = parts[0] || 'items';
-    const subTab = parts[1] || 'all';
-    const itemId = parts.length > 2 ? parts[2] : null;
+
+    // Expects hash like: encyclopedia/items/all
+    // parts[0] = 'encyclopedia'
+    if (parts[0] !== 'encyclopedia') {
+        // If the hash doesn't start with encyclopedia, it might be an old URL
+        // or a different main tab. Return default values for this component.
+        return { mainTab: 'items', subTab: 'all', itemId: null };
+    }
+
+    const mainTab = parts[1] || 'items';
+    const subTab = parts[2] || 'all';
+    const itemId = parts.length > 3 ? parts[3] : null;
 
     const validMainTabs = ['items', 'crops', 'mutations', 'weather', 'pets'];
-    const validSubTabs = ['all', 'seeds', 'gear', 'eggs', 'cosmetics', 'event', 'merchant'];
+    const validSubTabs = ['all', 'seeds', 'gear', 'eggs', 'cosmetics', 'events', 'merchant'];
 
     return {
         mainTab: validMainTabs.includes(mainTab) ? mainTab : 'items',
@@ -90,12 +99,12 @@ export const ItemEncyclopedia = () => {
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         const subTab = tab === 'items' ? activeSubTab : 'all';
-        window.location.hash = `${tab}/${subTab}`;
+        window.location.hash = `encyclopedia/${tab}/${subTab}`;
     };
 
     const handleSubTabChange = (subTab: string) => {
         setActiveSubTab(subTab);
-        window.location.hash = `${activeTab}/${subTab}`;
+        window.location.hash = `encyclopedia/${activeTab}/${subTab}`;
     };
 
     // Open full item view
