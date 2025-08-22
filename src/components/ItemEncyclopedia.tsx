@@ -38,7 +38,10 @@ const getHashData = () => {
 
     // Parse query parameters
     const params = new URLSearchParams(query || '');
-    const page = parseInt(params.get('page') || '1', 10);
+    let page = parseInt(params.get('page') || '1', 10);
+    if (isNaN(page) || page < 1) {
+        page = 1;
+    }
 
     // Expects hash like: encyclopedia/items/all?page=2
     // parts[0] = 'encyclopedia'
@@ -61,7 +64,8 @@ const getHashData = () => {
         return {
             mainTab: finalMainTab,
             subTab: finalSubTab,
-            itemId
+            itemId,
+            page
         };
     }
 
@@ -70,7 +74,8 @@ const getHashData = () => {
     return {
         mainTab: finalMainTab,
         subTab: validSubTabs.includes(subTab) ? subTab : 'all',
-        itemId
+        itemId,
+        page
     };
 };
 
@@ -759,11 +764,12 @@ export const ItemEncyclopedia = () => {
                                 Previous
                             </Button>
                             <div className="flex items-center gap-2">
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                {totalPages > 1 && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                     const pageNumber = currentPage <= 2 ? i + 1 :
                                         currentPage >= totalPages - 2 ?
                                             totalPages - (4 - i) :
                                             currentPage - 2 + i;
+                                    if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) return null;
                                     return (
                                         <Button
                                             key={pageNumber}
@@ -850,11 +856,12 @@ export const ItemEncyclopedia = () => {
                         Previous
                     </Button>
                     <div className="flex items-center gap-2">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        {totalPages > 1 && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                             const pageNumber = currentPage <= 2 ? i + 1 :
                                 currentPage >= totalPages - 2 ?
                                     totalPages - (4 - i) :
                                     currentPage - 2 + i;
+                            if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) return null;
                             return (
                                 <Button
                                     key={pageNumber}
@@ -1257,6 +1264,16 @@ export const ItemEncyclopedia = () => {
 
                     <TabsContent value="items">
                         <Tabs value={activeSubTab} onValueChange={handleSubTabChange} className="space-y-6">
+                            {!isMobile && (
+                                <TabsList>
+                                    <TabsTrigger value="all">All Items ({filteredItems.length})</TabsTrigger>
+                                    <TabsTrigger value="seeds">Seeds ({seedItems.length})</TabsTrigger>
+                                    <TabsTrigger value="gear">Gear ({gearItems.length})</TabsTrigger>
+                                    <TabsTrigger value="eggs">Eggs ({eggItems.length})</TabsTrigger>
+                                    <TabsTrigger value="cosmetics">Cosmetics ({cosmeticItems.length})</TabsTrigger>
+                                    <TabsTrigger value="events">Event Items ({eventItems.length})</TabsTrigger>
+                                </TabsList>
+                            )}
                             <TabsContent value="all">
                                 {renderItemTable(filteredItems)}
                             </TabsContent>
