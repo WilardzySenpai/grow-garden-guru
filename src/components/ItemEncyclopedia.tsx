@@ -964,41 +964,40 @@ export const ItemEncyclopedia = () => {
                                 {totalResults} results
                             </Badge>
                         </div>
-                        {activeTab !== 'crops' && (
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                                <div className="relative w-full sm:w-auto">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Search everything..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-8 w-full sm:w-[250px] md:w-[300px]"
-                                    />
-                                    {searchTerm && (
-                                        <button
-                                            onClick={handleClearSearch}
-                                            className="absolute right-2 top-2.5"
-                                        >
-                                            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                                        </button>
-                                    )}
-                                </div>
-                                <Select
-                                    value={sortOrder}
-                                    onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
-                                >
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Sort by..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectLabel>Sort Order</SelectLabel>
-                                            <SelectItem value="a-z">Name (A to Z)</SelectItem>
-                                            <SelectItem value="z-a">Name (Z to A)</SelectItem>
-                                            <SelectItem value="category">By Category</SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                            <div className="relative w-full sm:w-auto">
+                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search everything..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-8 w-full sm:w-[250px] md:w-[300px]"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        onClick={handleClearSearch}
+                                        className="absolute right-2 top-2.5"
+                                    >
+                                        <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                    </button>
+                                )}
+                            </div>
+                            <Select
+                                value={sortOrder}
+                                onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
+                            >
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Sort by..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>Sort Order</SelectLabel>
+                                        <SelectItem value="a-z">Name (A to Z)</SelectItem>
+                                        <SelectItem value="z-a">Name (Z to A)</SelectItem>
+                                        <SelectItem value="category">By Category</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
                             {isAdmin && (
                                 <Button
                                     variant="outline"
@@ -1055,8 +1054,6 @@ export const ItemEncyclopedia = () => {
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
-                            </div>
-                        )}
 
                             {/* Secondary Category Selection - Only show if primary category is selected */}
                             {activeTab === 'items' && (
@@ -1079,11 +1076,10 @@ export const ItemEncyclopedia = () => {
                             )}
                         </div>
                     ) : (
-                        <Tabs>
-                            <TabsList>
-                                <TabsTrigger value="items">
-                                    📦 Items ({filteredItems.length})
-                                </TabsTrigger>
+                        <TabsList>
+                             <TabsTrigger value="items">
+                                 📦 Items ({filteredItems.length})
+                             </TabsTrigger>
                              <TabsTrigger value="crops">
                                  🌱 Crop Categories
                              </TabsTrigger>
