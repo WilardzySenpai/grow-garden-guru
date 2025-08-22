@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import {
     Card,
     CardContent,
@@ -10,9 +11,16 @@ import {
     TabsList,
     TabsTrigger,
 } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { recipes, Recipe, RecipeTier, RecipeOption } from '@/lib/recipes';
-import { CheckCircle2 } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Button } from "@/components/ui/button";
+import { recipes, Recipe, RecipeTier } from '@/lib/recipes';
+import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const TierCard = ({ tier }: { tier: RecipeTier }) => (
     <Card className="mb-4">
@@ -44,15 +52,65 @@ const RecipeCard = ({ recipe }: { recipe: Recipe }) => (
     </div>
 );
 
-export const RecipePedia = () => {
+// Mobile view component
+const MobileRecipePedia = () => {
+    const [selectedRecipe, setSelectedRecipe] = useState(recipes[0]);
+
+    const handleRecipeChange = (recipeName: string) => {
+        const newSelectedRecipe = recipes.find(r => r.name === recipeName);
+        if (newSelectedRecipe) {
+            setSelectedRecipe(newSelectedRecipe);
+        }
+    };
+
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Cooking Recipes</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Tabs defaultValue={recipes[0].name} className="w-full">
-                    <TabsList className="overflow-x-auto max-w-full">
+        <div className="space-y-4">
+            <Select onValueChange={handleRecipeChange} defaultValue={selectedRecipe.name}>
+                <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a recipe" />
+                </SelectTrigger>
+                <SelectContent>
+                    {recipes.map((recipe) => (
+                        <SelectItem key={recipe.name} value={recipe.name}>
+                            <div className="flex items-center">
+                                <span className="mr-2">{recipe.icon}</span>
+                                {recipe.name}
+                            </div>
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            
+            <div>
+                <RecipeCard recipe={selectedRecipe} />
+            </div>
+        </div>
+    );
+}
+
+// Desktop view component
+const DesktopRecipePedia = () => {
+    const tabsContainerRef = useRef<HTMLDivElement>(null);
+
+    const scroll = (scrollOffset: number) => {
+        if (tabsContainerRef.current) {
+            tabsContainerRef.current.scrollBy({ left: scrollOffset, behavior: 'smooth' });
+        }
+    };
+
+    return (
+        <Tabs defaultValue={recipes[0].name} className="w-full">
+            <div className="relative">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full z-10"
+                    onClick={() => scroll(-200)}
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="overflow-hidden mx-10" ref={tabsContainerRef}>
+                    <TabsList className="whitespace-nowrap">
                         {recipes.map((recipe) => (
                             <TabsTrigger key={recipe.name} value={recipe.name}>
                                 <span className="mr-2">{recipe.icon}</span>
@@ -60,12 +118,38 @@ export const RecipePedia = () => {
                             </TabsTrigger>
                         ))}
                     </TabsList>
-                    {recipes.map((recipe) => (
-                        <TabsContent key={recipe.name} value={recipe.name}>
-                            <RecipeCard recipe={recipe} />
-                        </TabsContent>
-                    ))}
-                </Tabs>
+                </div>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full z-10"
+                    onClick={() => scroll(200)}
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+            {recipes.map((recipe) => (
+                <TabsContent key={recipe.name} value={recipe.name} className="mt-4">
+                    <RecipeCard recipe={recipe} />
+                </TabsContent>
+            ))}
+        </Tabs>
+    );
+}
+
+export const RecipePedia = () => {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Cooking Recipes</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="md:hidden">
+                    <MobileRecipePedia />
+                </div>
+                <div className="hidden md:block">
+                    <DesktopRecipePedia />
+                </div>
             </CardContent>
         </Card>
     );

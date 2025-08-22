@@ -19,36 +19,43 @@ interface MarketBoardProps {
 export const MarketBoard = ({ marketData, loading, error, onRefetch }: MarketBoardProps) => {
     const isMobile = useIsMobile();
     
-    // Initialize activeTab from URL hash or default to 'seeds'
-    const getInitialTab = () => {
+    // Default to 'seeds', the useEffect will correct it on mount
+    const [activeTab, setActiveTab] = useState('seeds');
+
+    // Handles setting the active tab from the URL hash
+    const handleHashChange = () => {
         const hash = window.location.hash.replace('#', '');
+        const parts = hash.split('/');
         const validTabs = ['seeds', 'gear', 'eggs', 'cosmetics', 'event', 'merchant'];
-        return validTabs.includes(hash) ? hash : 'seeds';
+        if (parts.length === 2 && parts[0] === 'marketboard' && validTabs.includes(parts[1])) {
+            setActiveTab(parts[1]);
+        }
     };
     
-    const [activeTab, setActiveTab] = useState(getInitialTab);
-
-    // Handle tab changes - update both state and URL hash
+    // Handles changing the tab and updating the URL hash
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
-        window.location.hash = tab;
+        window.location.hash = `marketboard/${tab}`;
     };
 
-    // Listen for hash changes (browser back/forward)
+    // This effect runs on mount and on hash changes
     useEffect(() => {
-        const handleHashChange = () => {
-            const hash = window.location.hash.replace('#', '');
-            const validTabs = ['seeds', 'gear', 'eggs', 'cosmetics', 'event', 'merchant'];
-            if (validTabs.includes(hash)) {
-                setActiveTab(hash);
-            }
-        };
+        const currentHash = window.location.hash;
 
+        if (currentHash === '' || currentHash === '#') {
+            // Set the default hash if none exists, use replaceState to avoid junk history
+            window.history.replaceState(null, '', '#marketboard/seeds');
+            setActiveTab('seeds');
+        } else {
+            // Process the existing hash
+            handleHashChange();
+        }
+        
+        // Listen for subsequent hash changes
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
 
-    // Update loading state when data is received
     useEffect(() => {
         if (marketData) {
             console.log('MarketBoard: Received market data from API:', marketData);

@@ -128,6 +128,23 @@ const Index = () => {
 
     }, []);
 
+     const handleTabChange = (newTab: string) => {
+        setActiveTab(newTab);
+        window.location.hash = newTab;
+    };
+
+    useEffect(() => {
+        const hash = window.location.hash.replace('#', '');
+        const validTabs = ['market', 'encyclopedia', 'recipes', 'calculator', 'notifications'];
+        if (validTabs.includes(hash)) {
+            setActiveTab(hash);
+        } else {
+            // Default to market tab and update hash
+            setActiveTab('market');
+            window.location.hash = 'market';
+        }
+    }, []);
+
     return (
         <div className="min-h-screen bg-background">
             {/* Music Consent Dialog */}
@@ -512,7 +529,7 @@ const Index = () => {
                         <p>Loading...</p>
                     </div>
                 ) : (
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                         {/* Main Navigation - hamburger on mobile, tabs on desktop */}
                         <div className="flex items-center justify-between gap-4 mb-8">
                             <div className="flex-grow">
@@ -526,19 +543,19 @@ const Index = () => {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="start" side="bottom" className="bg-card border-border w-screen max-w-none left-0 rounded-none shadow-lg">
-                                            <DropdownMenuItem onClick={() => setActiveTab('market')} className="flex items-center gap-2">
+                                            <DropdownMenuItem onClick={() => handleTabChange('market')} className="flex items-center gap-2">
                                                 <BarChart3 className="h-4 w-4" /> Market Board
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setActiveTab('encyclopedia')} className="flex items-center gap-2">
+                                            <DropdownMenuItem onClick={() => handleTabChange('encyclopedia')} className="flex items-center gap-2">
                                                 <BookOpen className="h-4 w-4" /> Encyclopedia
                                             </DropdownMenuItem>
-                                             <DropdownMenuItem onClick={() => setActiveTab('recipes')} className="flex items-center gap-2">
+                                             <DropdownMenuItem onClick={() => handleTabChange('recipes')} className="flex items-center gap-2">
                                                  <Utensils className="h-4 w-4" /> Recipes
                                              </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setActiveTab('calculator')} className="flex items-center gap-2">
+                                            <DropdownMenuItem onClick={() => handleTabChange('calculator')} className="flex items-center gap-2">
                                                 <Calculator className="h-4 w-4" /> Calculator
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setActiveTab('notifications')} className="flex items-center gap-2">
+                                            <DropdownMenuItem onClick={() => handleTabChange('notifications')} className="flex items-center gap-2">
                                                 <Bell className="h-4 w-4" /> Notifications
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
