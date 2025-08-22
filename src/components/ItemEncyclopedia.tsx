@@ -14,6 +14,7 @@ import { ItemContextMenu } from '@/components/ItemContextMenu';
 import { FullItemView } from '@/components/FullItemView';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
+import { cropCategories } from '@/lib/cropCategories';
 
 import type { ItemInfo, WeatherData } from '@/types/api';
 import type { PetInfo } from '@/types/pet';
@@ -587,122 +588,6 @@ export const ItemEncyclopedia = () => {
         }
     ];
 
-    // Crop categories data structure
-    const cropCategories = {
-        'Berry Plants': [
-            'blueberry', 'celestiberry', 'cranberry', 'elderstrawberry',
-            'grape', 'lingonberry', 'raspberry', 'strawberry', 'white_mulberry'
-        ],
-        'Blossom Plants': [
-            'bone_blossom', 'candy_blossom', 'cherry_blossom', 'moon_blossom'
-        ],
-        'Candy Plants': [
-            'blue_lollipop', 'candy_blossom', 'candy_sunflower', 'chocolate_carrot',
-            'easter_egg', 'red_lollipop', 'sugarglaze'
-        ],
-        'Flower Plants': [
-            'bee_balm', 'burning_bud', 'candy_blossom', 'candy_sunflower',
-            'cherry_blossom', 'crocus', 'daffodil', 'delphinium', 'ember_lily',
-            'enkaku', 'firework_flower', 'foxglove', 'grand_volcania', 'hinomai',
-            'honeysuckle', 'lavender', 'liberty_lily', 'lilac', 'lily_of_the_valley',
-            'lotus', 'manuka_flower', 'monoblooma', 'moon_blossom', 'moonflower',
-            'nightshade', 'noble_flower', 'orange_tulip', 'parasol_flower', 'pink_lily',
-            'pink_tulip', 'purple_dahlia', 'rafflesia', 'rose', 'rosy_delight',
-            'serenity', 'soft_sunshine', 'stonebite', 'succulent', 'sunflower',
-            'taro_flower', 'veinpetal', 'zenflare'
-        ],
-        'Fruit Plants': [
-            'apple', 'avocado', 'banana', 'blood_banana', 'blueberry', 'celestiberry',
-            'coconut', 'cranberry', 'crown_melon', 'dragon_fruit', 'durian', 'grandtomato',
-            'grape', 'green_apple', 'hive_fruit', 'kiwi', 'lemon', 'lime', 'lingonberry',
-            'loquat', 'mango', 'maple_apple', 'moon_mango', 'moon_melon', 'nectarine',
-            'papaya', 'passionfruit', 'peach', 'pear', 'pineapple', 'raspberry',
-            'starfruit', 'strawberry', 'sugar_apple', "traveler's_fruit", 'watermelon', 'white_mulberry'
-        ],
-        'Fungus Plants': [
-            'glowshroom', 'horned_dinoshroom', 'mega_mushroom', 'mushroom',
-            'nectarshade', 'sinisterdrip'
-        ],
-        'Leafy Plants': [
-            'aloe_vera', 'apple', 'beanstalk', 'bee_balm', 'blood_banana', 'blueberry',
-            'cacao', 'cantaloupe', 'cauliflower', 'celestiberry', 'cocovine', 'cranberry',
-            'eggplant', 'elephant_ears', 'firefly_fern', 'foxglove', 'giant_pinecone',
-            'grandtomato', 'grape', 'green_apple', 'hive_fruit', 'honeysuckle', 'lilac',
-            'lily_of_the_valley', 'lumira', 'mango', 'maple_apple', 'mint', 'moon_blossom',
-            'moon_mango', 'moonflower', 'nectarine', 'noble_flower', 'parasol_flower',
-            'peach', 'pineapple', 'pink_lily', 'pitcher_plant', 'pumpkin', 'purple_dahlia',
-            'rafflesia', 'raspberry', 'rose', 'rosy_delight', 'spiked_mango', 'starfruit',
-            'strawberry', 'sugar_apple', 'sunflower', 'tomato', "traveler's_fruit",
-            'twistedtangle', 'watermelon'
-        ],
-        'Night Plants': [
-            'blood_banana', 'celestiberry', 'glowshroom', 'mint', 'moon_blossom',
-            'moon_mango', 'moon_melon', 'moonflower', 'nightshade', 'starfruit'
-        ],
-        'Prehistoric Plants': [
-            'amber_spine', 'bone_blossom', 'boneboo', 'firefly_fern', 'fossilight',
-            'grand_volcania', 'horned_dinoshroom', 'horsetail', 'lingonberry', 'paradise_petal', 'stonebite'
-        ],
-        'Prickly Plants': [
-            'aloe_vera', 'cactus', 'celestiberry', 'dragon_fruit', 'durian',
-            'horned_dinoshroom', 'nectar_thorn', 'pineapple', 'pricklefruit',
-            'prickly_pear', 'spiked_mango', 'twistedtangle', 'venus_fly_trap'
-        ],
-        'Sour Plants': [
-            'cranberry', 'lemon', 'lime', 'passionfruit', 'starfruit'
-        ],
-        'Spicy Plants': [
-            'bell_pepper', 'cacao', 'dragon_pepper', 'ember_lily', 'horned_dinoshroom',
-            'jalapeno', 'papaya', 'pepper'
-        ],
-        'Stalky Plants': [
-            'bamboo', 'beanstalk', 'bendboo', 'boneboo', 'burning_bud', 'cocovine',
-            'dandelion', 'elephant_ears', 'firefly_fern', 'grand_volcania',
-            'horned_dinoshroom', 'lily_of_the_valley', 'lotus', 'lucky_bamboo',
-            'mushroom', 'pitcher_plant', 'spring_onion', 'stonebite', 'sugarglaze',
-            'tallasparagus', 'veinpetal'
-        ],
-        'Summer Plants': [
-            'aloe_vera', 'avocado', 'banana', 'bell_pepper', 'blueberry', 'butternut_squash',
-            'cantaloupe', 'carrot', 'cauliflower', 'delphinium', 'elephant_ears', 'feijoa',
-            'green_apple', 'guanabana', 'kiwi', 'lily_of_the_valley', 'loquat', 'parasol_flower',
-            'peace_lily', 'pear', 'pineapple', 'pitcher_plant', 'prickly_pear', 'rafflesia',
-            'rosy_delight', 'strawberry', 'sugar_apple', 'tomato', "traveler's_fruit", 'watermelon', 'wild_carrot'
-        ],
-        'Sweet Plants': [
-            'banana', 'blue_lollipop', 'blueberry', 'candy_blossom', 'candy_sunflower',
-            'chocolate_carrot', 'crown_melon', 'easter_egg', 'grape', 'mango', 'moon_melon',
-            'nectar_thorn', 'peach', 'pear', 'raspberry', 'red_lollipop', 'spiked_mango',
-            'starfruit', 'strawberry', 'sugar_apple', 'sugarglaze', 'watermelon'
-        ],
-        'Toxic Plants': [
-            'foxglove', 'nightshade'
-        ],
-        'Tropical Plants': [
-            'banana', 'coconut', 'cocovine', 'dragon_fruit', 'durian', 'mango',
-            'papaya', 'parasol_flower', 'passionfruit', 'pineapple', 'starfruit', 'watermelon'
-        ],
-        'Vegetable Plants': [
-            'avocado', 'beanstalk', 'bell_pepper', 'carrot', 'cauliflower', 'chocolate_carrot',
-            'corn', 'dragon_pepper', 'eggplant', 'grandtomato', 'jalapeno', 'king_cabbage',
-            'mint', 'onion', 'pepper', 'pumpkin', 'purple_cabbage', 'rhubarb', 'tallasparagus',
-            'taro_flower', 'tomato', 'violet_corn', 'wild_carrot'
-        ],
-        'Woody Plants': [
-            'apple', 'avocado', 'cacao', 'coconut', 'cocovine', 'durian', 'feijoa',
-            'giant_pinecone', 'hive_fruit', 'kiwi', 'mango', 'maple_apple', 'moon_blossom',
-            'moon_mango', 'nectarine', 'papaya', 'peach', 'pear', 'rhubarb', "traveler's_fruit"
-        ],
-        'Zen Plants': [
-            'dezen', 'enkaku', 'hinomai', 'lucky_bamboo', 'maple_apple', 'monoblooma',
-            'sakura_bush', 'serenity', 'soft_sunshine', 'spiked_mango', 'taro_flower',
-            'tranquil_bloom', 'zen_rocks', 'zenflare'
-        ],
-        'Root Plants': [
-            'carrot', 'chocolate_carrot', 'onion', 'spring_onion', 'wild_carrot'
-        ]
-    };
-
     // Filter functions with null safety
     const filteredItems = items.filter(item =>
         (item.display_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -1066,105 +951,70 @@ export const ItemEncyclopedia = () => {
         <Card>
             <CardHeader className="pb-2">
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xl">📚</span>
-                                <CardTitle className="text-2xl">Encyclopedia</CardTitle>
-                                <div className="ml-4">
-                                    <Select
-                                        value={sortOrder}
-                                        onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <span className="text-xl">📚</span>
+                            <CardTitle className="text-2xl">Encyclopedia</CardTitle>
+                            <Badge variant="secondary" className="h-6">
+                                {totalResults} results
+                            </Badge>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="relative">
+                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search everything..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-8 w-[250px] md:w-[300px]"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        onClick={handleClearSearch}
+                                        className="absolute right-2 top-2.5"
                                     >
-                                        <SelectTrigger className="w-[180px]">
-                                            <SelectValue placeholder="Sort by..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>Sort Order</SelectLabel>
-                                                <SelectItem value="a-z">Name (A to Z)</SelectItem>
-                                                <SelectItem value="z-a">Name (Z to A)</SelectItem>
-                                                <SelectItem value="category">By Category</SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4 ml-4">
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Search items..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-8 w-[300px]"
-                                    />
-                                    {searchTerm && (
-                                        <button
-                                            onClick={handleClearSearch}
-                                            className="absolute right-2 top-2.5"
-                                        >
-                                            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                                        </button>
-                                    )}
-                                </div>
-                                <Select
-                                    value={sortOrder}
-                                    onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
-                                >
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Sort by..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectLabel>Sort Order</SelectLabel>
-                                            <SelectItem value="a-z">Name (A to Z)</SelectItem>
-                                            <SelectItem value="z-a">Name (Z to A)</SelectItem>
-                                            <SelectItem value="category">By Category</SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                                {isAdmin && (
-                                    <Button
-                                        variant="outline"
-                                        className="ml-4"
-                                        disabled={refreshing}
-                                        onClick={async () => {
-                                            setRefreshing(true);
-                                            try {
-                                                // Call backend endpoint to trigger sync
-                                                const resp = await fetch('/api/admin/sync-cache', { method: 'POST' });
-                                                if (!resp.ok) throw new Error('Sync failed');
-                                                toast({ title: 'Cache Updated', description: 'Encyclopedia cache refreshed.' });
-                                                await fetchEncyclopediaData();
-                                            } catch (err) {
-                                                toast({ title: 'Sync Error', description: 'Failed to refresh cache.', variant: 'destructive' });
-                                            } finally {
-                                                setRefreshing(false);
-                                            }
-                                        }}
-                                    >
-                                        {refreshing ? 'Refreshing...' : 'Refresh Cache'}
-                                    </Button>
+                                        <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                    </button>
                                 )}
                             </div>
-                        </div>
-                        <Badge variant="secondary" className="h-6">
-                            {filteredItems.length + filteredMutations.length + filteredWeather.length + filteredPets.length} results
-                        </Badge>
-                    </div>
-                    <div className="relative">
-                        <Input
-                            placeholder="Search items, mutations, weather..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-secondary/50 border-0"
-                        />
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <span className="text-muted-foreground text-sm">
-                                {searchTerm ? '755 results' : 'Type to search...'}
-                            </span>
+                            <Select
+                                value={sortOrder}
+                                onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
+                            >
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Sort by..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>Sort Order</SelectLabel>
+                                        <SelectItem value="a-z">Name (A to Z)</SelectItem>
+                                        <SelectItem value="z-a">Name (Z to A)</SelectItem>
+                                        <SelectItem value="category">By Category</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            {isAdmin && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={refreshing}
+                                    onClick={async () => {
+                                        setRefreshing(true);
+                                        try {
+                                            const resp = await fetch('/api/admin/sync-cache', { method: 'POST' });
+                                            if (!resp.ok) throw new Error('Sync failed');
+                                            toast({ title: 'Cache Updated', description: 'Encyclopedia cache refreshed.' });
+                                            await fetchEncyclopediaData();
+                                        } catch (err) {
+                                            toast({ title: 'Sync Error', description: 'Failed to refresh cache.', variant: 'destructive' });
+                                        } finally {
+                                            setRefreshing(false);
+                                        }
+                                    }}
+                                >
+                                    {refreshing ? 'Refreshing...' : 'Refresh Cache'}
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
