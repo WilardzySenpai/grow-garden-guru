@@ -60,11 +60,12 @@ export const ItemEncyclopedia = () => {
     const isMobile = useIsMobile();
     const { user } = useAuth();
 
-    const { mainTab: initialMainTab, subTab: initialSubTab } = getHashData();
+    const { mainTab: initialMainTab, subTab: initialSubTab, itemId: initialItemId } = getHashData();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState(initialMainTab);
     const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
+    const [sortOrder, setSortOrder] = useState<'a-z' | 'z-a' | 'category'>('a-z');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [items, setItems] = useState<ItemInfo[]>([]);
@@ -110,11 +111,15 @@ export const ItemEncyclopedia = () => {
     // Open full item view
     const openFullItemView = useCallback((item: ItemInfo) => {
         setFullItemView({ isOpen: true, item });
-    }, []);
+        // Update URL with the item information
+        window.location.hash = `encyclopedia/${activeTab}/${item.type}/${item.item_id}`;
+    }, [activeTab]);
 
     // Close full item view
     const closeFullItemView = () => {
         setFullItemView({ isOpen: false, item: null });
+        // Remove item from URL when closing
+        window.location.hash = `encyclopedia/${activeTab}/${activeSubTab}`;
     };
 
     const fetchEncyclopediaData = useCallback(async () => {
@@ -221,14 +226,19 @@ export const ItemEncyclopedia = () => {
     // Listen for hash changes (browser back/forward)
     useEffect(() => {
         const handleHashChange = () => {
-            const { mainTab, subTab } = getHashData();
+            const { mainTab, subTab, itemId } = getHashData();
             setActiveTab(mainTab);
             setActiveSubTab(subTab);
+            
+            // Close item view if no item in URL
+            if (!itemId && fullItemView.isOpen) {
+                closeFullItemView();
+            }
         };
 
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
-    }, []);
+    }, [fullItemView.isOpen, closeFullItemView]);
 
     // Handle opening item view from URL
     useEffect(() => {
@@ -699,7 +709,30 @@ export const ItemEncyclopedia = () => {
         (item.item_id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (item.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (item.rarity?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
+    ).sort((a, b) => {
+        if (sortOrder === 'a-z') {
+            return (a.display_name || '').localeCompare(b.display_name || '');
+        } else if (sortOrder === 'z-a') {
+            return (b.display_name || '').localeCompare(a.display_name || '');
+        } else if (sortOrder === 'category') {
+            // Find categories that contain this item
+            const aCategories = Object.entries(cropCategories)
+                .filter(([_, items]) => items.includes(a.item_id))
+                .map(([category]) => category);
+            const bCategories = Object.entries(cropCategories)
+                .filter(([_, items]) => items.includes(b.item_id))
+                .map(([category]) => category);
+            
+            // Sort by first category, then by name within category
+            const aCategory = aCategories[0] || 'ZZZ';
+            const bCategory = bCategories[0] || 'ZZZ';
+            if (aCategory === bCategory) {
+                return (a.display_name || '').localeCompare(b.display_name || '');
+            }
+            return aCategory.localeCompare(bCategory);
+        }
+        return 0;
+    });
 
     const filteredMutations = mutations.filter(mutation =>
         mutation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1034,10 +1067,64 @@ export const ItemEncyclopedia = () => {
             <CardHeader className="pb-2">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-4 flex-1">
                             <div className="flex items-center gap-2">
                                 <span className="text-xl">📚</span>
                                 <CardTitle className="text-2xl">Encyclopedia</CardTitle>
+                                <div className="ml-4">
+                                    <Select
+                                        value={sortOrder}
+                                        onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Sort by..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectLabel>Sort Order</SelectLabel>
+                                                <SelectItem value="a-z">Name (A to Z)</SelectItem>
+                                                <SelectItem value="z-a">Name (Z to A)</SelectItem>
+                                                <SelectItem value="category">By Category</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 ml-4">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search items..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-8 w-[300px]"
+                                    />
+                                    {searchTerm && (
+                                        <button
+                                            onClick={handleClearSearch}
+                                            className="absolute right-2 top-2.5"
+                                        >
+                                            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                        </button>
+                                    )}
+                                </div>
+                                <Select
+                                    value={sortOrder}
+                                    onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
+                                >
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Sort by..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Sort Order</SelectLabel>
+                                            <SelectItem value="a-z">Name (A to Z)</SelectItem>
+                                            <SelectItem value="z-a">Name (Z to A)</SelectItem>
+                                            <SelectItem value="category">By Category</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                                 {isAdmin && (
                                     <Button
                                         variant="outline"

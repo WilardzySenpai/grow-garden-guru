@@ -16,7 +16,7 @@ export const FullItemView = ({ item, isOpen, onClose }: FullItemViewProps) => {
     if (!item) return null;
 
     const copyItemLink = async () => {
-        const url = `${window.location.origin}/encyclopedia/#items/${item.type}/${item.item_id}`;
+        const url = `${window.location.origin}/app#encyclopedia/items/${item.type}/${item.item_id}`;
         try {
             await navigator.clipboard.writeText(url);
             toast({
