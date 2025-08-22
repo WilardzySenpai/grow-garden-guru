@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Card,
     CardContent,
@@ -21,6 +21,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { recipes, Recipe, RecipeTier } from '@/lib/recipes';
 import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+
+const formatRecipeNameForURL = (name: string) => name.toLowerCase().replace(/\s+/g, '_');
+
+const getRecipeNameFromURL = () => {
+    const hash = window.location.hash.replace('#', '');
+    const parts = hash.split('/');
+    if (parts[0] === 'recipes' && parts.length > 1) {
+        return parts[1];
+    }
+    return null;
+};
 
 const TierCard = ({ tier }: { tier: RecipeTier }) => (
     <Card className="mb-4">
@@ -53,19 +64,10 @@ const RecipeCard = ({ recipe }: { recipe: Recipe }) => (
 );
 
 // Mobile view component
-const MobileRecipePedia = () => {
-    const [selectedRecipe, setSelectedRecipe] = useState(recipes[0]);
-
-    const handleRecipeChange = (recipeName: string) => {
-        const newSelectedRecipe = recipes.find(r => r.name === recipeName);
-        if (newSelectedRecipe) {
-            setSelectedRecipe(newSelectedRecipe);
-        }
-    };
-
+const MobileRecipePedia = ({ selectedRecipe, onRecipeChange }: { selectedRecipe: Recipe, onRecipeChange: (name: string) => void }) => {
     return (
         <div className="space-y-4">
-            <Select onValueChange={handleRecipeChange} defaultValue={selectedRecipe.name}>
+            <Select onValueChange={onRecipeChange} value={selectedRecipe.name}>
                 <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a recipe" />
                 </SelectTrigger>
@@ -89,7 +91,7 @@ const MobileRecipePedia = () => {
 }
 
 // Desktop view component
-const DesktopRecipePedia = () => {
+const DesktopRecipePedia = ({ selectedRecipe, onRecipeChange }: { selectedRecipe: Recipe, onRecipeChange: (name: string) => void }) => {
     const tabsContainerRef = useRef<HTMLDivElement>(null);
 
     const scroll = (scrollOffset: number) => {
@@ -99,7 +101,7 @@ const DesktopRecipePedia = () => {
     };
 
     return (
-        <Tabs defaultValue={recipes[0].name} className="w-full">
+        <Tabs value={selectedRecipe.name} onValueChange={onRecipeChange} className="w-full">
             <div className="relative">
                 <Button
                     variant="outline"
@@ -138,6 +140,33 @@ const DesktopRecipePedia = () => {
 }
 
 export const RecipePedia = () => {
+    const findRecipeByFormattedName = (formattedName: string | null) => {
+        if (!formattedName) return recipes[0];
+        return recipes.find(r => formatRecipeNameForURL(r.name) === formattedName) || recipes[0];
+    };
+
+    const [selectedRecipe, setSelectedRecipe] = useState(() => {
+        const recipeNameFromURL = getRecipeNameFromURL();
+        return findRecipeByFormattedName(recipeNameFromURL);
+    });
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            const recipeNameFromURL = getRecipeNameFromURL();
+            setSelectedRecipe(findRecipeByFormattedName(recipeNameFromURL));
+        };
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
+    const handleRecipeChange = (recipeName: string) => {
+        const newSelectedRecipe = recipes.find(r => r.name === recipeName);
+        if (newSelectedRecipe) {
+            setSelectedRecipe(newSelectedRecipe);
+            window.location.hash = `recipes/${formatRecipeNameForURL(recipeName)}`;
+        }
+    };
+    
     return (
         <Card>
             <CardHeader>
@@ -145,10 +174,10 @@ export const RecipePedia = () => {
             </CardHeader>
             <CardContent>
                 <div className="md:hidden">
-                    <MobileRecipePedia />
+                    <MobileRecipePedia selectedRecipe={selectedRecipe} onRecipeChange={handleRecipeChange} />
                 </div>
                 <div className="hidden md:block">
-                    <DesktopRecipePedia />
+                    <DesktopRecipePedia selectedRecipe={selectedRecipe} onRecipeChange={handleRecipeChange} />
                 </div>
             </CardContent>
         </Card>

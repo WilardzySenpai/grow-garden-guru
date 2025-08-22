@@ -48,10 +48,22 @@ const getHashData = () => {
     const itemId = parts.length > 3 ? parts[3] : null;
 
     const validMainTabs = ['items', 'crops', 'mutations', 'weather', 'pets'];
+    const finalMainTab = validMainTabs.includes(mainTab) ? mainTab : 'items';
+
+    if (finalMainTab === 'crops') {
+        const cropTypeKeys = Object.keys(cropCategories).map(k => k.toLowerCase());
+        const finalSubTab = (subTab && (cropTypeKeys.includes(subTab.toLowerCase()) || subTab.toLowerCase() === 'all')) ? subTab : 'all';
+        return {
+            mainTab: finalMainTab,
+            subTab: finalSubTab,
+            itemId
+        };
+    }
+
     const validSubTabs = ['all', 'seeds', 'gear', 'eggs', 'cosmetics', 'events', 'merchant'];
 
     return {
-        mainTab: validMainTabs.includes(mainTab) ? mainTab : 'items',
+        mainTab: finalMainTab,
         subTab: validSubTabs.includes(subTab) ? subTab : 'all',
         itemId
     };
@@ -73,7 +85,16 @@ export const ItemEncyclopedia = () => {
     const [weatherItems, setWeatherItems] = useState<WeatherData[]>([]);
     const [pets, setPets] = useState<PetInfo[]>([]);
     const [userCropChecklist, setUserCropChecklist] = useState<Record<string, boolean>>({});
-    const [selectedCropType, setSelectedCropType] = useState<string>('all');
+    const [selectedCropType, setSelectedCropType] = useState<string>(() => {
+        if (initialMainTab === 'crops') {
+            if (initialSubTab.toLowerCase() === 'all') {
+                return 'all';
+            }
+            const cropTypeKeys = Object.keys(cropCategories);
+            return cropTypeKeys.find(k => k.toLowerCase() === initialSubTab.toLowerCase()) || 'all';
+        }
+        return 'all';
+    });
 
     // Context menu and full item view states
     const [contextMenu, setContextMenu] = useState<{
@@ -108,6 +129,11 @@ export const ItemEncyclopedia = () => {
     const handleSubTabChange = (subTab: string) => {
         setActiveSubTab(subTab);
         window.location.hash = `encyclopedia/${activeTab}/${subTab}`;
+    };
+
+    const handleCropTypeChange = (cropType: string) => {
+        setSelectedCropType(cropType);
+        window.location.hash = `encyclopedia/crops/${cropType.toLowerCase()}`;
     };
 
     // Open full item view
@@ -231,6 +257,16 @@ export const ItemEncyclopedia = () => {
             const { mainTab, subTab, itemId } = getHashData();
             setActiveTab(mainTab);
             setActiveSubTab(subTab);
+
+            if (mainTab === 'crops') {
+                if (subTab.toLowerCase() === 'all') {
+                    setSelectedCropType('all');
+                } else {
+                    const cropTypeKeys = Object.keys(cropCategories);
+                    const capitalizedCropType = cropTypeKeys.find(k => k.toLowerCase() === subTab.toLowerCase()) || 'all';
+                    setSelectedCropType(capitalizedCropType);
+                }
+            }
             
             // Close item view if no item in URL
             if (!itemId && fullItemView.isOpen) {
@@ -965,39 +1001,60 @@ export const ItemEncyclopedia = () => {
                             </Badge>
                         </div>
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                            <div className="relative w-full sm:w-auto">
-                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search everything..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-8 w-full sm:w-[250px] md:w-[300px]"
-                                />
-                                {searchTerm && (
-                                    <button
-                                        onClick={handleClearSearch}
-                                        className="absolute right-2 top-2.5"
-                                    >
-                                        <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                                    </button>
-                                )}
-                            </div>
-                            <Select
-                                value={sortOrder}
-                                onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
-                            >
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Sort by..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>Sort Order</SelectLabel>
-                                        <SelectItem value="a-z">Name (A to Z)</SelectItem>
-                                        <SelectItem value="z-a">Name (Z to A)</SelectItem>
-                                        <SelectItem value="category">By Category</SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                            {activeTab !== 'crops' && (<>
+                                <div className="relative w-full sm:w-auto">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search everything..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-8 w-full sm:w-[250px] md:w-[300px]"
+                                    />
+                                    {searchTerm && (
+                                        <button
+                                            onClick={handleClearSearch}
+                                            className="absolute right-2 top-2.5"
+                                        >
+                                            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                        </button>
+                                    )}
+                                </div>
+                                <Select
+                                    value={sortOrder}
+                                    onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
+                                >
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Sort by..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Sort Order</SelectLabel>
+                                            <SelectItem value="a-z">Name (A to Z)</SelectItem>
+                                            <SelectItem value="z-a">Name (Z to A)</SelectItem>
+                                            <SelectItem value="category">By Category</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </>)}
+                            {activeTab === 'crops' && (
+                                <Select
+                                    value={selectedCropType || "all"}
+                                    onValueChange={handleCropTypeChange}
+                                >
+                                    <SelectTrigger className="w-[200px]">
+                                        <SelectValue placeholder="Select crop type..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Crop Types</SelectLabel>
+                                            <SelectItem value="all">All Types</SelectItem>
+                                            {Object.keys(cropCategories).map((type) => (
+                                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            )}
                             {isAdmin && (
                                 <Button
                                     variant="outline"
@@ -1120,26 +1177,6 @@ export const ItemEncyclopedia = () => {
 
                      <TabsContent value="crops">
                          <div className="space-y-6">
-                             <div className="flex justify-between items-center gap-4">
-                                    <Select
-                                        value={selectedCropType || "all"}
-                                        onValueChange={(value) => setSelectedCropType(value)}
-                                    >
-                                        <SelectTrigger className="w-[200px]">
-                                            <SelectValue placeholder="Select crop type..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>Crop Types</SelectLabel>
-                                                <SelectItem value="all">All Types</SelectItem>
-                                                {Object.keys(cropCategories).map((type) => (
-                                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                                ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                             </div>
-
                              {Object.entries(
                                 selectedCropType === "all" 
                                     ? cropCategories 
