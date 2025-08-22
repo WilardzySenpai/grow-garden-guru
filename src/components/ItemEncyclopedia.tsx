@@ -73,6 +73,7 @@ export const ItemEncyclopedia = () => {
     const [weatherItems, setWeatherItems] = useState<WeatherData[]>([]);
     const [pets, setPets] = useState<PetInfo[]>([]);
     const [userCropChecklist, setUserCropChecklist] = useState<Record<string, boolean>>({});
+    const [selectedCropType, setSelectedCropType] = useState<string>('all');
 
     // Context menu and full item view states
     const [contextMenu, setContextMenu] = useState<{
@@ -955,48 +956,49 @@ export const ItemEncyclopedia = () => {
         <Card>
             <CardHeader className="pb-2">
                 <div className="space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                             <span className="text-xl">📚</span>
                             <CardTitle className="text-2xl">Encyclopedia</CardTitle>
-                            <Badge variant="secondary" className="h-6">
+                            <Badge variant="secondary" className="h-6 text-xs sm:text-sm">
                                 {totalResults} results
                             </Badge>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <div className="relative">
-                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search everything..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-8 w-[250px] md:w-[300px]"
-                                />
-                                {searchTerm && (
-                                    <button
-                                        onClick={handleClearSearch}
-                                        className="absolute right-2 top-2.5"
-                                    >
-                                        <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                                    </button>
-                                )}
-                            </div>
-                            <Select
-                                value={sortOrder}
-                                onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
-                            >
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Sort by..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>Sort Order</SelectLabel>
-                                        <SelectItem value="a-z">Name (A to Z)</SelectItem>
-                                        <SelectItem value="z-a">Name (Z to A)</SelectItem>
-                                        <SelectItem value="category">By Category</SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                        {activeTab !== 'crops' && (
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                                <div className="relative w-full sm:w-auto">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search everything..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-8 w-full sm:w-[250px] md:w-[300px]"
+                                    />
+                                    {searchTerm && (
+                                        <button
+                                            onClick={handleClearSearch}
+                                            className="absolute right-2 top-2.5"
+                                        >
+                                            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                        </button>
+                                    )}
+                                </div>
+                                <Select
+                                    value={sortOrder}
+                                    onValueChange={(value) => setSortOrder(value as 'a-z' | 'z-a' | 'category')}
+                                >
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Sort by..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Sort Order</SelectLabel>
+                                            <SelectItem value="a-z">Name (A to Z)</SelectItem>
+                                            <SelectItem value="z-a">Name (Z to A)</SelectItem>
+                                            <SelectItem value="category">By Category</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
                             {isAdmin && (
                                 <Button
                                     variant="outline"
@@ -1053,6 +1055,8 @@ export const ItemEncyclopedia = () => {
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
+                            </div>
+                        )}
 
                             {/* Secondary Category Selection - Only show if primary category is selected */}
                             {activeTab === 'items' && (
@@ -1075,10 +1079,11 @@ export const ItemEncyclopedia = () => {
                             )}
                         </div>
                     ) : (
-                        <TabsList>
-                             <TabsTrigger value="items">
-                                 📦 Items ({filteredItems.length})
-                             </TabsTrigger>
+                        <Tabs>
+                            <TabsList>
+                                <TabsTrigger value="items">
+                                    📦 Items ({filteredItems.length})
+                                </TabsTrigger>
                              <TabsTrigger value="crops">
                                  🌱 Crop Categories
                              </TabsTrigger>
@@ -1096,46 +1101,6 @@ export const ItemEncyclopedia = () => {
 
                     <TabsContent value="items">
                         <Tabs value={activeSubTab} onValueChange={handleSubTabChange} className="space-y-6">
-                            {isMobile ? (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="w-full">
-                                            <Menu className="h-4 w-4 mr-2" />
-                                            {activeSubTab.charAt(0).toUpperCase() + activeSubTab.slice(1)}
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="w-full">
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('all')}>All ({filteredItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('seeds')}>Seeds ({seedItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('gear')}>Gear ({gearItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('eggs')}>Eggs ({eggItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('cosmetics')}>Cosmetics ({cosmeticItems.length})</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleSubTabChange('events')}>Events ({eventItems.length})</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            ) : (
-                                <TabsList>
-                                    <TabsTrigger value="all">
-                                        All ({filteredItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="seeds">
-                                        Seeds ({seedItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="gear">
-                                        Gear ({gearItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="eggs">
-                                        Eggs ({eggItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="cosmetics">
-                                        Cosmetics ({cosmeticItems.length})
-                                    </TabsTrigger>
-                                    <TabsTrigger value="events">
-                                        Events ({eventItems.length})
-                                    </TabsTrigger>
-                                </TabsList>
-                            )}
-
                             <TabsContent value="all">
                                 {renderItemTable(filteredItems)}
                             </TabsContent>
@@ -1160,23 +1125,23 @@ export const ItemEncyclopedia = () => {
                      <TabsContent value="crops">
                          <div className="space-y-6">
                              <div className="flex justify-between items-center gap-4">
-                                 <Select
-                                     value={selectedCropType || "all"}
-                                     onValueChange={(value) => setSelectedCropType(value)}
-                                 >
-                                     <SelectTrigger className="w-[200px]">
-                                         <SelectValue placeholder="Select crop type..." />
-                                     </SelectTrigger>
-                                     <SelectContent>
-                                         <SelectGroup>
-                                             <SelectLabel>Crop Types</SelectLabel>
-                                             <SelectItem value="all">All Types</SelectItem>
-                                             {Object.keys(cropCategories).map((type) => (
-                                                 <SelectItem key={type} value={type}>{type}</SelectItem>
-                                             ))}
-                                         </SelectGroup>
-                                     </SelectContent>
-                                 </Select>
+                                    <Select
+                                        value={selectedCropType || "all"}
+                                        onValueChange={(value) => setSelectedCropType(value)}
+                                    >
+                                        <SelectTrigger className="w-[200px]">
+                                            <SelectValue placeholder="Select crop type..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectLabel>Crop Types</SelectLabel>
+                                                <SelectItem value="all">All Types</SelectItem>
+                                                {Object.keys(cropCategories).map((type) => (
+                                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
                              </div>
 
                              {Object.entries(
@@ -1184,7 +1149,7 @@ export const ItemEncyclopedia = () => {
                                     ? cropCategories 
                                     : { [selectedCropType]: cropCategories[selectedCropType] }
                              ).map(([categoryName, subCategories]) => {
-                                 const allCropsInCategory = Object.values(subCategories).flat();
+                                 const allCropsInCategory = Object.values(subCategories).flat() as string[];
                                  const totalCrops = allCropsInCategory.length;
                                  const plantedCrops = allCropsInCategory.filter(cropId => userCropChecklist[cropId]).length;
 
@@ -1199,7 +1164,7 @@ export const ItemEncyclopedia = () => {
                                          </CardHeader>
                                          <CardContent>
                                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                 {allCropsInCategory.map((cropId) => {
+                                                 {allCropsInCategory.map((cropId: string) => {
                                                      const cropItem = items.find(item =>
                                                          item.item_id === cropId ||
                                                          item.display_name?.toLowerCase().replace(/\s+/g, '_') === cropId ||
