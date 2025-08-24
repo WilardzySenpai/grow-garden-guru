@@ -15,6 +15,7 @@ local.env
 env.local
 .env
 bun.lockb
+bun.lock
 
 # Editor directories and files
 .vscode/*

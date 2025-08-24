@@ -97,6 +97,8 @@ export const FruitCalculator = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [targetValue, setTargetValue] = useState('');
     const [reverseCalcResult, setReverseCalcResult] = useState('');
+    
+    const IMAGEKIT_URL = "https://ik.imagekit.io/hachiki/crops";
 
     // Handle tab changes - update both state and URL hash
     const handleTabChange = (tab: string) => {
@@ -521,7 +523,12 @@ export const FruitCalculator = () => {
                                     onClick={() => handleCropSelect(crop.item_id)}
                                     className="justify-start h-auto p-2 flex items-center gap-2"
                                 >
-                                    <img src={crop.image} alt={crop.display_name} className="w-5 h-5 object-cover" onError={(e) => e.currentTarget.src = '/Crops/place_holder_crop.png'} />
+                                    <img 
+                                        src={`${IMAGEKIT_URL}/${crop.item_id}.png`}
+                                        alt={crop.display_name} 
+                                        className="w-5 h-5 object-cover" 
+                                        onError={(e) => e.currentTarget.src = `${IMAGEKIT_URL}/place_holder_crop.png`} 
+                                    />
                                     <span className="text-xs">{crop.display_name}</span>
                                 </Button>
                             ))}
