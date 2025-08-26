@@ -389,7 +389,7 @@ const Profile = () => {
                 <Tabs defaultValue="profile" className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="profile">Profile</TabsTrigger>
-                        <TabsTrigger value="notifications">Notifications</TabsTrigger>
+                        {/* <TabsTrigger value="notifications">Notifications</TabsTrigger> */}
                         <TabsTrigger value="danger">Danger Zone</TabsTrigger>
                     </TabsList>
 
@@ -433,8 +433,8 @@ const Profile = () => {
                         </Card>
                     </TabsContent>
 
-                    <TabsContent value="notifications" className="space-y-6">
-                        {/* Browser Notifications */}
+                    {/* Browser Notifications */}
+                    {/* <TabsContent value="notifications" className="space-y-6">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -472,7 +472,7 @@ const Profile = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Stock Alerts */}
+                        {/* Stock Alerts
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -597,7 +597,7 @@ const Profile = () => {
                                 )}
                             </CardContent>
                         </Card>
-                    </TabsContent>
+                    </TabsContent> */}
 
                     <TabsContent value="danger">
                         <Card className="border-destructive/20">

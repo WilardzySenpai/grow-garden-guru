@@ -210,6 +210,8 @@ export const useStockData = (userId: string | null): StockDataHook => {
 
                             console.log(`🔔 [Stock Alert] Triggering for ${newItem.display_name}!`);
                             
+                            // TEMPORARILY DISABLED NOTIFICATIONS
+                            /*
                             // Show a toast for immediate feedback
                             toast.success(message, {
                                 description: `Now at quantity: ${newItem.quantity}`,
@@ -256,7 +258,9 @@ export const useStockData = (userId: string | null): StockDataHook => {
                                 }
                             };
 
-                            insertNotification();
+                            // insertNotification();
+                            */
+                            console.log('[Stock Alert] Notifications temporarily disabled');
                         }
                     }
                 }
