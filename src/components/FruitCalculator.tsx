@@ -19,6 +19,7 @@ const staticCropData = [
     { item_id: "mandrake", display_name: "Mandrake" }, { item_id: "mangosteen", display_name: "Mangosteen" }, { item_id: "golden_egg", display_name: "Golden Egg" }, { item_id: "poseidon_plant", display_name: "Poseidon Plant" }, { item_id: "gleamroot", display_name: "Gleamroot" }, { item_id: "canary_melon", display_name: "Canary Melon" }, { item_id: "duskpuff", display_name: "Duskpuff" }, { item_id: "amberheart", display_name: "Amberheart" }, { item_id: "princess_thorn", display_name: "Princess Thorn" }, { item_id: "romanesco", display_name: "Romanesco" }, { item_id: "flare_daisy", display_name: "Flare Daisy" },
 
     // Beanstalk Update 2
+    { item_id: "flaremelon", display_name: "Flaremelon" }, { item_id: "crown_of_thorns", display_name: "Crownofthorn" }, { item_id: "calla_lily", display_name: "Callalily" }, { item_id: "glowpod", display_name: "Glowpod" }, { item_id: "willowberry", display_name: "Willowberry" }, { item_id: "cyclamen", display_name: "Cyclamen" }
 
 ].map(crop => ({
     ...crop,
@@ -63,7 +64,7 @@ const plantBaseValue: { [key: string]: number } = {
     'mandrake': 2.85, 'mangosteen': 1.42, 'golden_egg': 7.6, 'poseidon_plant' :2.85, 'gleamroot' :2.375, 'canary_melon': 7.60, 'duskpuff': 2.85, 'amberheart': 3.80, 'princess_thorn':11.40, 'romanesco': 7.60, 'flare_daisy': 1.43,
 
     // Beanstalk Update 2
-    'flaremelon': 3.56, 'crownofthorn': 0.763, 'callalily': 7.04, 'glowpod': 2.80, 'willowberry': 3.80, 'cyclamen': 8.56
+    'flaremelon': 3.56, 'crown_of_thorns': 0.763, 'callal_ily': 7.04, 'glowpod': 2.80, 'willowberry': 3.80, 'cyclamen': 8.56
 
 };
 
@@ -77,7 +78,7 @@ const plantCalculationData: { [key: string]: { tier1Value: number; tier2Multipli
     'mandrake': { tier1Value: 45125, tier2Multiplier: 5567 }, 'mangosteen': { tier1Value: 45125, tier2Multiplier: 22300 }, 'golden_egg': { tier1Value: 225625, tier2Multiplier: 3910 }, 'poseidon_plant': { tier1Value: 59163, tier2Multiplier: 7300 }, 'gleamroot': { tier1Value: 67688, tier2Multiplier: 12000 }, 'canary_melon': { tier1Value: 58663, tier2Multiplier: 1016 }, 'duskpuff': { tier1Value: 31588, tier2Multiplier: 3888.888 }, 'amberheart': { tier1Value: 157938, tier2Multiplier: 10920 }, 'princess_thorn': { tier1Value: 100278, tier2Multiplier: 771 }, 'romanesco': { tier1Value: 149815, tier2Multiplier: 2591 }, 'flare_daisy': { tier1Value: 22563, tier2Multiplier: 11085 },
 
     // Beanstalk Update 2
-    'flaremelon': { tier1Value: 45125, tier2Multiplier: 3545.56 }, 'crownofthorn': { tier1Value: 22563, tier2Multiplier: 38682 }, 'callalily': { tier1Value: 61078, tier2Multiplier: 1232 }, 'glowpod': { tier1Value: 27075, tier2Multiplier: 3435 }, 'willowberry': { tier1Value: 66334, tier2Multiplier: 4596 }, 'cyclamen': { tier1Value: 85738, tier2Multiplier: 1172 }
+    'flaremelon': { tier1Value: 45125, tier2Multiplier: 3545.56 }, 'crown_of_thorns': { tier1Value: 22563, tier2Multiplier: 38682 }, 'calla_lily': { tier1Value: 61078, tier2Multiplier: 1232 }, 'glowpod': { tier1Value: 27075, tier2Multiplier: 3435 }, 'willowberry': { tier1Value: 66334, tier2Multiplier: 4596 }, 'cyclamen': { tier1Value: 85738, tier2Multiplier: 1172 }
 };
 
 interface EnvironmentalMutationData {
