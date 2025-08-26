@@ -16,7 +16,10 @@ const staticCropData = [
     { item_id: "rhubarb", display_name: "Rhubarb" }, { item_id: "spring_onion", display_name: "Spring Onion" }, { item_id: "pricklefruit", display_name: "Pricklefruit" }, { item_id: "bitter_melon", display_name: "Bitter Melon" }, { item_id: "badlands_pepper", display_name: "Bandlans Pepper" }, { item_id: "butternut_squash", display_name: "Butternut Squash" }, { item_id: "king_cabbage", display_name: "King Cabbage" }, { item_id: "onion", display_name: "Onion" },
 
     // Beanstalk Update
-    { item_id: "mandrake", display_name: "Mandrake" }, { item_id: "mangosteen", display_name: "Mangosteen" }, { item_id: "golden_egg", display_name: "Golden Egg" }, { item_id: "poseidon_plant", display_name: "Poseidon Plant" }, { item_id: "gleamroot", display_name: "Gleamroot" }, { item_id: "canary_melon", display_name: "Canary Melon" }, { item_id: "duskpuff", display_name: "Duskpuff" }, { item_id: "amberheart", display_name: "Amberheart" }, { item_id: "princess_thorn", display_name: "Princess Thorn" }, { item_id: "romanesco", display_name: "Romanesco" }, { item_id: "flare_daisy", display_name: "Flare Daisy" }
+    { item_id: "mandrake", display_name: "Mandrake" }, { item_id: "mangosteen", display_name: "Mangosteen" }, { item_id: "golden_egg", display_name: "Golden Egg" }, { item_id: "poseidon_plant", display_name: "Poseidon Plant" }, { item_id: "gleamroot", display_name: "Gleamroot" }, { item_id: "canary_melon", display_name: "Canary Melon" }, { item_id: "duskpuff", display_name: "Duskpuff" }, { item_id: "amberheart", display_name: "Amberheart" }, { item_id: "princess_thorn", display_name: "Princess Thorn" }, { item_id: "romanesco", display_name: "Romanesco" }, { item_id: "flare_daisy", display_name: "Flare Daisy" },
+
+    // Beanstalk Update 2
+
 ].map(crop => ({
     ...crop,
     image: `/Crops/${crop.item_id.replace(/ /g, '_')}.png`
@@ -57,7 +60,11 @@ const plantBaseValue: { [key: string]: number } = {
     'rhubarb': 1.90, 'spring_onion': 1.42, 'pricklefruit': 7.5, 'bitter_melon': 2.85, 'badlands_pepper': 3.33, 'butternut_squash': 4.5, 'king_cabbage': 7.5, 'onion': 1.42,
 
     // Beanstalk Update
-    'mandrake': 2.85, 'mangosteen': 1.42, 'golden_egg': 7.6, 'poseidon_plant' :2.85, 'gleamroot' :2.375, 'canary_melon': 7.60, 'duskpuff': 2.85, 'amberheart': 3.80, 'princess_thorn':11.40, 'romanesco': 7.60, 'flare_daisy': 1.43
+    'mandrake': 2.85, 'mangosteen': 1.42, 'golden_egg': 7.6, 'poseidon_plant' :2.85, 'gleamroot' :2.375, 'canary_melon': 7.60, 'duskpuff': 2.85, 'amberheart': 3.80, 'princess_thorn':11.40, 'romanesco': 7.60, 'flare_daisy': 1.43,
+
+    // Beanstalk Update 2
+    'flaremelon': 3.56, 'crownofthorn': 0.763, 'callalily': 7.04, 'glowpod': 2.80, 'willowberry': 3.80, 'cyclamen': 8.56
+
 };
 
 const plantCalculationData: { [key: string]: { tier1Value: number; tier2Multiplier: number } } = {
@@ -67,7 +74,10 @@ const plantCalculationData: { [key: string]: { tier1Value: number; tier2Multipli
     'rhubarb': { tier1Value: 13538, tier2Multiplier: 3762 }, 'spring_onion': { tier1Value: 27075, tier2Multiplier: 13370 }, 'pricklefruit': { tier1Value: 70312, tier2Multiplier: 1250 }, 'bitter_melon': { tier1Value: 50960, tier2Multiplier: 6274 }, 'badlands_pepper': { tier1Value: 40613, tier2Multiplier: 3671 }, 'butternut_squash': { tier1Value: 28309, tier2Multiplier: 1398 }, 'king_cabbage': { tier1Value: 83250, tier2Multiplier: 1480 }, 'onion': { tier1Value: 9025, tier2Multiplier: 4474 },
 
     // Beanstalk Update
-    'mandrake': { tier1Value: 45125, tier2Multiplier: 5567 }, 'mangosteen': { tier1Value: 45125, tier2Multiplier: 22300 }, 'golden_egg': { tier1Value: 225625, tier2Multiplier: 3910 }, 'poseidon_plant': { tier1Value: 59163, tier2Multiplier: 7300 }, 'gleamroot': { tier1Value: 67688, tier2Multiplier: 12000 }, 'canary_melon': { tier1Value: 58663, tier2Multiplier: 1016 }, 'duskpuff': { tier1Value: 31588, tier2Multiplier: 3888.888 }, 'amberheart': { tier1Value: 157938, tier2Multiplier: 10920 }, 'princess_thorn': { tier1Value: 100278, tier2Multiplier: 771 }, 'romanesco': { tier1Value: 149815, tier2Multiplier: 2591 }, 'flare_daisy': { tier1Value: 22563, tier2Multiplier: 11085 }
+    'mandrake': { tier1Value: 45125, tier2Multiplier: 5567 }, 'mangosteen': { tier1Value: 45125, tier2Multiplier: 22300 }, 'golden_egg': { tier1Value: 225625, tier2Multiplier: 3910 }, 'poseidon_plant': { tier1Value: 59163, tier2Multiplier: 7300 }, 'gleamroot': { tier1Value: 67688, tier2Multiplier: 12000 }, 'canary_melon': { tier1Value: 58663, tier2Multiplier: 1016 }, 'duskpuff': { tier1Value: 31588, tier2Multiplier: 3888.888 }, 'amberheart': { tier1Value: 157938, tier2Multiplier: 10920 }, 'princess_thorn': { tier1Value: 100278, tier2Multiplier: 771 }, 'romanesco': { tier1Value: 149815, tier2Multiplier: 2591 }, 'flare_daisy': { tier1Value: 22563, tier2Multiplier: 11085 },
+
+    // Beanstalk Update 2
+    'flaremelon': { tier1Value: 45125, tier2Multiplier: 3545.56 }, 'crownofthorn': { tier1Value: 22563, tier2Multiplier: 38682 }, 'callalily': { tier1Value: 61078, tier2Multiplier: 1232 }, 'glowpod': { tier1Value: 27075, tier2Multiplier: 3435 }, 'willowberry': { tier1Value: 66334, tier2Multiplier: 4596 }, 'cyclamen': { tier1Value: 85738, tier2Multiplier: 1172 }
 };
 
 interface EnvironmentalMutationData {
@@ -199,30 +209,48 @@ export const FruitCalculator = () => {
         eclipse: { label: '🌒 Eclipse', multiplier: 25 },
         fortune: { label: '🍀 Fortune', multiplier: 50 },
         lightcycle: { label: '🔄 Lightcycle', multiplier: 50 },
+        cyclonic: { label: '🌀 Cyclonic', multiplier: 50 },
+        brainrot: { label: '🧠 Brainrot', multiplier: 100 },
+        rot: { label: '🍂 Rot', multiplier: 8 },
+        warped: { label: '🪐 Warped', multiplier: 75 },
+        gnomed: { label: '🧙 Gnomed', multiplier: 15 },
+        beanbound: { label: '🌱 Beanbound', multiplier: 100 },
+        gloom: { label: '🌑 Gloom', multiplier: 30 },
+        maelstrom: { label: '🌪️ Maelstrom', multiplier: 100 },
     };
 
     const conflictGroups: { [key: string]: string[] } = {
-        burnt: ["cooked"],
-        cooked: ["burnt"],
-        gold: ["rainbow"],
-        rainbow: ["gold"],
-        amber: ["ancientamber", "oldamber"],
-        ancientamber: ["amber", "oldamber"],
-        oldamber: ["amber", "ancientamber"],
-        clay: ["ceramic", "sandy", "wet"],
-        ceramic: ["clay"],
-        sandy: ["clay"],
-        wet: ["clay"],
-        frozen: ["wet", "drenched", "chilled"],
-        tempestuous: ["windstruck", "twisted"],
-        foxfire: ["harmonisedfoxfire"],
+        burnt: ["cooked","fried","ceramic"],
+        cooked: ["burnt","ceramic"],
+        fried: ["cooked","ceramic"],
+        gold: ["rainbow","silver"],
+        rainbow: ["gold","silver"],
+        silver: ["gold","rainbow"],
+        amber: ["ancientamber","oldamber"],
+        ancientamber: ["amber","oldamber"],
+        oldamber: ["amber","ancientamber"],
+        clay: ["ceramic", "sandy"],
+        ceramic: ["clay","fried","burnt","cooked"],
+        sandy: ["clay","wet","drenched"],
+        paradisal: ["sundried","verdant"],
+        sundried: ["paradisal","verdant"],
+        verdant: ["sundried","paradisal"],
+        twisted: ["windstruck","tempestous","cylonic","maelstrom"],
+        windstruck: ["tempestous","twisted","cyclonic"],
+        tempestous: ["windstruck","twisted","cyclonic","maelstrom"],
+        cylonic: ["twisted","windstruck","tempestous","maelstrom"],
+        maelstrom: ["twisted","tempestous","cyclonic"],
         chakra: ["harmonisedchakra"],
         harmonisedchakra: ["chakra"],
+        foxfire: ["harmonisedfoxfire"],
         harmonisedfoxfire: ["foxfire"],
         sauce: ["spaghetti"],
         meatball: ["spaghetti"],
         pasta: ["spaghetti"],
-        spaghetti: ["pasta", "meatball", "sauce"]
+        spaghetti: ["pasta","meatball","sauce"],
+        gloom: ["rot","bloom"],
+        bloom: ["rot","gloom"],
+        rot: ["gloom","bloom"]
     };
 
     const handleMutationChange = (mutation: string) => {
