@@ -11,23 +11,26 @@ export const cropCategories = {
         'candy_sunflower', 'chocolate_carrot', 'red_lollipop'
     ],
     'Flower': [
-        'bee_balm', 'burning_bud', 'manuka_flower', 'monoblooma', 'moon_blossom',
-        'moonflower', 'candy_blossom', 'candy_sunflower', 'cherry_blossom',
-        'crocus', 'nightshade', 'noble_flower', 'daffodil', 'delphinium',
-        'orange_tulip', 'ember_lily', 'enkaku', 'parasol_flower', 'pink_lily',
+        'bee_balm', 'bone_blossom', 'burning_bud', 'manuka_flower', 'monoblooma',
+        'moon_blossom', 'moonflower', 'candy_blossom', 'candy_sunflower',
+        'cherry_blossom', 'crocus', 'dandelion', 'delphinium', 'nightshade',
+        'noble_flower', 'daffodil', 'orange_tulip', 'ember_lily', 'enkaku',
+        'paradise_petal', 'parasol_flower', 'peace_lily', 'pink_lily',
         'pink_tulip', 'purple_dahlia', 'firework_flower', 'foxglove',
-        'rafflesia', 'rose', 'rosy_delight', 'grand_volcania', 'hinomai',
-        'honeysuckle', 'serenity', 'soft_sunshine', 'stonebite', 'succulent',
-        'sunflower', 'lavender', 'liberty_lily', 'lilac', 'lily_of_the_valley',
-        'lotus', 'taro_flower', 'veinpetal', 'zenflare'
+        'rafflesia', 'rose', 'rosy_delight', 'sakura_bush', 'grand_volcania',
+        'hinomai', 'honeysuckle', 'serenity', 'soft_sunshine', 'stonebite',
+        'succulent', 'sunflower', 'tranquil_bloom', 'lavender', 'liberty_lily',
+        'lilac', 'lily_of_the_valley', 'lotus', 'taro_flower', 'veinpetal',
+        'zenflare'
     ],
     'Fruit': [
         'apple', 'avocado', 'mango', 'maple_apple', 'moon_mango', 'moon_melon',
-        'banana', 'blood_banana', 'blueberry', 'nectarine', 'celestiberry',
-        'coconut', 'cranberry', 'crown_melon', 'papaya', 'passionfruit',
-        'peach', 'pear', 'pineapple', 'dragon_fruit', 'durian', 'raspberry',
+        'banana', 'bitter_melon', 'blood_banana', 'blueberry', 'nectarine', 'celestiberry',
+        'cantaloupe', 'coconut', 'cranberry', 'crown_melon', 'eggplant', 'feijoa',
+        'guanabana', 'papaya', 'passionfruit', 'peach', 'pear', 'pineapple',
+        'prickly_pear', 'pumpkin', 'dragon_fruit', 'durian', 'raspberry',
         'grand_tomato', 'grape', 'green_apple', 'starfruit', 'strawberry',
-        'sugar_apple', 'hive_fruit', "traveler's_fruit", 'kiwi', 'watermelon',
+        'sugar_apple', 'hive_fruit', 'tomato', "traveler's_fruit", 'kiwi', 'watermelon',
         'white_mulberry', 'lemon', 'lime', 'lingonberry', 'loquat'
     ],
     'Fungus': [
@@ -39,13 +42,13 @@ export const cropCategories = {
         'blueberry', 'cacao', 'cantaloupe', 'cauliflower', 'celestiberry',
         'cocovine', 'cranberry', 'eggplant', 'elephant_ears', 'firefly_fern',
         'foxglove', 'giant_pinecone', 'grand_tomato', 'grape', 'green_apple',
-        'hive_fruit', 'honeysuckle', 'lilac', 'lily_of_the_valley', 'lumira',
-        'mango', 'maple_apple', 'mint', 'moon_blossom', 'moon_mango',
+        'hive_fruit', 'honeysuckle', 'king_cabbage', 'lilac', 'lily_of_the_valley',
+        'lumira', 'mango', 'maple_apple', 'mint', 'moon_blossom', 'moon_mango',
         'moonflower', 'nectarine', 'noble_flower', 'parasol_flower',
         'peach', 'pineapple', 'pink_lily', 'pitcher_plant', 'pumpkin',
-        'purple_dahlia', 'rafflesia', 'raspberry', 'rose', 'rosy_delight',
-        'spiked_mango', 'starfruit', 'strawberry', 'sugar_apple', 'sunflower',
-        'tomato', "traveler's_fruit", 'twisted_tangle', 'watermelon'
+        'purple_cabbage', 'purple_dahlia', 'rafflesia', 'raspberry', 'rose',
+        'rosy_delight', 'spiked_mango', 'starfruit', 'strawberry', 'sugar_apple',
+        'sunflower', 'tomato', "traveler's_fruit", 'twisted_tangle', 'watermelon'
     ],
     'Night': [
         'blood_banana', 'celestiberry', 'glowshroom', 'mint', 'moon_blossom',
@@ -70,10 +73,11 @@ export const cropCategories = {
     ],
     'Stalky': [
         'bamboo', 'beanstalk', 'bendboo', 'boneboo', 'burning_bud', 'cocovine',
-        'dandelion', 'elephant_ears', 'firefly_fern', 'grand_volcania',
-        'horned_dinoshroom', 'lily_of_the_valley', 'lotus', 'lucky_bamboo',
-        'mushroom', 'pitcher_plant', 'spring_onion', 'stonebite',
-        'sugarglaze', 'tall_asparagus', 'veinpetal'
+        'corn', 'dandelion', 'elephant_ears', 'firefly_fern', 'glowshroom',
+        'grand_volcania', 'horned_dinoshroom', 'lily_of_the_valley', 'lotus',
+        'lucky_bamboo', 'mega_mushroom', 'mushroom', 'pitcher_plant',
+        'spring_onion', 'stonebite', 'sugarglaze', 'tall_asparagus',
+        'veinpetal', 'violet_corn'
     ],
     'Summer': [
         'aloe_vera', 'avocado', 'banana', 'bell_pepper', 'blueberry',
@@ -92,12 +96,13 @@ export const cropCategories = {
         'strawberry', 'sugar_apple', 'sugarglaze', 'watermelon'
     ],
     'Toxic': [
-        'foxglove', 'nightshade'
+        'foxglove', 'nightshade', 'pitcher_plant'
     ],
     'Tropical': [
-        'banana', 'coconut', 'cocovine', 'dragon_fruit', 'durian',
-        'mango', 'papaya', 'parasol_flower', 'passionfruit', 'pineapple',
-        'starfruit', 'watermelon'
+        'banana', 'cantaloupe', 'coconut', 'cocovine', 'dragon_fruit',
+        'durian', 'feijoa', 'guanabana', 'loquat', 'mango', 'papaya',
+        'parasol_flower', 'passionfruit', 'pineapple', 'starfruit',
+        'watermelon'
     ],
     'Vegetable': [
         'avocado', 'beanstalk', 'bell_pepper', 'carrot', 'cauliflower',
@@ -107,10 +112,11 @@ export const cropCategories = {
         'taro_flower', 'tomato', 'violet_corn', 'wild_carrot'
     ],
     'Woody': [
-        'apple', 'avocado', 'cacao', 'coconut', 'cocovine', 'durian',
-        'feijoa', 'giant_pinecone', 'hive_fruit', 'kiwi', 'mango',
-        'maple_apple', 'moon_blossom', 'moon_mango', 'nectarine', 'papaya',
-        'peach', 'pear', 'rhubarb', "traveler's_fruit"
+        'apple', 'avocado', 'bamboo', 'bendboo', 'boneboo', 'cacao',
+        'coconut', 'cocovine', 'durian', 'feijoa', 'giant_pinecone',
+        'hive_fruit', 'kiwi', 'lucky_bamboo', 'mango', 'maple_apple',
+        'moon_blossom', 'moon_mango', 'nectarine', 'papaya', 'peach',
+        'pear', 'rhubarb', 'sugar_apple', "traveler's_fruit"
     ],
     'Zen': [
         'dezen', 'enkaku', 'hinomai', 'lucky_bamboo', 'maple_apple',
