@@ -12,11 +12,14 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Goodbye from "./pages/Goodbye";
 import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Hub from "./pages/Hub";
 import About from "./pages/About";
+import GlobalWarningBanner from "@/components/GlobalWarningBanner";
+import GoodbyeGate from "@/components/GoodbyeGate";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +31,8 @@ const App = () => (
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
+                        <GlobalWarningBanner />
+                        <GoodbyeGate />
                         <Routes>
                             <Route path="/" element={<Home />} />
                             <Route path="/app" element={<Index />} />
@@ -39,6 +44,7 @@ const App = () => (
                             <Route path="/contact" element={<Contact />} />
                             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                             <Route path="/about" element={<About />} />
+                            <Route path="/goodbye" element={<Goodbye />} />
                             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                             <Route path="*" element={<NotFound />} />
                         </Routes>
